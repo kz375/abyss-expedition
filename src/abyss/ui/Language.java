@@ -1,0 +1,235 @@
+package abyss.ui;
+
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
+
+/** Display-only translations. Saved identifiers, player names and random state never change. */
+public final class Language {
+    private static boolean chinese;
+    private static final Map<String, String> ZH = Map.ofEntries(
+        Map.entry("THE GATEWAY", "深渊之门"),
+        Map.entry("  [2]  Load save / enter seed  / LIST to browse archives", "  [2]  读取存档／输入种子  /  输入“列表”查看留档"),
+        Map.entry("  CHECKPOINT  /  ", "  当前存档  /  "),
+        Map.entry("  /  Floor ", "  /  楼层 "),
+        Map.entry("  SEED  /  ", "  种子  /  "),
+        Map.entry("  No active expedition. A new path awaits.\n", "  暂无进行中的冒险，新的道路正等待你。\n"),
+        Map.entry("Begin expedition", "开始冒险"),
+        Map.entry("Continue expedition", "继续冒险"),
+        Map.entry("  [2]  Open / create by seed  / previous expeditions retained", "  [2]  输入种子读取／创建  /  保留其他存档"),
+        Map.entry("]  Achievements         / ", "]  成就图鉴         / "),
+        Map.entry(" of ", " / "),
+        Map.entry(" unlocked", " 已解锁"),
+        Map.entry("]  Leave the abyss\n", "]  离开深渊\n"),
+        Map.entry("  Type a number, then press Enter.", "  输入编号后按回车。"),
+        Map.entry("  Press Enter to return to the gateway...", "  按回车返回主页……"),
+        Map.entry("01  /  CHOOSE YOUR DESCENT", "01  /  选择冒险难度"),
+        Map.entry("Discover the abyss at a gentler pace.", "轻松探索，逐步熟悉深渊。"),
+        Map.entry("The standard expedition.", "标准难度的冒险旅程。"),
+        Map.entry("A harsher journey. Plan every encounter.", "危机重重，每场遭遇都需规划。"),
+        Map.entry("The deepest challenge. Prepare to adapt.", "最严峻的挑战，随时准备应变。"),
+        Map.entry("02  /  THE HIDDEN PATH", "02  /  隐藏之路"),
+        Map.entry("02  /  CHOOSE YOUR CHAMPION", "02  /  选择你的角色"),
+        Map.entry("HP ", "生命 "),
+        Map.entry(" ATK ", " 攻击 "),
+        Map.entry(" DEF ", " 防御 "),
+        Map.entry("     Skill: ", "     技能："),
+        Map.entry("     Passive: ", "     被动："),
+        Map.entry("\n❉ A hidden path opens. Creator has been revealed.\n", "\n❉ 隐藏之路开启，造物主已显现。\n"),
+        Map.entry("Enter 6 to choose Creator.", "输入 6 选择造物主。"),
+        Map.entry("Enter a number between 1 and ", "请输入 1 至 "),
+        Map.entry("Enter a number between ", "请输入范围内的编号："),
+        Map.entry(" and ", " 至 "),
+        Map.entry("CHRONICLE OF THE ABYSS", "深渊成就录"),
+        Map.entry("  Achievements  ", "  成就进度  "),
+        Map.entry("  Permanent milestones. No combat bonuses.\n", "  永久荣誉记录，不提供战斗属性加成。\n"),
+        Map.entry("  NEW", "  新解锁"),
+        Map.entry("  No new milestones this session. Your next legend awaits.", "  本次暂无新成就，下一段传奇正等待你。"),
+        Map.entry("\n                  A B Y S S   E X P E D I T I O N", "\n                         深  渊  远  征"),
+        Map.entry("                     An adventure of risk and reward", "                       风险与回报交织的冒险"),
+        Map.entry("\n                Eight floors below. One relic to reclaim.", "\n                    深入八层深渊，夺回星辰圣遗物。"),
+        Map.entry("                 Every descent writes another legend.", "                     每一次远征，书写新的传奇。"),
+        Map.entry("❉  VICTORY  /  THE STAR RELIC RECLAIMED", "❉  远征胜利  /  星辰圣遗物已夺回"),
+        Map.entry("☠  DEFEAT  /  A LEGEND REMEMBERED", "☠  远征失败  /  勇者的传说长存"),
+        Map.entry("░  EXPEDITION PAUSED", "░  远征已暂停"),
+        Map.entry("You claim the Star Relic and become a new legend!", "你夺回了星辰圣遗物，成为新的传奇！"),
+        Map.entry("You fell in the abyss, but courage never dies.", "你倒在了深渊之中，但勇气永不消逝。"),
+        Map.entry("The abyss will wait. Resume from your last checkpoint.", "深渊会等待你。下次从最近保存的检查点继续。"),
+        Map.entry("  /  Level ", "  /  等级 "),
+        Map.entry("EXPEDITION RECORD", "远征战报"),
+        Map.entry("Floors reached", "抵达楼层"),
+        Map.entry("Enemies slain", "击败敌人"),
+        Map.entry(" (Elite ", "（精英 "),
+        Map.entry(", Boss ", "，首领 "),
+        Map.entry("Total damage dealt", "累计造成伤害"),
+        Map.entry("Total damage taken", "累计承受伤害"),
+        Map.entry("Gold earned", "累计获得金币"),
+        Map.entry("Potions drunk", "使用药水"),
+        Map.entry("Events resolved", "完成事件"),
+        Map.entry("Battle rounds", "战斗回合"),
+        Map.entry("Relics collected", "持有圣遗物"),
+        Map.entry("  RANK  ", "  评级  "),
+        Map.entry("                         SCORE  ", "                         得分  "),
+        Map.entry("The abyss remembers your triumph.", "深渊将铭记你的胜利。"),
+        Map.entry("This is an interim report, not a completed expedition.", "这是阶段战报，本次远征尚未结束。"),
+        Map.entry("Your journey ends. Your achievements endure.", "旅程结束了，你的成就将被永久保留。"),
+        Map.entry("Health remaining", "剩余生命"),
+        Map.entry("Gold carried", "携带金币"),
+        Map.entry("\n  RELIQUARY", "\n  圣遗物收藏"),
+        Map.entry("EXPEDITION ARCHIVES", "远征存档库"),
+        Map.entry("  Enter an existing seed to restore its saved progress.", "  输入已有种子，恢复该种子保存的进度。"),
+        Map.entry("  New number: create expedition. Blank: generate a seed.", "  输入新数字创建冒险；留空则自动生成种子。"),
+        Map.entry("  Type LIST to view retained expeditions.", "  输入“列表”查看保留的存档。"),
+        Map.entry("Seed > ", "种子 > "),
+        Map.entry("  No retained expeditions yet.", "  暂无保留的远征存档。"),
+        Map.entry("IN PROGRESS", "进行中"),
+        Map.entry("VICTORY", "胜利"),
+        Map.entry("DEFEAT", "失败"),
+        Map.entry("Cannot restore this archive; it has NOT been replaced. Choose another seed.", "无法恢复此存档，原文件未被覆盖。请选择其他种子。"),
+        Map.entry("  New expedition seed: ", "  新冒险种子："),
+        Map.entry("Enter a whole number from -9223372036854775808 to 9223372036854775807, or LIST.", "请输入 -9223372036854775808 至 9223372036854775807 之间的整数，或输入“列表”。"),
+        Map.entry("Explorer", "探索者"),
+        Map.entry("Adventurer", "冒险者"),
+        Map.entry("Nightmare", "噩梦"),
+        Map.entry("Ultra Nightmare", "超级噩梦"),
+        Map.entry("Warrior", "战士"),
+        Map.entry("Mage", "法师"),
+        Map.entry("Ranger", "游侠"),
+        Map.entry("Paladin", "圣骑士"),
+        Map.entry("Necromancer", "死灵法师"),
+        Map.entry("Creator", "造物主"),
+        Map.entry("WARRIOR", "战士"),
+        Map.entry("MAGE", "法师"),
+        Map.entry("RANGER", "游侠"),
+        Map.entry("PALADIN", "圣骑士"),
+        Map.entry("NECROMANCER", "死灵法师"),
+        Map.entry("CREATOR", "造物主"),
+        Map.entry("Armor Break", "破甲重击"),
+        Map.entry("Arcane Burst", "奥术爆发"),
+        Map.entry("Double Shot", "双重射击"),
+        Map.entry("Holy Judgment", "神圣审判"),
+        Map.entry("Soul Drain", "灵魂汲取"),
+        Map.entry("Reality Rend", "现实撕裂"),
+        Map.entry("Deal 220% attack damage and sunder enemy defense", "造成 220% 攻击伤害并削弱敌人防御"),
+        Map.entry("Start every battle with 60 shield", "每场战斗开始时获得 60 护盾"),
+        Map.entry("Deal 260% attack damage and set the enemy ablaze", "造成 260% 攻击伤害并点燃敌人"),
+        Map.entry("Skills have 1 less cooldown turn", "技能冷却减少 1 回合"),
+        Map.entry("Two arrows (130% each) that mark the target (+15% damage taken)", "射出两箭（每箭 130%），标记目标使其受到的伤害增加 15%"),
+        Map.entry("12% chance for a small bonus hit after attacking", "普通攻击后有 12% 概率追加一次小额攻击"),
+        Map.entry("Deal 200% damage, restore health, and Stun the enemy for 1 turn", "造成 200% 伤害、恢复生命并眩晕敌人 1 回合"),
+        Map.entry("Gain 8 shield at the start of every turn", "每回合开始时获得 8 护盾"),
+        Map.entry("Deal 180% damage, drain 50% of it as health, and inflict Poison", "造成 180% 伤害，吸取实际伤害的 50% 恢复生命，并施加中毒"),
+        Map.entry("Enemies start battle Cursed: +20% damage taken for 3 turns", "战斗开始时诅咒敌人：受到伤害增加 20%，持续 3 回合"),
+        Map.entry("Five strikes (140%-220%) and Empower yourself (+15% damage, 2 turns)", "连续攻击五次（140%～220%），并强化自身（伤害增加 15%，持续 2 回合）"),
+        Map.entry("Instantly destroy enemies below 65 health", "立即消灭生命低于 65 的敌人"),
+        Map.entry("First Blood", "初战告捷"),
+        Map.entry("Defeat your first enemy.", "击败第一个敌人。"),
+        Map.entry("Elite Hunter", "精英猎手"),
+        Map.entry("Defeat an elite enemy.", "击败一个精英敌人。"),
+        Map.entry("Guardian Breaker", "守卫终结者"),
+        Map.entry("Defeat a boss.", "击败一个首领。"),
+        Map.entry("Deep Delver", "深入深渊"),
+        Map.entry("Reach floor 5.", "抵达第 5 层。"),
+        Map.entry("Relic Keeper", "圣遗物收藏家"),
+        Map.entry("Hold 5 different relics in one expedition.", "单局同时持有 5 件不同圣遗物。"),
+        Map.entry("Gold Seeker", "寻金者"),
+        Map.entry("Earn 300 gold in one expedition.", "单局累计获得 300 金币。"),
+        Map.entry("Battle Veteran", "身经百战"),
+        Map.entry("Deal 1,000 health damage in one expedition.", "单局累计造成 1,000 点实际生命伤害。"),
+        Map.entry("Twin Cores", "双核心破坏者"),
+        Map.entry("Win the mechanism trial during an expedition.", "在主游戏中赢得机关试炼。"),
+        Map.entry("Star Bearer", "星辰执掌者"),
+        Map.entry("Complete an expedition.", "完成一次远征。"),
+        Map.entry("Nightmare Conqueror", "噩梦征服者"),
+        Map.entry("Win on Nightmare or Ultra Nightmare.", "在噩梦或超级噩梦难度下通关。"),
+        Map.entry("Abyss Master", "深渊主宰"),
+        Map.entry("Win on Ultra Nightmare.", "在超级噩梦难度下通关。")
+        ,Map.entry("  ░ Checkpoint saved for Abyss Floor ", "  ░ 检查点已保存：深渊第 "),
+        Map.entry(" / Seed ", " / 种子 "),
+        Map.entry("  ░ Unable to write checkpoint; the expedition continues.", "  ░ 检查点保存失败，冒险继续。"),
+        Map.entry("\n  The gates close softly. Your chronicle awaits your return.", "\n  深渊之门缓缓关闭，冒险记录等待你的归来。"),
+        Map.entry("Unable to archive the legacy checkpoint. No new expedition was started.", "旧存档归档失败，未开始新的冒险。"),
+        Map.entry("  Legacy checkpoint retained under seed ", "  旧存档已保留，对应种子为 "),
+        Map.entry("\n  RETAINED EXPEDITION / Seed ", "\n  保留的远征记录 / 种子 "),
+        Map.entry(" / Read-only final record", " / 只读最终记录"),
+        Map.entry("\n░ Checkpoint restored. Returning to Abyss Floor ", "\n░ 存档已恢复，返回深渊楼层 "),
+        Map.entry("Enter your adventurer name: ", "请输入冒险者名字："),
+        Map.entry("Name shortened to 200 characters.", "名字已截短至 200 个字符。"),
+        Map.entry("\nWelcome, ", "\n欢迎，"),
+        Map.entry(". Descend eight floors of the abyss and claim the lost Star Relic.", "。深入八层深渊，夺回失落的星辰圣遗物。"),
+        Map.entry("Cannot establish a durable checkpoint. Expedition stopped safely.", "无法建立可靠存档，已安全停止冒险。"),
+        Map.entry("You remain on Abyss Floor ", "你仍停留在深渊楼层 "),
+        Map.entry("\nInput closed.", "\n输入已结束。"),
+        Map.entry("The abyss waits for another day. Farewell.", "深渊等待下一次冒险，再会。"),
+        Map.entry("Final archive could not be saved. The previous checkpoint remains.", "最终记录保存失败，之前的检查点仍被保留。"),
+        Map.entry("\n  EXPEDITION SEED  /  ", "\n  远征种子  /  "),
+        Map.entry("  Return to the gateway next launch to view your full chronicle.\n", "  下次启动后，可在主页查看完整的成就记录。\n"),
+        Map.entry(" - Level ", " - 等级 "),
+        Map.entry("  Health ", "  生命 "),
+        Map.entry("  Attack ", "  攻击 "),
+        Map.entry("   Defense ", "   防御 "),
+        Map.entry("   Shield ", "   护盾 "),
+        Map.entry("  Gold ", "  金币 "),
+        Map.entry("   Potions ", "   药水 "),
+        Map.entry("   Skill CD ", "   技能冷却 "),
+        Map.entry("  Status: ", "  状态："),
+        Map.entry("None", "无"),
+        Map.entry("  Relics: ", "  圣遗物："),
+        Map.entry("ABYSS FLOOR ", "深渊楼层 "),
+        Map.entry("Choose your route:", "选择路线："),
+        Map.entry(" [visited]", " [已访问]"),
+        Map.entry("  5. Leave expedition (return to the saved checkpoint next time)", "  5. 离开冒险（下次从已保存的检查点继续）"),
+        Map.entry("This location has already been visited on this floor.", "本层已访问过该地点。"),
+        Map.entry("Battle", "普通战斗"),
+        Map.entry("Elite Battle", "精英战斗"),
+        Map.entry("Unknown Event", "神秘事件"),
+        Map.entry("Campfire", "篝火"),
+        Map.entry("Merchant", "商店"),
+        Map.entry("Final Battle", "最终战斗"),
+        Map.entry("Burn", "灼烧"),
+        Map.entry("Poison", "中毒"),
+        Map.entry("Stun", "眩晕"),
+        Map.entry("Weak", "虚弱"),
+        Map.entry("Regen", "再生"),
+        Map.entry("Empower", "强化"),
+        Map.entry("Sunder", "破甲"),
+        Map.entry("Curse", "诅咒")
+    );
+    private Language() { }
+    public static String t(String english) { return chinese ? ZH.getOrDefault(english, WorldText.translate(CombatText.translate(english))) : english; }
+    public static boolean isChinese() { return chinese; }
+    public static String battle(String english) {
+        if (!chinese) return english;
+        String translated = CombatText.translate(english);
+        return translated.equals(english) ? t(english) : translated;
+    }
+    private static Path settings() { return Path.of(System.getProperty("abyss.saveDir", "saves"), "language.properties"); }
+    public static void load() {
+        chinese = false;
+        Path file = settings();
+        if (!Files.exists(file)) return;
+        try (Reader reader = Files.newBufferedReader(file)) {
+            Properties data = new Properties(); data.load(reader);
+            chinese = "zh".equals(data.getProperty("language"));
+        } catch (IOException | IllegalArgumentException e) {
+            System.out.println("Language settings unavailable. Using English for this session.");
+        }
+    }
+    public static void select(boolean useChinese) {
+        chinese = useChinese;
+        Path temporary = null;
+        try {
+            Path file = settings();
+            Files.createDirectories(file.getParent());
+            temporary = Files.createTempFile(file.getParent(), "language-", ".tmp");
+            Properties data = new Properties(); data.setProperty("language", chinese ? "zh" : "en");
+            try (Writer writer = Files.newBufferedWriter(temporary)) { data.store(writer, "Abyss display language"); }
+            try { Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE); }
+            catch (AtomicMoveNotSupportedException e) { Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING); }
+        } catch (IOException e) {
+            System.out.println(chinese ? "语言已切换，但设置保存失败，仅在本次运行中有效。" : "Language changed for this session only; settings could not be saved.");
+        } finally {
+            if (temporary != null) try { Files.deleteIfExists(temporary); } catch (IOException ignored) { }
+        }
+    }
+}

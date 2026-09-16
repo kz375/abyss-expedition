@@ -1,0 +1,103 @@
+// Optional browser integration test with an isolated headless Chrome profile.
+// node web/tests/browser-test.mjs /absolute/path/to/chrome http://127.0.0.1:8080
+import { spawn } from 'node:child_process';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import assert from 'node:assert/strict';
+
+const executable = process.argv[2];
+const origin = process.argv[3] || 'http://127.0.0.1:8080';
+if (!executable) throw new Error('Pass an absolute Chrome executable path');
+const profile = await mkdtemp(join(tmpdir(), 'abyss-web-chrome-'));
+const chrome = spawn(executable, ['--headless=new', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${profile}`, '--remote-debugging-port=0', 'about:blank'], {stdio:'ignore'});
+let socket;
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+try {
+  let port;
+  for (let i = 0; i < 100; i++) {
+    try { port = Number((await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split('\n')[0]); break; } catch { await delay(100); }
+  }
+  assert.ok(port, 'Chrome starts');
+  const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
+  socket = new WebSocket(targets.find(t => t.type === 'page').webSocketDebuggerUrl);
+  await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
+  const pending = new Map(); let serial = 0; const errors = [];
+  socket.onmessage = event => {
+    const message = JSON.parse(event.data);
+    if (message.id) { const item = pending.get(message.id); if (item) { pending.delete(message.id); message.error ? item.reject(new Error(JSON.stringify(message.error))) : item.resolve(message.result); } }
+    else if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.text);
+  };
+  const command = (method, params = {}) => new Promise((resolve, reject) => {
+    const id = ++serial; pending.set(id, {resolve,reject}); socket.send(JSON.stringify({id,method,params}));
+  });
+  const evaluate = async expression => {
+    const result = await command('Runtime.evaluate', {expression,returnByValue:true,awaitPromise:true});
+    if (result.exceptionDetails) throw new Error(JSON.stringify(result.exceptionDetails));
+    return result.result.value;
+  };
+  const waitFor = async expression => {
+    for (let i = 0; i < 120; i++) { if (await evaluate(expression)) return; await delay(100); }
+    throw new Error(`Timed out: ${expression}\n${await evaluate('document.body.innerText')}`);
+  };
+  const send = async value => {
+    await waitFor('document.getElementById("submit").disabled === false');
+    await evaluate(`document.getElementById('command').value = ${JSON.stringify(value)}; document.getElementById('command-form').requestSubmit();`);
+    await waitFor('document.getElementById("submit").disabled === false || !document.getElementById("ended").hidden');
+  };
+  await command('Runtime.enable'); await command('Page.enable');
+  await command('Emulation.setDeviceMetricsOverride', {width:1280,height:960,deviceScaleFactor:1,mobile:false});
+  await command('Page.navigate', {url:origin});
+  await waitFor('document.getElementById("choices")?.children.length === 5 && !document.getElementById("submit").disabled');
+  assert.equal(await evaluate('document.querySelectorAll(".choice").length'), 5, 'main menu buttons');
+  assert.equal(/[\u3400-\u9fff]/.test(await evaluate('document.body.innerText')), false, 'English screen contains no Chinese UI');
+  await evaluate('document.getElementById("shell-language").click()');
+  await waitFor('document.querySelectorAll(".choice").length === 2 && !document.getElementById("submit").disabled');
+  assert.equal(/[\u3400-\u9fff]/.test(await evaluate('document.body.innerText')), false, 'English language chooser stays English');
+  await send('2');
+  await waitFor('document.getElementById("screen").innerText.includes("深渊之门")');
+  assert.equal(/[A-Za-z]{3,}/.test(await evaluate('document.body.innerText')), false, 'Chinese page, branding and menu contain no English UI');
+  await evaluate('document.getElementById("show-history").click()');
+  assert.equal(/[A-Za-z]{3,}/.test(await evaluate('document.getElementById("history-text").innerText')), false, 'Chinese journal contains only Chinese history');
+  await evaluate('document.getElementById("close-history").click()');
+  await send('5'); await send('1');
+  assert.equal(/[\u3400-\u9fff]/.test(await evaluate('document.body.innerText')), false, 'switching back synchronizes full English page');
+  await send('5'); await send('2');
+  await command('Page.reload');
+  await waitFor('document.documentElement.lang === "zh-CN" && document.querySelectorAll(".choice").length === 5 && !document.getElementById("submit").disabled');
+  assert.equal(/[A-Za-z]{3,}/.test(await evaluate('document.body.innerText')), false, 'selected language survives refresh');
+  const shot = await command('Page.captureScreenshot', {format:'png'});
+  await writeFile(join(profile, 'desktop.png'), Buffer.from(shot.data, 'base64'));
+  await send('1'); await send('8675309'); await send('网页测试<script>alert(1)</script>'); await send('2');
+  await waitFor('document.querySelectorAll(".choice").length === 5');
+  await send('kz');
+  await waitFor('document.querySelectorAll(".choice").length === 1');
+  assert.match(await evaluate('document.getElementById("choices").innerText'), /6.*造物主/s);
+  await send('6'); await send('1');
+  await waitFor('document.getElementById("choices").innerText.includes("普通攻击")');
+  assert.equal(await evaluate('document.getElementById("shell-language").disabled'), true, 'language shortcut cannot submit combat action 5');
+  await evaluate('globalThis.dialogText=""; globalThis.confirm=message=>{globalThis.dialogText=message;return false};document.getElementById("pause").click()');
+  assert.equal(/[A-Za-z]{3,}/.test(await evaluate('globalThis.dialogText')), false, 'Chinese pause dialog is monolingual');
+  assert.equal(await evaluate('errorText({status:503})'), '服务器暂不可用，请稍后点击重新连接。', 'server errors localized instead of exposing bilingual payload');
+  assert.equal(await evaluate('document.querySelectorAll("#screen script").length'), 0, 'player text is not executable HTML');
+  await command('Page.reload');
+  await waitFor('document.getElementById("choices")?.innerText.includes("普通攻击")');
+  await command('Emulation.setDeviceMetricsOverride', {width:390,height:844,deviceScaleFactor:1,mobile:true});
+  assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'), true, 'mobile page does not overflow');
+  const mobile = await command('Page.captureScreenshot', {format:'png'});
+  await writeFile(join(profile, 'mobile.png'), Buffer.from(mobile.data, 'base64'));
+  // Render an actual protocol-shaped puzzle snapshot and test key & touch controls separately from mechanics (covered by Java tests).
+  await evaluate(`state = {...state, ready:true, puzzle:{size:8,moves:4,limit:40,player:10,monster:27,boxes:[18,36],targets:[21,45],shattered:-1,finished:false,won:false},revision:state.revision+1}; const example=state; state=null; render(example); paused=true; clearTimeout(pollTimer);`);
+  assert.equal(await evaluate('document.querySelectorAll(".cell").length'), 64, '64 puzzle cells');
+  assert.equal(await evaluate('document.querySelectorAll(".cell.core").length'), 2, 'two visible cores');
+  await evaluate(`const p={...state.puzzle,targets:[45],shattered:21};renderPuzzle(p);`);
+  assert.equal(await evaluate('document.querySelectorAll(".cell.core").length'), 1, 'shattered yellow tile removed');
+  await evaluate(`globalThis.capturedMove=null; send=async value=>{globalThis.capturedMove=value}; document.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));`);
+  assert.equal(await evaluate('globalThis.capturedMove'), 'LEFT', 'arrow key without Enter');
+  await evaluate(`document.querySelector('[data-move="DOWN"]').click()`);
+  assert.equal(await evaluate('globalThis.capturedMove'), 'DOWN', 'touch direction button');
+  assert.deepEqual(errors, [], 'no browser exceptions');
+  console.log(`PASS: Chrome main menu, Chinese, hidden Creator, combat, refresh, mobile layout, puzzle rendering and controls. Screenshots: ${profile}`);
+} finally {
+  socket?.close(); chrome.kill('SIGTERM');
+}

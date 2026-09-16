@@ -1,0 +1,9 @@
+*
+!src/
+!src/**
+!web/
+!web/java/
+!web/java/**
+!web/public/
+!web/public/**
+!web/Dockerfile

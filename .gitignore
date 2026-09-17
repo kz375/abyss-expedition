@@ -1,0 +1,8 @@
+out/
+build/
+dist/
+releases/
+saves/
+web-data/
+.idea/
+.DS_Store

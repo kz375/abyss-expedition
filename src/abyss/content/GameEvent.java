@@ -48,6 +48,40 @@ public enum GameEvent
         System.out.println(abyss.ui.Language.t("You step through the rift. An elite guardian is waiting."));
         s.resolveBattle(h, f, true, d);
     } },
+    FORGOTTEN_FORGE { public void resolve(EventServices s, Hero h, int f, Difficulty d) {
+        System.out.println(abyss.ui.Language.t("A forgotten forge still burns. 1. Temper your weapon (lose 12 health, gain 4 attack)  2. Reinforce your armor (lose 12 health, gain 4 defense)  3. Leave"));
+        int choice = s.readChoice(1, 3);
+        if (choice == 3) { System.out.println(abyss.ui.Language.t("You leave the forge to its endless work.")); return; }
+        if (!h.spendHealth(12)) { System.out.println(abyss.ui.Language.t("You are too wounded to work the forge.")); return; }
+        if (choice == 1) { h.addAttack(4); System.out.println(abyss.ui.Language.t("The forge tempers your weapon. Attack +4.")); }
+        else { h.addDefense(4); System.out.println(abyss.ui.Language.t("The forge reinforces your armor. Defense +4.")); }
+    } },
+    ECHOING_ALTAR { public void resolve(EventServices s, Hero h, int f, Difficulty d) {
+        System.out.println(abyss.ui.Language.t("An echoing altar answers your pulse. 1. Offer 30 gold for vitality  2. Listen for a ward  3. Leave"));
+        int choice = s.readChoice(1, 3);
+        if (choice == 1) {
+            if (h.getGold() < 30) { System.out.println(abyss.ui.Language.t("The altar falls silent. You lack the required gold.")); return; }
+            h.spendGold(30); h.addMaxHealth(14); h.restoreHealth(20);
+            System.out.println(abyss.ui.Language.t("The altar grants vitality. Max health +14 and 20 health restored."));
+        } else if (choice == 2) { h.addShield(30 + f * 3); System.out.println(abyss.ui.Language.t("A resonant ward forms around you.")); }
+        else System.out.println(abyss.ui.Language.t("The echoes fade as you walk away."));
+    } },
+    MOONLIT_CARAVAN { public void resolve(EventServices s, Hero h, int f, Difficulty d) {
+        int cost = 20 + f * 3;
+        System.out.println(abyss.ui.Language.t("A moonlit caravan offers rare supplies. 1. Pay ") + cost
+                + abyss.ui.Language.t(" gold for a potion and a ward  2. Leave"));
+        if (s.readChoice(1, 2) != 1) { System.out.println(abyss.ui.Language.t("The caravan fades into the mist.")); return; }
+        if (h.getGold() < cost) { System.out.println(abyss.ui.Language.t("The caravan master shakes their head. Not enough gold.")); return; }
+        h.spendGold(cost); h.receivePotion(); h.addShield(18 + f * 3);
+        System.out.println(abyss.ui.Language.t("You receive a potion and a moonlit ward."));
+    } },
+    STARVED_IDOL { public void resolve(EventServices s, Hero h, int f, Difficulty d) {
+        System.out.println(abyss.ui.Language.t("A starved idol opens its stone mouth. 1. Feed it 10 health for 45 gold  2. Leave"));
+        if (s.readChoice(1, 2) != 1) { System.out.println(abyss.ui.Language.t("The idol closes its mouth and goes still.")); return; }
+        if (!h.spendHealth(10)) { System.out.println(abyss.ui.Language.t("The idol refuses a life-threatening offering.")); return; }
+        int gold = s.gainGold(h, 45 + f * 5);
+        System.out.println(abyss.ui.Language.t("The idol spits out ") + gold + abyss.ui.Language.t(" gold."));
+    } },
     MYSTERIOUS_STALKER { public void resolve(EventServices s, Hero h, int f, Difficulty d) { s.resolveMechanismEncounter(h, f, d); } };
 
     public abstract void resolve(EventServices services, Hero hero, int floor, Difficulty difficulty);
@@ -61,7 +95,8 @@ public enum GameEvent
         }
         GameEvent[] regularEvents = {
                 ANCIENT_SHRINE, LOCKED_CHEST, WANDERING_HEALER, MYSTIC_SPRING, TRAPPED_ADVENTURER,
-                DICE_GAMBLER, ANCIENT_LIBRARY, WHISPERING_WELL, CARD_SHARP, ORACLE, RELIC_CURATOR, RIFT_GATE};
+                DICE_GAMBLER, ANCIENT_LIBRARY, WHISPERING_WELL, CARD_SHARP, ORACLE, RELIC_CURATOR, RIFT_GATE,
+                FORGOTTEN_FORGE, ECHOING_ALTAR, MOONLIT_CARAVAN, STARVED_IDOL};
         regularEvents[services.nextInt(regularEvents.length)].resolve(services, hero, floor, difficulty);
     }
 }

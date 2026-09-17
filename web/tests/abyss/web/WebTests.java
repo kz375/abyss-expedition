@@ -71,10 +71,10 @@ public final class WebTests {
             check(choose("424242").contains("adventurer name"), "seed accepted");
             check(choose("Web测试 <script>alert(1)</script>").contains("CHOOSE YOUR DESCENT"), "unicode and literal HTML name accepted");
             String classes = choose("2"); check(classes.contains("CHOOSE YOUR CHAMPION"), "difficulty accepted");
-            check(!classes.substring(classes.indexOf("\"screen\":"), classes.indexOf("\"history\":")).contains("6. Creator"), "creator hidden");
+            check(!classes.substring(classes.indexOf("\"screen\":"), classes.indexOf("\"history\":")).contains("[6] Creator"), "creator hidden");
             String hidden = choose("kz");
             String screen = hidden.substring(hidden.indexOf("\"screen\":"), hidden.indexOf("\"history\":"));
-            check(screen.contains("6. Creator") && !screen.contains("1. Warrior"), "hidden path contains only Creator");
+            check(screen.contains("[6] Creator") && !screen.contains("[1] Warrior"), "hidden path contains only Creator");
             check(choose("6").contains("Choose your route"), "class selection enters expedition");
             Path player;
             try (var dirs = Files.list(directory)) { player = dirs.filter(Files::isDirectory).findFirst().orElseThrow(); }

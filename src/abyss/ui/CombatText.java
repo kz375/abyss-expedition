@@ -70,6 +70,8 @@ final class CombatText {
         Map.entry("Elite [Frenzied]: ", "精英词缀【狂暴】："),
         Map.entry(" attack.", " 点攻击力。"),
         Map.entry("BOSS PHASE II: ", "首领进入第二阶段："),
+        Map.entry("BOSS PHASE III: ", "首领进入第三阶段："),
+        Map.entry(" surges with power! Health, attack, and defense rise by 15%.", "力量暴涨！生命、攻击与防御均提高 15%。"),
         Map.entry(" summons ", "获得 "),
         Map.entry(" shield, gains ", " 点护盾，攻击力增加 "),
         Map.entry(" attack, and acts more aggressively!", "，行动变得更加凶猛！"),

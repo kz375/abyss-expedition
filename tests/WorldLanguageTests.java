@@ -71,7 +71,18 @@ public class WorldLanguageTests {
             if (english.toString(StandardCharsets.UTF_8).matches("(?s).*[\\p{IsHan}].*")) throw new AssertionError("Chinese leaked into English");
             var selection = ConsoleSeeds.choose(new ConsoleInput(new Scanner("列表\n123\n")));
             if (selection.seed() != 123) throw new AssertionError("Chinese archive command failed");
+            check("an early swarm (Cave Bat, Abyss Hound, Lost Miner)".equals(Prophecy.visionForFloor(2)), "floor-two prophecy");
+            check("Relic Guardian".equals(Prophecy.visionForFloor(3)), "boss prophecy");
+            check("a shadow host (Shadow Assassin, Cursed Doll, Bone Scholar)".equals(Prophecy.visionForFloor(4)), "mid-floor prophecy");
+            check("a lost legion (Void Stalker, Bone Reaper, Dread Wraith)".equals(Prophecy.visionForFloor(7)), "late-floor prophecy");
+            check("Abyss Lord".equals(Prophecy.visionForFloor(8)), "final boss prophecy");
+            check("nothing beyond the final gate".equals(Prophecy.visionForFloor(9)), "end-of-run prophecy");
+            check(GameEvent.valueOf("RELIC_CURATOR") != null && GameEvent.valueOf("RIFT_GATE") != null
+                            && GameEvent.valueOf("FORGOTTEN_FORGE") != null && GameEvent.valueOf("ECHOING_ALTAR") != null
+                            && GameEvent.valueOf("MOONLIT_CARAVAN") != null && GameEvent.valueOf("STARVED_IDOL") != null,
+                    "new event types registered");
             original.println("PASS: " + en.size() + " language-independent event/shop/trial snapshots; monolingual output and Chinese archive input.");
         } finally { System.setOut(original); Language.select(false); }
     }
+    private static void check(boolean condition, String label) { if (!condition) throw new AssertionError(label); }
 }

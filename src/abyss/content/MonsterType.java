@@ -57,6 +57,11 @@ public enum MonsterType {
         List<MonsterType> choices = Arrays.stream(values()).filter(type -> type.zone == zone).toList();
         return choices.get(random.nextInt(choices.size()));
     }
+    /** The final boss may call any codex creature, but never another boss. */
+    public static MonsterType randomSummon(Random random) {
+        List<MonsterType> choices = Arrays.stream(values()).filter(type -> !type.isBoss()).toList();
+        return choices.get(random.nextInt(choices.size()));
+    }
     public static MonsterType fromName(String name) {
         String plain = name.startsWith("Elite ") ? name.substring(6) : name;
         return Arrays.stream(values()).filter(type -> type.name.equals(plain)).findFirst().orElse(null);

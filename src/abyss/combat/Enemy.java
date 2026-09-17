@@ -18,9 +18,9 @@ public final class Enemy implements Combatant
     private final boolean elite;
     private final boolean finalBoss;
     private int health;
-    private final int maxHealth;
+    private int maxHealth;
     private int attack;
-    private final int defense;
+    private int defense;
     private final int goldReward;
     private final int experienceReward;
     private int shield;
@@ -32,6 +32,7 @@ public final class Enemy implements Combatant
     private final IntConsumer damageDealtRecorder;
     private boolean enraged;
     private boolean phaseTwo;
+    private boolean phaseThree;
     private final EliteAffix affix;
     private EnemyIntent intent = EnemyIntent.ATTACK;
     private final List<StatusEffect> statuses = new ArrayList<>();
@@ -79,22 +80,28 @@ public final class Enemy implements Combatant
             boolean finalBoss = floor == finalFloor;
             MonsterType monster = finalBoss ? MonsterType.ABYSS_LORD : MonsterType.RELIC_GUARDIAN;
             return new Enemy(monster.monsterName(),
-                    scaled(125 + floor * 32, difficulty.bossRankMultiplier() * difficulty.enemyHealthMultiplier()),
-                    scaled(20 + floor * 4, difficulty.bossRankMultiplier() * difficulty.enemyAttackMultiplier()),
-                    6 + floor, true, false, finalBoss,
+                    scaled(125 + floor * 32, difficulty.bossRankMultiplier() * 1.15 * difficulty.enemyHealthMultiplier()),
+                    scaled(20 + floor * 4, difficulty.bossRankMultiplier() * 1.15 * difficulty.enemyAttackMultiplier()),
+                    scaled(6 + floor, 1.15), true, false, finalBoss,
                     scaled(35 + floor * 8, difficulty.rewardMultiplier()),
                     scaled(65 + floor * 18, difficulty.rewardMultiplier()),
                     monster.behavior(), 30,
                     difficulty == Difficulty.ULTRA_NIGHTMARE, EliteAffix.NONE, random, damageDealtRecorder);
         }
+        return spawnRegular(EnemyTier.forFloor(floor).randomMonster(random), floor, elite, difficulty, random, damageDealtRecorder);
+    }
+
+    /** Uses floor scaling while allowing scripted encounters to choose a specific codex creature. */
+    private static Enemy spawnRegular(MonsterType monster, int floor, boolean elite, Difficulty difficulty, Random random,
+                                      IntConsumer damageDealtRecorder)
+    {
         EnemyTier tier = EnemyTier.forFloor(floor);
-        MonsterType monster = tier.randomMonster(random);
         String name = elite ? "Elite " + monster.monsterName() : monster.monsterName();
-        double rank = elite ? difficulty.eliteRankMultiplier() : 1.0;
+        double rank = elite ? difficulty.eliteRankMultiplier() * 1.15 : 1.0;
         return new Enemy(name,
                 scaled(tier.getBaseHealth() + monster.healthOffset() + floor * 14 + random.nextInt(12), rank * difficulty.enemyHealthMultiplier()),
                 scaled(tier.getBaseAttack() + monster.attackOffset() + floor * 3, rank * difficulty.enemyAttackMultiplier()),
-                Math.max(0, tier.getBaseDefense() + monster.defenseOffset() + floor), false, elite, false,
+                scaled(Math.max(0, tier.getBaseDefense() + monster.defenseOffset() + floor), elite ? 1.15 : 1.0), false, elite, false,
                 scaled(16 + floor * 6, difficulty.rewardMultiplier() * rank),
                 scaled(30 + floor * 12, difficulty.rewardMultiplier() * rank),
                 monster.behavior(), elite ? 20 : 12, difficulty == Difficulty.ULTRA_NIGHTMARE,
@@ -122,6 +129,7 @@ public final class Enemy implements Combatant
     public EnemyIntent getIntent() { return intent; }
     public EliteAffix getAffix() { return affix; }
     public boolean isPhaseTwo() { return phaseTwo; }
+    public boolean isPhaseThree() { return phaseThree; }
     public void setSkillCooldown(int cooldown) { skillCooldown = cooldown; }
 
     public void decrementSkillCooldown()
@@ -148,7 +156,8 @@ public final class Enemy implements Combatant
     {
         if (!isUltraNightmareFinalBoss()) throw new IllegalStateException("Only the Ultra Nightmare final boss can summon minions");
         boolean eliteMinion = random.nextInt(100) < 5;
-        Enemy minion = spawnEvent(8, eliteMinion, Difficulty.ULTRA_NIGHTMARE, random, damageDealtRecorder);
+        Enemy minion = spawnRegular(MonsterType.randomSummon(random), 8, eliteMinion,
+                Difficulty.ULTRA_NIGHTMARE, random, damageDealtRecorder);
         minion.prepareEliteAffix();
         minion.prepareUltraNightmare();
         minion.prepareIntent();
@@ -182,6 +191,21 @@ public final class Enemy implements Combatant
         skillChance = Math.min(100, skillChance + 15);
         System.out.println(abyss.ui.Language.battle("BOSS PHASE II: ") + abyss.ui.Language.t(name) + abyss.ui.Language.battle(" summons ") + ward + abyss.ui.Language.battle(" shield, gains ")
                 + bonus + abyss.ui.Language.battle(" attack, and acts more aggressively!"));
+    }
+
+    /** The final quarter is a true third phase: health, attack, and defense each rise by fifteen percent. */
+    public void enterPhaseThreeIfNeeded()
+    {
+        if (!boss || phaseThree || health > maxHealth / 4) return;
+        phaseThree = true;
+        int healthBonus = Math.max(1, maxHealth * 15 / 100);
+        maxHealth += healthBonus;
+        health += healthBonus;
+        attack = scaled(attack, 1.15);
+        defense = scaled(defense, 1.15);
+        skillChance = Math.min(100, skillChance + 15);
+        System.out.println(abyss.ui.Language.battle("BOSS PHASE III: ") + abyss.ui.Language.t(name)
+                + abyss.ui.Language.battle(" surges with power! Health, attack, and defense rise by 15%."));
     }
 
     public void enrageIfNeeded()

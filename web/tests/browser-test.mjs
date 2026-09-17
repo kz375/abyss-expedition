@@ -87,6 +87,8 @@ try {
   assert.match(await evaluate('document.getElementById("choices").innerText'), /6.*造物主/s);
   await send('6'); await send('1');
   await waitFor('document.getElementById("choices").innerText.includes("普通攻击")');
+  assert.equal(await evaluate('document.querySelectorAll(".health-row.player-health").length >= 1'), true, 'player health uses the aligned green combat row');
+  assert.equal(await evaluate('document.querySelectorAll(".health-row.enemy-health").length >= 1'), true, 'enemy health uses the aligned red combat row');
   assert.equal(await evaluate('document.getElementById("shell-language").disabled'), true, 'language shortcut cannot submit combat action 5');
   await evaluate('globalThis.dialogText=""; globalThis.confirm=message=>{globalThis.dialogText=message;return false};document.getElementById("pause").click()');
   assert.equal(/[A-Za-z]{3,}/.test(await evaluate('globalThis.dialogText')), false, 'Chinese pause dialog is monolingual');

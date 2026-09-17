@@ -29,7 +29,7 @@ public final class ConsoleMenus {
             if (choice == languageChoice) {
                 ConsolePresentation.section(Language.t("Language"));
                 // Keep the Chinese language name in Chinese in both interfaces.
-                System.out.println(Language.isChinese() ? "  [1] 英文\n  [2] 简体中文" : "  [1] English\n  [2] 简体中文");
+                System.out.println("  [1] English\n  [2] 简体中文");
                 Language.select(input.readChoice(1,2) == 2);
                 ConsolePresentation.printTitle();
                 continue;
@@ -71,12 +71,12 @@ public final class ConsoleMenus {
             {
                 HeroClass heroClass = classes[index];
                 int displayNumber = creatorRevealed ? 6 : index + 1;
-                System.out.println(displayNumber + ". " + ConsoleLayout.padded(Language.t(heroClass.getName()), 12)
+                System.out.println("  [" + displayNumber + "] " + ConsoleLayout.padded(Language.t(heroClass.getName()), 14)
                         + Language.t("HP ") + String.format("%-4d", (int) (heroClass.getBaseHealth() * multiplier))
                         + Language.t(" ATK ") + String.format("%-3d", (int) (heroClass.getBaseAttack() * multiplier))
                         + Language.t(" DEF ") + (int) (heroClass.getBaseDefense() * multiplier));
-                System.out.println(Language.t("     Skill: ") + Language.t(heroClass.getSkillName()) + " - " + Language.t(heroClass.getSkillDescription()));
-                System.out.println(Language.t("     Passive: ") + Language.t(heroClass.getPassiveSkillDescription()));
+                System.out.println("      ⚔ " + Language.t(heroClass.getSkillName()) + "  ·  " + Language.t(heroClass.getSkillDescription()));
+                System.out.println("      ✦ " + Language.t(heroClass.getPassiveSkillName()) + "  ·  " + Language.t(heroClass.getPassiveSkillDescription()) + "\n");
             }
 
             if (!INPUT.hasNextLine())

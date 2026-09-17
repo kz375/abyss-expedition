@@ -77,7 +77,7 @@ public final class ConsoleBattle {
             }
             if (enemy.isBoss() && enemy.isPhaseTwo())
             {
-                System.out.println("  " + ConsoleLayout.padded(Language.t("Boss Phase"), 20) + "II");
+                System.out.println("  " + ConsoleLayout.padded(Language.t("Boss Phase"), 20) + (enemy.isPhaseThree() ? "III" : "II"));
             }
             String intentText = enemy.getIntent() == EnemyIntent.SPECIAL
                     ? Language.t(enemy.getIntent().label()) + (Language.isChinese() ? "：" : ": ") + Language.t(enemy.getBehavior().getSkillName())

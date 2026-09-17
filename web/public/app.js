@@ -13,14 +13,14 @@ Object.assign(words.en, {
 });
 words.zh.thanks = "感谢你踏入深渊";
 words.en.thanks = "Thank you for venturing into the abyss";
-words.zh.edition = "版本 · 1.1.7";
-words.en.edition = "VERSION · 1.1.7";
+words.zh.edition = "版本 · 1.1.11";
+words.en.edition = "VERSION · 1.1.11";
 words.zh.versionLabel = "版本";
 words.en.versionLabel = "VERSION";
-words.zh.releaseVersion = "1.1.7";
-words.en.releaseVersion = "1.1.7";
-words.zh.releaseNote = "怪兽图鉴、深渊界面与结局感谢更新";
-words.en.releaseNote = "Monster Codex, abyss visuals, and ending thanks";
+words.zh.releaseVersion = "1.1.11";
+words.en.releaseVersion = "1.1.11";
+words.zh.releaseNote = "单次随机事件与简洁角色卡片更新";
+words.en.releaseNote = "Single-choice events and streamlined hero cards";
 const t = key => words[language][key] || key;
 function languageAvailable() {
   return state?.ready && !state.ended && !state.puzzle && [...choicesFrom(state.screen).entries()].some(([, label]) => /^(Language|语言)\s/.test(label));
@@ -69,11 +69,26 @@ function choicesFrom(text) {
 function isClassSelection(text) { return /CHOOSE YOUR CHAMPION|选择你的角色/.test(text); }
 function isSeedPrompt(text) { return /(?:Seed|种子)\s*>\s*$/m.test(text); }
 function needsContinue(text) { return /Press Enter to (?:enter|return)|按回车(?:进入|返回)/.test(text); }
-function addChoice(number, label, action) {
+function addChoice(number, label, action, variant = "") {
   const button = document.createElement("button"); button.className = "choice"; button.type = "button";
+  if (variant) button.classList.add(variant);
   if (number) { const badge = document.createElement("span"); badge.className = "number"; badge.textContent = number; button.append(badge); }
   const name = document.createElement("span"); name.className = "label"; name.textContent = label;
   button.append(name); button.addEventListener("click", action); $("choices").append(button);
+}
+function isCriticalLine(line) { return /CRITICAL HIT|暴击/.test(line); }
+function basicDamage(line) {
+  return line.match(/^You attack for (\d+) damage\.$/) || line.match(/^你发动普通攻击，造成 (\d+) 点伤害。$/);
+}
+function incomingDamage(line) {
+  return line.match(/^(.+?) attacks you for (\d+) damage\.$/) || line.match(/^(.+?)攻击了你，造成 (\d+) 点伤害。$/);
+}
+function combatEvent(row, icon, value, kind, label = "") {
+  row.className = `text-line combat-event ${kind}`;
+  const glyph = document.createElement("span"); glyph.className = "combat-icon"; glyph.textContent = icon;
+  const text = document.createElement("span"); text.className = "combat-label"; text.textContent = label;
+  const number = document.createElement("strong"); number.className = "combat-number"; number.textContent = value;
+  row.append(glyph, text, number);
 }
 function renderText(text) {
   $("screen").replaceChildren();
@@ -81,20 +96,32 @@ function renderText(text) {
   if (gateway >= 0) text = text.substring(gateway);
   const classMenu = /CHOOSE YOUR CHAMPION|THE HIDDEN PATH|选择你的角色|隐藏之路/.test(text);
   let blank = false;
-  for (const line of text.split("\n")) {
+  const lines = text.split("\n");
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
     if (!classMenu && choicesFrom(line).size) continue;
     if (/^\s*>\s*$/.test(line) || /Type a number, then press Enter\.|输入编号后按回车。/.test(line)) continue;
     if (!line.trim() && blank) continue;
     blank = !line.trim();
     const health = line.match(/^\s*(.+?)\s+\[[#.]+\]\s*(\d+)\/(\d+)(.*)$/);
     if (health) {
-      const row = document.createElement("div"); row.className = "health-row";
+      const player = /^(You|你)$/.test(health[1].trim());
+      const summoned = /^\d+\.\s/.test(health[1].trim());
+      const row = document.createElement("div"); row.className = `health-row ${player ? "player-health" : "enemy-health"}${summoned ? " summon-health" : ""}`;
       const label = document.createElement("span"); label.textContent = health[1].trim();
       const bar = document.createElement("progress"); bar.max = Math.max(1, Number(health[3])); bar.value = Number(health[2]); bar.setAttribute("aria-label", label.textContent);
       const value = document.createElement("span"); value.textContent = `${health[2]} / ${health[3]}${health[4]}`;
       row.append(label, bar, value); $("screen").append(row); continue;
     }
     const row = document.createElement("div");
+    if (/^\s*(Summoned foes:|召唤物：)\s*$/.test(line)) {
+      row.className = "summon-heading"; row.textContent = line.trim(); $("screen").append(row); continue;
+    }
+    const critical = index > 0 && isCriticalLine(lines[index - 1]);
+    const outgoing = basicDamage(line), incoming = incomingDamage(line);
+    if (isCriticalLine(line) && (basicDamage(lines[index + 1] || "") || incomingDamage(lines[index + 1] || ""))) continue;
+    if (outgoing) { combatEvent(row, critical ? "✦" : "⚔", outgoing[1], critical ? "critical-hit" : "player-hit"); $("screen").append(row); continue; }
+    if (incoming) { combatEvent(row, critical ? "✦" : "☠", incoming[2], critical ? "critical-hit enemy-hit" : "enemy-hit", incoming[1]); $("screen").append(row); continue; }
     const divider = /^\s*[─━═+\-|░▒▓▄☠❉ ]{8,}\s*$/.test(line) && /[─━═\-]/.test(line);
     row.className = divider ? "divider" : "text-line";
     if (/❉|CHOOSE YOUR|THE GATEWAY|深渊之门|选择你的|选择冒险/.test(line)) row.classList.add("heading-line");
@@ -114,8 +141,10 @@ function render(next) {
     $("history-text").textContent = next.history;
     $("choices").replaceChildren();
     const numberedChoices = choicesFrom(next.screen);
+    const classSelection = isClassSelection(next.screen);
+    $("choices").classList.toggle("class-choices", classSelection);
     if (!next.puzzle && !next.ended) {
-      for (const [number, label] of numberedChoices) addChoice(number, label, () => send(number));
+      for (const [number, label] of numberedChoices) addChoice(number, label, () => send(number), classSelection ? "class-choice" : "");
       if (!numberedChoices.size && needsContinue(next.screen)) addChoice("", t("continue"), () => send(""));
       if (isSeedPrompt(next.screen)) {
         addChoice("", t("browseSaves"), () => send(language === "zh" ? "列表" : "LIST"));
@@ -124,7 +153,7 @@ function render(next) {
     }
     $("screen").hidden = !!next.puzzle;
     $("puzzle").hidden = !next.puzzle;
-    const requiresTyping = !numberedChoices.size || isClassSelection(next.screen);
+    const requiresTyping = !numberedChoices.size || classSelection;
     $("command-form").hidden = !!next.puzzle || next.ended || !requiresTyping;
     $("ended").hidden = !next.ended;
     $("restart").textContent = t("gateway");

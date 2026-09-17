@@ -12,12 +12,12 @@ public final class GameNodes
 
     public static List<GameNode> standard()
     {
-        return List.of(battle(), eliteBattle(), new EventNode(), new CampNode(), new ShopNode());
+        return List.of(battle(), eliteBattle(), new EventNode("Unknown Event"), new CampNode(), new ShopNode());
     }
 
     public static GameNode battle() { return new BattleNode(); }
     public static GameNode eliteBattle() { return new EliteNode(); }
-    public static List<GameNode> sideNodes() { return List.of(new EventNode(), new CampNode(), new ShopNode()); }
+    public static List<GameNode> sideNodes() { return List.of(new EventNode("Unknown Event"), new CampNode(), new ShopNode(), new EventNode("Fate Event")); }
     public static GameNode finalBattle() { return new BossNode(); }
 
     private static final class BattleNode implements GameNode
@@ -32,7 +32,9 @@ public final class GameNodes
     }
     private static final class EventNode implements GameNode
     {
-        @Override public String getLabel() { return "Unknown Event"; }
+        private final String label;
+        private EventNode(String label) { this.label = label; }
+        @Override public String getLabel() { return label; }
         @Override public boolean resolve(GameServices s, Hero h, int f, Difficulty d) { s.resolveEvent(h, f, d); return false; }
     }
     private static final class CampNode implements GameNode

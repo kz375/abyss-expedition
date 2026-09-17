@@ -98,6 +98,7 @@ public enum HeroClass
     public int getBaseAttack() { return baseAttack; }
     public int getBaseDefense() { return baseDefense; }
     public String getSkillName() { return skillName; }
+    public String getPassiveSkillName() { return passiveSkillName; }
     public String getSkillDescription() { return skillDescription; }
     public String getPassiveSkillDescription() { return passiveSkillDescription; }
     public void onBattleStart(HeroContext hero, Combatant enemy) { }

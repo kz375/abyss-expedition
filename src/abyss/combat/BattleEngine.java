@@ -144,6 +144,7 @@ public final class BattleEngine {
             return;
         }
         enemy.enterPhaseTwoIfNeeded();
+        enemy.enterPhaseThreeIfNeeded();
         enemy.enrageIfNeeded();
         if (stunned)
         {

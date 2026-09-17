@@ -67,8 +67,12 @@ public final class RegressionTests {
         }, leaving);
         FloorRoutes routes = new FloorRoutes(new int[]{1,2},0);
         ConsoleInput input = new ConsoleInput(new Scanner("3\n3\n1\n"));
-        routes.choose(input); check(routes.visited() == 1, "side node reserved");
-        check(routes.choose(input).getLabel().equals("Battle"), "visited side refused, combat stays available");
+        routes.choose(input); check(routes.visited() == 3, "choosing one random side route closes the alternatives");
+        check(routes.choose(input).getLabel().equals("Battle"), "closed random alternatives cannot block permanent combat");
+        FloorRoutes expanded = new FloorRoutes(new Random(91));
+        check(expanded.types().length == 4 && Arrays.stream(expanded.types()).distinct().count() == 4,
+                "each new floor has four distinct random side routes alongside the two permanent battles");
+        check(FloorRoutes.valid(new int[]{0, 2}, 1), "two-route legacy checkpoints remain loadable");
     }
     private static void combat() {
         Hero paladin = hero(HeroClass.PALADIN);
@@ -109,8 +113,27 @@ public final class RegressionTests {
         check(enemyHits[0] == 2 && !boss.isAlive(), "skill attacks do not summon and can finish the boss");
         Enemy sampler = Enemy.spawn(8, false, Difficulty.ULTRA_NIGHTMARE, 8, new Random(44), n -> { });
         int elites = 0;
-        for (int index = 0; index < 1000; index++) if (sampler.summonUltraNightmareMinion().isElite()) elites++;
+        Set<MonsterType> summons = EnumSet.noneOf(MonsterType.class);
+        for (int index = 0; index < 1000; index++) {
+            Enemy minion = sampler.summonUltraNightmareMinion();
+            if (minion.isElite()) elites++;
+            MonsterType type = MonsterType.fromName(minion.getName());
+            check(type != null && !type.isBoss(), "Ultra Nightmare boss never summons another boss");
+            summons.add(type);
+        }
         check(elites >= 25 && elites <= 75, "Ultra Nightmare boss summon elite rate remains near five percent");
+        check(summons.size() == 19, "Ultra Nightmare boss can summon every regular codex monster");
+        Enemy regular = Enemy.spawn(5, false, Difficulty.ADVENTURER, 8, new Random(72), n -> { });
+        Enemy elite = Enemy.spawn(5, true, Difficulty.ADVENTURER, 8, new Random(72), n -> { });
+        check(elite.getMaxHealth() > regular.getMaxHealth() && elite.getAttack() > regular.getAttack() && elite.getDefense() > regular.getDefense(),
+                "elite baseline boost strengthens health, attack, and defense");
+        Enemy phaseBoss = Enemy.spawn(8, false, Difficulty.ADVENTURER, 8, new Random(73), n -> { });
+        int baseHealth = phaseBoss.getMaxHealth(), baseAttack = phaseBoss.getAttack(), baseDefense = phaseBoss.getDefense();
+        phaseBoss.takeDamage(baseHealth - baseHealth / 4);
+        phaseBoss.enterPhaseTwoIfNeeded(); phaseBoss.enterPhaseThreeIfNeeded();
+        check(phaseBoss.isPhaseThree() && phaseBoss.getMaxHealth() == baseHealth + baseHealth * 15 / 100
+                        && phaseBoss.getAttack() >= (int) (baseAttack * 1.15) && phaseBoss.getDefense() >= (int) (baseDefense * 1.15),
+                "boss third phase raises health, attack, and defense by fifteen percent");
     }
     private static void relics() {
         for (RelicEffect relic : RelicCatalog.all()) {

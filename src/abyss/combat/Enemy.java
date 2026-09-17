@@ -3,6 +3,7 @@ package abyss.combat;
 import abyss.config.Difficulty;
 import abyss.content.EnemyTier;
 import abyss.content.EliteAffix;
+import abyss.content.MonsterType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,25 +77,27 @@ public final class Enemy implements Combatant
         if (boss)
         {
             boolean finalBoss = floor == finalFloor;
-            return new Enemy(finalBoss ? "Abyss Lord" : "Relic Guardian",
+            MonsterType monster = finalBoss ? MonsterType.ABYSS_LORD : MonsterType.RELIC_GUARDIAN;
+            return new Enemy(monster.monsterName(),
                     scaled(125 + floor * 32, difficulty.bossRankMultiplier() * difficulty.enemyHealthMultiplier()),
                     scaled(20 + floor * 4, difficulty.bossRankMultiplier() * difficulty.enemyAttackMultiplier()),
                     6 + floor, true, false, finalBoss,
                     scaled(35 + floor * 8, difficulty.rewardMultiplier()),
                     scaled(65 + floor * 18, difficulty.rewardMultiplier()),
-                    finalBoss ? EnemyBehaviors.ABYSSAL_NOVA : EnemyBehaviors.GUARDIANS_WRATH, 30,
+                    monster.behavior(), 30,
                     difficulty == Difficulty.ULTRA_NIGHTMARE, EliteAffix.NONE, random, damageDealtRecorder);
         }
         EnemyTier tier = EnemyTier.forFloor(floor);
-        String name = elite ? "Elite " + tier.randomName(random) : tier.randomName(random);
+        MonsterType monster = tier.randomMonster(random);
+        String name = elite ? "Elite " + monster.monsterName() : monster.monsterName();
         double rank = elite ? difficulty.eliteRankMultiplier() : 1.0;
         return new Enemy(name,
-                scaled(tier.getBaseHealth() + floor * 14 + random.nextInt(12), rank * difficulty.enemyHealthMultiplier()),
-                scaled(tier.getBaseAttack() + floor * 3, rank * difficulty.enemyAttackMultiplier()),
-                tier.getBaseDefense() + floor, false, elite, false,
+                scaled(tier.getBaseHealth() + monster.healthOffset() + floor * 14 + random.nextInt(12), rank * difficulty.enemyHealthMultiplier()),
+                scaled(tier.getBaseAttack() + monster.attackOffset() + floor * 3, rank * difficulty.enemyAttackMultiplier()),
+                Math.max(0, tier.getBaseDefense() + monster.defenseOffset() + floor), false, elite, false,
                 scaled(16 + floor * 6, difficulty.rewardMultiplier() * rank),
                 scaled(30 + floor * 12, difficulty.rewardMultiplier() * rank),
-                tier.getBehavior(), elite ? 20 : 12, difficulty == Difficulty.ULTRA_NIGHTMARE,
+                monster.behavior(), elite ? 20 : 12, difficulty == Difficulty.ULTRA_NIGHTMARE,
                 elite ? EliteAffix.random(random) : EliteAffix.NONE,
                 random, damageDealtRecorder);
     }
@@ -112,6 +115,7 @@ public final class Enemy implements Combatant
     public boolean isBoss() { return boss; }
     public boolean isElite() { return elite; }
     public boolean isFinalBoss() { return finalBoss; }
+    public boolean isUltraNightmareFinalBoss() { return finalBoss && ultraNightmare; }
     public EnemyBehavior getBehavior() { return behavior; }
     public int getGoldReward() { return goldReward; }
     public int getExperienceReward() { return experienceReward; }
@@ -137,6 +141,18 @@ public final class Enemy implements Combatant
         int ward = maxHealth * (boss ? 25 : elite ? 20 : 15) / 100;
         shield += ward;
         System.out.println(abyss.ui.Language.battle("Ultra Nightmare [Abyssal Ward]: ") + abyss.ui.Language.t(name) + abyss.ui.Language.battle(" gains ") + ward + abyss.ui.Language.battle(" shield."));
+    }
+
+    /** Final-boss Ultra Nightmare mechanic: one add appears for every basic attack. */
+    public Enemy summonUltraNightmareMinion()
+    {
+        if (!isUltraNightmareFinalBoss()) throw new IllegalStateException("Only the Ultra Nightmare final boss can summon minions");
+        boolean eliteMinion = random.nextInt(100) < 5;
+        Enemy minion = spawnEvent(8, eliteMinion, Difficulty.ULTRA_NIGHTMARE, random, damageDealtRecorder);
+        minion.prepareEliteAffix();
+        minion.prepareUltraNightmare();
+        minion.prepareIntent();
+        return minion;
     }
 
     public void prepareEliteAffix()

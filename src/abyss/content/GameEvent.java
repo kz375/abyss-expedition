@@ -3,6 +3,7 @@ package abyss.content;
 import abyss.combat.Hero;
 import abyss.config.Difficulty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** All random event effects. */
@@ -17,6 +18,36 @@ public enum GameEvent
     ANCIENT_LIBRARY { public void resolve(EventServices s, Hero h, int f, Difficulty d) { System.out.println(abyss.ui.Language.t("An ancient library slumbers in the dark. 1. Study combat tomes (+1 attack)  2. Meditate (+1 defense)  3. Leave")); int choice = s.readChoice(1, 3); if (choice == 1) { h.addAttack(1); System.out.println(abyss.ui.Language.t("Hours of study sharpen your blade. Attack +1.")); } else if (choice == 2) { h.addDefense(1); System.out.println(abyss.ui.Language.t("Meditation hardens your resolve. Defense +1.")); } else System.out.println(abyss.ui.Language.t("You leave the dusty shelves behind.")); } },
     WHISPERING_WELL { public void resolve(EventServices s, Hero h, int f, Difficulty d) { System.out.println(abyss.ui.Language.t("A stone well whispers your name. 1. Toss 25 gold into it  2. Leave")); if (s.readChoice(1, 2) != 1) { System.out.println(abyss.ui.Language.t("The whispers fade as you leave.")); return; } if (h.getGold() < 25) { System.out.println(abyss.ui.Language.t("You lack the coin. The whispers fade, disappointed.")); return; } h.spendGold(25); int roll = s.nextInt(100); if (roll < 45) { List<RelicEffect> unowned = s.unownedRelics(h); if (unowned.isEmpty()) { h.addAttack(2); System.out.println(abyss.ui.Language.t("The well grants +2 attack.")); } else { System.out.println(abyss.ui.Language.t("Something rises from the well...")); h.equipRelic(s.randomElement(unowned)); } } else if (roll < 70) { h.addAttack(2); System.out.println(abyss.ui.Language.t("The whispers teach you fury. Attack +2.")); } else if (roll < 85) { h.addDefense(2); System.out.println(abyss.ui.Language.t("The whispers harden your skin. Defense +2.")); } else { h.addMaxHealth(20); h.restoreHealth(20); System.out.println(abyss.ui.Language.t("Vitality surges through you. Max health +20 and 20 health restored.")); } } },
     CARD_SHARP { public void resolve(EventServices s, Hero h, int f, Difficulty d) { System.out.println(abyss.ui.Language.t("A masked card sharp offers a wager. 1. Pay 25 gold for a card  2. Leave")); if (s.readChoice(1, 2) != 1) { System.out.println(abyss.ui.Language.t("The cards vanish into the dark.")); return; } if (h.getGold() < 25) { System.out.println(abyss.ui.Language.t("Not enough gold. The card sharp laughs.")); return; } h.spendGold(25); int roll = s.nextInt(100); if (roll < 45) { int gold = s.gainGold(h, 60); System.out.println(abyss.ui.Language.t("A golden card! You receive ") + gold + abyss.ui.Language.t(" gold.")); } else if (roll < 80) { h.receivePotion(); h.addShield(20); System.out.println(abyss.ui.Language.t("A silver card grants a potion and 20 shield.")); } else { h.takeDamage(14); System.out.println(abyss.ui.Language.t("A cursed card cuts your hand. You suffer 14 damage.")); } } },
+    ORACLE { public void resolve(EventServices s, Hero h, int f, Difficulty d) {
+        System.out.println(abyss.ui.Language.t("A blind oracle traces circles in ash. 1. Foresee the next floor  2. Foresee two floors ahead  3. Leave"));
+        int choice = s.readChoice(1, 3);
+        if (choice == 3) { System.out.println(abyss.ui.Language.t("The oracle lets the ash scatter in silence.")); return; }
+        int target = f + choice;
+        System.out.println(abyss.ui.Language.t("The oracle sees Abyss Floor ") + target + abyss.ui.Language.t(": ")
+                + abyss.ui.Language.t(Prophecy.visionForFloor(target)) + ".");
+    } },
+    RELIC_CURATOR { public void resolve(EventServices s, Hero h, int f, Difficulty d) {
+        int cost = 55 + f * 10;
+        System.out.println(abyss.ui.Language.t("A relic curator unlocks a velvet case. 1. Pay ") + cost
+                + abyss.ui.Language.t(" gold to examine three relics  2. Leave"));
+        if (s.readChoice(1, 2) != 1) { System.out.println(abyss.ui.Language.t("The curator closes the case and bows.")); return; }
+        if (h.getGold() < cost) { System.out.println(abyss.ui.Language.t("Not enough gold. The curator keeps the case sealed.")); return; }
+        List<RelicEffect> remaining = new ArrayList<>(s.unownedRelics(h));
+        if (remaining.isEmpty()) { System.out.println(abyss.ui.Language.t("The curator finds no relic you do not already own.")); return; }
+        h.spendGold(cost);
+        List<RelicEffect> offers = new ArrayList<>();
+        while (offers.size() < Math.min(3, remaining.size())) offers.add(remaining.remove(s.nextInt(remaining.size())));
+        System.out.println(abyss.ui.Language.t("Choose one relic from the curator's case:"));
+        for (int index = 0; index < offers.size(); index++) System.out.println("  " + (index + 1) + ". "
+                + abyss.ui.Language.t(offers.get(index).getName()) + " - " + abyss.ui.Language.t(offers.get(index).getDescription()));
+        h.equipRelic(offers.get(s.readChoice(1, offers.size()) - 1));
+    } },
+    RIFT_GATE { public void resolve(EventServices s, Hero h, int f, Difficulty d) {
+        System.out.println(abyss.ui.Language.t("A rift gate hums with an elite presence. 1. Enter the rift  2. Leave"));
+        if (s.readChoice(1, 2) != 1) { System.out.println(abyss.ui.Language.t("The rift folds shut behind you.")); return; }
+        System.out.println(abyss.ui.Language.t("You step through the rift. An elite guardian is waiting."));
+        s.resolveBattle(h, f, true, d);
+    } },
     MYSTERIOUS_STALKER { public void resolve(EventServices s, Hero h, int f, Difficulty d) { s.resolveMechanismEncounter(h, f, d); } };
 
     public abstract void resolve(EventServices services, Hero hero, int floor, Difficulty difficulty);
@@ -30,7 +61,7 @@ public enum GameEvent
         }
         GameEvent[] regularEvents = {
                 ANCIENT_SHRINE, LOCKED_CHEST, WANDERING_HEALER, MYSTIC_SPRING, TRAPPED_ADVENTURER,
-                DICE_GAMBLER, ANCIENT_LIBRARY, WHISPERING_WELL, CARD_SHARP};
+                DICE_GAMBLER, ANCIENT_LIBRARY, WHISPERING_WELL, CARD_SHARP, ORACLE, RELIC_CURATOR, RIFT_GATE};
         regularEvents[services.nextInt(regularEvents.length)].resolve(services, hero, floor, difficulty);
     }
 }

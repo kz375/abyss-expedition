@@ -87,11 +87,13 @@ public final class WebTests {
             client = browser(); check(call("/api/session", "").statusCode() == 200, "second browser starts");
             String isolated = ready();
             check(isolated.contains("No active expedition") && !isolated.contains("424242"), "players cannot see each other's archives");
-            choose("5"); String chinese = choose("2");
+            choose("6"); String chinese = choose("2");
             check(chinese.contains("深渊之门"), "Chinese language supported");
             check(!chinese.contains("THE GATEWAY") && !chinese.contains("Language /"), "Chinese history excludes English and bilingual labels");
-            choose("5"); String english = choose("1");
-            check(!english.contains("深渊之门") && !english.contains("简体中文"), "English history excludes Chinese");
+            choose("6"); String english = choose("1");
+            // The language's own native name intentionally remains 简体中文 in every UI language.
+            check(!english.contains("深渊之门") && !english.replace("简体中文", "").matches("(?s).*?[\\u3400-\\u9fff].*"),
+                    "English history excludes Chinese except the native language name");
             client = playerOne; check(ready().contains("\"language\":\"en\""), "language isolated across JVMs");
             check(call("/api/pause", "").statusCode() == 200, "pause shuts down safely");
             check(Arrays.equals(checkpoint, Files.readAllBytes(save)), "pause does not rewrite checkpoint");

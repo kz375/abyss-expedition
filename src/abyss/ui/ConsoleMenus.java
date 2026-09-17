@@ -16,9 +16,11 @@ public final class ConsoleMenus {
             System.out.println("  [1]  " + (save == null ? Language.t("Begin expedition") : Language.t("Continue expedition")));
             System.out.println(Language.t("  [2]  Load save / enter seed  / LIST to browse archives"));
             int achievementChoice = 3;
-            int exitChoice = 4;
+            int codexChoice = 4;
+            int exitChoice = 5;
             System.out.println("  [" + achievementChoice + Language.t("]  Achievements         / ") + book.unlocked().size() + Language.t(" of ")
                     + abyss.achievement.Achievement.values().length + Language.t(" unlocked"));
+            System.out.println("  [" + codexChoice + "]  " + Language.t("Monster Codex"));
             System.out.println("  [" + exitChoice + Language.t("]  Leave the abyss\n"));
             int languageChoice = exitChoice + 1;
             System.out.println("  [" + languageChoice + "]  " + Language.t("Language") + "  ·  " + (Language.isChinese() ? "中文" : "English"));
@@ -26,14 +28,16 @@ public final class ConsoleMenus {
             int choice = input.readChoice(1,languageChoice);
             if (choice == languageChoice) {
                 ConsolePresentation.section(Language.t("Language"));
-                System.out.println(Language.isChinese() ? "  [1] 英文\n  [2] 简体中文" : "  [1] English\n  [2] Simplified Chinese");
+                // Keep the Chinese language name in Chinese in both interfaces.
+                System.out.println(Language.isChinese() ? "  [1] 英文\n  [2] 简体中文" : "  [1] English\n  [2] 简体中文");
                 Language.select(input.readChoice(1,2) == 2);
                 ConsolePresentation.printTitle();
                 continue;
             }
             if (choice == exitChoice) return 4;
-            if (choice != achievementChoice) return choice;
-            ConsoleAchievements.print(book, false);
+            if (choice != achievementChoice && choice != codexChoice) return choice;
+            if (choice == achievementChoice) ConsoleAchievements.print(book, false);
+            else ConsoleMonsterCodex.print(book);
             System.out.print(Language.t("  Press Enter to return to the gateway..."));
             input.nextLine();
         }

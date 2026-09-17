@@ -29,7 +29,7 @@ public final class RegressionTests {
         PrintStream output = System.out;
         try (PrintStream quiet = new PrintStream(OutputStream.nullOutputStream())) {
             System.setOut(quiet);
-            shop(); combat(); damage(); relics(); saves(saveDir); puzzle(); achievements(); gameFlow(saveDir); seededSaves(saveDir); languages();
+            shop(); combat(); ultraNightmareBoss(); damage(); relics(); saves(saveDir); puzzle(); achievements(); gameFlow(saveDir); seededSaves(saveDir); languages();
         } finally { System.setOut(output); }
         output.println("PASS: " + checks + " regression assertions. Isolated saves: " + saveDir);
     }
@@ -48,6 +48,14 @@ public final class RegressionTests {
         }, hero);
         check(hero.getGold() == 950, "shop charges exactly 18+32+35");
         check(hero.getPotions() == 3 && hero.getAttack() == 34 && hero.getDefense() == 14, "three purchases apply once");
+        Hero nightmareShopper = new Hero("Nightmare", HeroClass.WARRIOR, Difficulty.NIGHTMARE, new Random(17), NO_DAMAGE, new RunStatistics());
+        nightmareShopper.addGold(1000);
+        Locations.visitShop(new LocationServices() { public int nextInt(int bound) { return 0; } public int readChoice(int min, int max) { return 1; } }, nightmareShopper);
+        check(nightmareShopper.getAttack() == 36 && nightmareShopper.getDefense() == 16, "Nightmare shop upgrades grant +4 attack and defense");
+        Hero ultraShopper = new Hero("Ultra", HeroClass.WARRIOR, Difficulty.ULTRA_NIGHTMARE, new Random(17), NO_DAMAGE, new RunStatistics());
+        ultraShopper.addGold(1000);
+        Locations.visitShop(new LocationServices() { public int nextInt(int bound) { return 0; } public int readChoice(int min, int max) { return 1; } }, ultraShopper);
+        check(ultraShopper.getAttack() == 124 && ultraShopper.getDefense() == 50, "Ultra Nightmare shop upgrades grant +6 attack and defense");
         Hero leaving = hero(HeroClass.WARRIOR);
         final int[] visits = {0};
         Locations.visitShop(new LocationServices() {
@@ -83,6 +91,26 @@ public final class RegressionTests {
         Hero mage = hero(HeroClass.MAGE);
         mage.startSkillCooldown(); check(mage.getSkillCooldown() == 1, "mage base cooldown");
         mage.decrementSkillCooldown(); check(mage.getSkillCooldown() == 0, "cooldown decrements");
+    }
+    private static void ultraNightmareBoss() {
+        RunStatistics stats = new RunStatistics();
+        int[] heroHits = {0}, enemyHits = {0};
+        CombatResolver resolver = new CombatResolver() {
+            public int hitEnemy(HeroContext hero, Enemy target, double multiplier) {
+                int damage = enemyHits[0]++ == 0 ? 1 : 100000;
+                target.takeDamage(damage); return damage;
+            }
+            public int hitHero(HeroContext hero, Enemy attacker, double multiplier) { heroHits[0]++; return 0; }
+        };
+        Hero hero = new Hero("Mechanic", HeroClass.WARRIOR, Difficulty.ULTRA_NIGHTMARE, new Random(21), resolver, stats);
+        Enemy boss = Enemy.spawn(8, false, Difficulty.ULTRA_NIGHTMARE, 8, new Random(9), stats::addDamageDealt);
+        new BattleEngine((minimum, maximum) -> stats.getTotalTurns() == 1 ? 1 : 2, stats).battle(hero, boss);
+        check(heroHits[0] >= 2, "Ultra Nightmare boss basic attack summons a foe that joins the same enemy turn");
+        check(enemyHits[0] == 2 && !boss.isAlive(), "skill attacks do not summon and can finish the boss");
+        Enemy sampler = Enemy.spawn(8, false, Difficulty.ULTRA_NIGHTMARE, 8, new Random(44), n -> { });
+        int elites = 0;
+        for (int index = 0; index < 1000; index++) if (sampler.summonUltraNightmareMinion().isElite()) elites++;
+        check(elites >= 25 && elites <= 75, "Ultra Nightmare boss summon elite rate remains near five percent");
     }
     private static void relics() {
         for (RelicEffect relic : RelicCatalog.all()) {
@@ -181,14 +209,14 @@ public final class RegressionTests {
         return output;
     }
     private static void gameFlow(Path directory) throws Exception {
-        String menu = launch(directory,"3\n\n4\n");
+        String menu = launch(directory,"3\n\n5\n");
         check(menu.contains("[2]  Load save / enter seed"),"seed restore entry always visible without current checkpoint");
         check(menu.contains("CHRONICLE OF THE ABYSS") && !SaveManager.hasSave(), "view achievements and exit without starting a game");
         String start=launch(directory,"1\n12345\nFlowTest\n1\n1\n");
         check(start.contains("Checkpoint saved")&&SaveManager.hasSave(),"new game checkpoint exists before first battle");
         SaveData first=SaveManager.load().orElseThrow();
         byte[] beforeMenu = Files.readAllBytes(directory.resolve("abyss-expedition.save"));
-        launch(directory,"3\n\n4\n");
+        launch(directory,"3\n\n5\n");
         check(Arrays.equals(beforeMenu,Files.readAllBytes(directory.resolve("abyss-expedition.save"))), "home viewing and quitting preserves checkpoint bytes");
         String resumed=launch(directory,"1\n");
         check(resumed.contains("Checkpoint restored"),"real entry point continues");
@@ -201,11 +229,11 @@ public final class RegressionTests {
         RunStatistics stats=new RunStatistics(); stats.setFloorReached(8);
         SaveManager.save(SaveData.capture(8,Difficulty.ADVENTURER,dying,stats,new Random(1),false));
         String death=launch(directory,"1\n" + "1\n".repeat(20));
-        check(death.contains("You fell in the abyss")&&!SaveManager.hasSave(),"death clears checkpoint: " + death);
+        check(death.contains("You fell in the abyss") && death.contains("Thank you for venturing into the abyss.") && !SaveManager.hasSave(),"death clears checkpoint: " + death);
         Hero winning=hero(HeroClass.WARRIOR); winning.addAttack(10000);
         SaveManager.save(SaveData.capture(8,Difficulty.ADVENTURER,winning,stats,new Random(1),false));
         String victory=launch(directory,"1\n1\n1\n");
-        check(victory.contains("You claim the Star Relic")&&!SaveManager.hasSave(),"victory clears checkpoint");
+        check(victory.contains("You claim the Star Relic") && victory.contains("Thank you for venturing into the abyss.") && !SaveManager.hasSave(),"victory clears checkpoint");
         var profile = new abyss.achievement.AchievementBook(directory);
         check(profile.unlocked().contains(abyss.achievement.Achievement.STAR_BEARER), "real victory persists achievement after run save deletion");
         check(victory.contains("CHRONICLE OF THE ABYSS") && victory.contains("Star Bearer  NEW"), "ending displays newly earned achievement");
@@ -237,6 +265,12 @@ public final class RegressionTests {
         check(reloaded.unlocked().size()==10, "all statistic-based feats unlock at thresholds");
         reloaded.unlock(abyss.achievement.Achievement.TWIN_CORES); reloaded.save();
         check(new abyss.achievement.AchievementBook(dir).unlocked().size()==11, "trial achievement persists separately");
+        reloaded.recordMonster("Elite Cave Bat"); reloaded.recordMonster("Cave Bat"); reloaded.recordMonster("Abyss Lord"); reloaded.save();
+        var codex = new abyss.achievement.AchievementBook(dir);
+        check(codex.monsterKillCount("Cave Bat") == 2 && codex.monsterKillCount("Abyss Lord") == 1,
+                "monster codex records base and boss kill counts permanently");
+        check(abyss.content.MonsterType.values().length == 21 && abyss.content.MonsterType.fromName("Elite Cave Bat") != null,
+                "expanded monster roster has stable codex identifiers");
         try { reloaded.unlocked().clear(); check(false,"immutable achievement snapshot"); }
         catch(UnsupportedOperationException expected) { check(true,"immutable achievement snapshot"); }
         Path broken = Files.createTempDirectory("abyss-achievement-corrupt-");
@@ -319,7 +353,7 @@ public final class RegressionTests {
 
     private static void languages() throws Exception {
         Path dir=Files.createTempDirectory("abyss-language-audit-");
-        String chinese=launch(dir,"5\n2\n3\n\n1\n333\nWarrior\n1\n1\n5\n");
+        String chinese=launch(dir,"6\n2\n3\n\n1\n333\nWarrior\n1\n1\n5\n");
         check(chinese.contains("深渊之门") && chinese.contains("成就图鉴"),"home switches immediately to Chinese");
         check(chinese.contains("深渊成就录") && chinese.contains("初战告捷"),"achievement titles and descriptions translated");
         check(chinese.contains("选择你的角色") && chinese.contains("每场战斗开始时获得 60 护盾"),"class descriptions translated");
@@ -327,21 +361,21 @@ public final class RegressionTests {
         check(chinese.contains("Warrior  /  战士"),"user name remains untouched while class display is translated");
         Path archive=dir.resolve("expeditions/333.save");
         byte[] snapshot=Files.readAllBytes(archive);
-        String next=launch(dir,"4\n");
+        String next=launch(dir,"5\n");
         check(next.contains("深渊之门") && next.contains("继续冒险"),"language preference persists on next launch");
-        String english=launch(dir,"5\n1\n4\n");
+        String english=launch(dir,"6\n1\n5\n");
         check(english.contains("THE GATEWAY") && english.contains("Continue expedition"),"switch back to English works");
         check(Arrays.equals(snapshot,Files.readAllBytes(archive)),"language switching never changes seed archive bytes");
         String resume=launch(dir,"2\nLIST\n333\n5\n");
         check(resume.contains("Checkpoint restored") && resume.contains("Warrior  /  Warrior"),"Chinese-created save restores normally in English");
         check(Arrays.equals(snapshot,Files.readAllBytes(archive)),"cross-language restore preserves full checkpoint");
-        String hidden=launch(dir,"5\n2\n2\n334\nHidden\n1\nkz\n6\n5\n");
+        String hidden=launch(dir,"6\n2\n2\n334\nHidden\n1\nkz\n6\n5\n");
         check(hidden.contains("造物主已显现") && hidden.contains("Hidden  /  造物主"),"KZ hidden input works in Chinese");
-        check(launch(dir,"3\n\n4\n").contains("成就进度"),"Chinese achievement menu remains navigable with existing save");
+        check(launch(dir,"3\n\n5\n").contains("成就进度"),"Chinese achievement menu remains navigable with existing save");
         Files.writeString(dir.resolve("language.properties"),"language=" + "\\" + "uZZZZ");
-        check(launch(dir,"4\n").contains("THE GATEWAY"),"damaged language settings fall back without blocking game");
+        check(launch(dir,"5\n").contains("THE GATEWAY"),"damaged language settings fall back without blocking game");
         Files.delete(dir.resolve("abyss-expedition.save"));
-        String archiveOnly=launch(dir,"5\n2\n2\nLIST\n333\n5\n");
+        String archiveOnly=launch(dir,"6\n2\n2\nLIST\n333\n5\n");
         check(archiveOnly.contains("[2]  读取存档／输入种子"),"restore entry visible in Chinese without latest shortcut");
         check(archiveOnly.contains("存档已恢复") && !archiveOnly.contains("请输入冒险者名字"),"home option two restores retained archive even without active save");
         check(Arrays.equals(snapshot,Files.readAllBytes(archive)),"archive-only restore preserves full progress");

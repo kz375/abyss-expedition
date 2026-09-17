@@ -33,7 +33,7 @@ public final class Locations
             for (int index = 0; index < stock.size(); index++)
             {
                 ShopItem item = stock.get(index);
-                System.out.println("  " + (index + 1) + ". " + abyss.ui.Language.t(item.label) + " (" + item.cost + abyss.ui.Language.t(" gold, ") + abyss.ui.Language.t(item.description) + ")");
+                System.out.println("  " + (index + 1) + ". " + abyss.ui.Language.t(item.label) + " (" + item.cost + abyss.ui.Language.t(" gold, ") + item.description(hero) + ")");
             }
             int leave = stock.size() + 1;
             System.out.println("  " + leave + abyss.ui.Language.t(". Leave"));
@@ -86,8 +86,14 @@ public final class Locations
     private enum ShopItem
     {
         POTION("Potion", 18, "gain 1 potion") { @Override void apply(Hero hero) { hero.receivePotion(); System.out.println(abyss.ui.Language.t("You received a potion.")); } },
-        WHETSTONE("Whetstone", 32, "attack +2") { @Override void apply(Hero hero) { hero.addAttack(2); System.out.println(abyss.ui.Language.t("Your weapon is sharper. Attack +2.")); } },
-        CHAINMAIL("Chainmail", 35, "defense +2") { @Override void apply(Hero hero) { hero.addDefense(2); System.out.println(abyss.ui.Language.t("Your armor is reinforced. Defense +2.")); } },
+        WHETSTONE("Whetstone", 32, "attack +2") { @Override void apply(Hero hero) {
+            int gain = highDifficultyStatGain(hero); hero.addAttack(gain);
+            System.out.println(statMessage(true, gain));
+        } @Override String description(Hero hero) { return statDescription(true, hero); } },
+        CHAINMAIL("Chainmail", 35, "defense +2") { @Override void apply(Hero hero) {
+            int gain = highDifficultyStatGain(hero); hero.addDefense(gain);
+            System.out.println(statMessage(false, gain));
+        } @Override String description(Hero hero) { return statDescription(false, hero); } },
         BARRIER("Barrier", 24, "gain 25 shield") { @Override void apply(Hero hero) { hero.addShield(25); System.out.println(abyss.ui.Language.t("A magical barrier grants 25 shield.")); } },
         VITALITY_TONIC("Vitality Tonic", 38, "max health +12; restore 20") { @Override void apply(Hero hero) { hero.addMaxHealth(12); hero.restoreHealth(20); System.out.println(abyss.ui.Language.t("Vitality flows through you. Max health +12 and restore 20 health.")); } },
         SMOKE_BOMB("Smoke Bomb", 28, "gain 1 potion and 12 shield") { @Override void apply(Hero hero) { hero.receivePotion(); hero.addShield(12); System.out.println(abyss.ui.Language.t("You pack a smoke bomb: gain a potion and 12 shield.")); } };
@@ -104,5 +110,29 @@ public final class Locations
         }
 
         abstract void apply(Hero hero);
+
+        String description(Hero hero) { return abyss.ui.Language.t(description); }
+
+        private static int highDifficultyStatGain(Hero hero) {
+            return switch (hero.getDifficulty()) {
+                case NIGHTMARE -> 4;
+                case ULTRA_NIGHTMARE -> 6;
+                default -> 2;
+            };
+        }
+
+        private static String statDescription(boolean attack, Hero hero) {
+            int gain = highDifficultyStatGain(hero);
+            return abyss.ui.Language.isChinese() ? (attack ? "攻击 +" : "防御 +") + gain
+                    : (attack ? "attack +" : "defense +") + gain;
+        }
+
+        private static String statMessage(boolean attack, int gain) {
+            if (abyss.ui.Language.isChinese()) return attack
+                    ? "你的武器更加锋利。攻击 +" + gain + "。"
+                    : "你的护甲得到强化。防御 +" + gain + "。";
+            return attack ? "Your weapon is sharper. Attack +" + gain + "."
+                    : "Your armor is reinforced. Defense +" + gain + ".";
+        }
     }
 }

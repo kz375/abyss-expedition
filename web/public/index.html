@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#101614">
-  <meta name="description" content="深渊远征。深入八层地下城，让每一步成为你的传奇。">
+  <meta name="description" content="深渊远征 深入八层地下城，让每一步成为你的传奇">
   <title>深渊远征</title>
   <link rel="icon" href="/mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
@@ -16,8 +16,9 @@
     <div class="top-actions"><span id="connection" role="status">正在连接…</span><button id="shell-language" class="quiet" type="button" data-i18n="switchLanguage" disabled>切换语言</button></div>
   </header>
   <main>
+    <div class="abyss-ornament" aria-hidden="true"><span>☾</span><span>✦</span><span>☾</span></div>
     <section class="intro">
-      <div><p class="eyebrow" data-i18n="eyebrow">来自深渊的冒险纪事</p><h1 data-i18n="title">深渊之门</h1><p class="subtitle" data-i18n="subtitle">八层深渊。一段属于你的传奇。</p></div>
+      <div><p class="eyebrow" data-i18n="eyebrow">来自深渊的冒险纪事</p><h1 data-i18n="title">深渊之门</h1><p class="subtitle" data-i18n="subtitle">八层深渊 一段属于你的传奇</p></div>
       <div class="seal" aria-hidden="true"><span>Ⅷ</span><small data-i18n="seal">深入深渊</small></div>
     </section>
     <div class="workspace">
@@ -36,12 +37,12 @@
         <form id="command-form" autocomplete="off">
           <label for="command" data-i18n="inputLabel">你的行动</label>
           <div class="input-row"><span aria-hidden="true">›</span><input id="command" name="command" maxlength="2000" placeholder="输入选项、名字或种子…" aria-describedby="input-hint"><button id="submit" class="primary" type="submit" data-i18n="send" disabled>确定 ↵</button></div>
-          <p id="input-hint" data-i18n="inputHint">点击选项即可行动；需要继续时，留空按确定。</p>
+          <p id="input-hint" data-i18n="inputHint">只有名字、种子和隐藏口令需要输入。</p>
         </form>
-        <div id="ended" class="ended" hidden><p data-i18n="ended">这段旅程已告一段落，你的存档与成就仍在。</p><button id="restart" class="primary" data-i18n="gateway">返回主页</button></div>
+        <div id="ended" class="ended" hidden><p data-i18n="ended">这段旅程已告一段落，你的存档与成就仍在。</p><p class="thanks" data-i18n="thanks">感谢你踏入深渊</p><button id="restart" class="primary" data-i18n="gateway">返回主页</button></div>
       </section>
       <aside>
-        <section class="side-card"><p class="eyebrow" data-i18n="fieldNotes">远征指南</p><h2 data-i18n="supplies">行囊与记录</h2><p data-i18n="saveNote">进度会在游戏检查点自动保存。刷新页面可继续当前会话，服务重启后从最近检查点恢复。</p><a href="/api/backup" class="side-action" id="backup" data-i18n="backup">↓ 下载存档备份</a><button id="pause" class="side-action" data-i18n="pause">⏸ 暂停并返回</button></section>
+        <section class="side-card"><p class="eyebrow" data-i18n="fieldNotes">远征指南</p><h2 data-i18n="supplies">行囊与记录</h2><p data-i18n="saveNote">进度会在游戏检查点自动保存。刷新页面可继续当前会话，服务重启后从最近检查点恢复。</p><p class="release-note"><span data-i18n="versionLabel">版本</span> <strong data-i18n="releaseVersion">1.1.7</strong><br><span data-i18n="releaseNote">怪兽图鉴、深渊界面与结局感谢更新</span></p><a href="/api/backup" class="side-action" id="backup" data-i18n="backup">↓ 下载存档备份</a><button id="pause" class="side-action" data-i18n="pause">⏸ 暂停并返回</button></section>
         <section class="side-card"><p class="eyebrow" data-i18n="archive">深渊档案</p><h2 data-i18n="history">冒险记录</h2><p data-i18n="historyNote">回看本次会话中的战斗、选择与收获。</p><button id="show-history" class="side-action" data-i18n="openHistory">打开手记 →</button><button id="import-backup" class="side-action" data-i18n="importBackup">↑ 导入存档备份</button><input id="backup-file" type="file" accept=".zip,application/zip" hidden></section>
         <div class="footnote"><span class="spark">✧</span><p data-i18n="storageNote">存档属于当前浏览器。清除网站数据、使用无痕模式或更换设备前，请下载备份。种子用于查找本档案内的进度，不是跨设备存档码。</p></div>
       </aside>

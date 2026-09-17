@@ -41,30 +41,42 @@ try {
     throw new Error(`Timed out: ${expression}\n${await evaluate('document.body.innerText')}`);
   };
   const send = async value => {
-    await waitFor('document.getElementById("submit").disabled === false');
-    await evaluate(`document.getElementById('command').value = ${JSON.stringify(value)}; document.getElementById('command-form').requestSubmit();`);
-    await waitFor('document.getElementById("submit").disabled === false || !document.getElementById("ended").hidden');
+    const revision = await evaluate('state?.revision');
+    if (await evaluate('document.getElementById("command-form").hidden')) {
+      const clicked = await evaluate(`(() => {
+        const button = [...document.querySelectorAll('#choices button')].find(item => item.querySelector('.number')?.textContent === ${JSON.stringify(value)});
+        if (!button) return false; button.click(); return true;
+      })()`);
+      assert.equal(clicked, true, `clickable choice ${value} exists`);
+    } else {
+      await waitFor('document.getElementById("submit").disabled === false');
+      await evaluate(`document.getElementById('command').value = ${JSON.stringify(value)}; document.getElementById('command-form').requestSubmit();`);
+    }
+    await waitFor(`(state?.ready && !busy && state?.revision !== ${JSON.stringify(revision)}) || !document.getElementById("ended").hidden`);
   };
   await command('Runtime.enable'); await command('Page.enable');
   await command('Emulation.setDeviceMetricsOverride', {width:1280,height:960,deviceScaleFactor:1,mobile:false});
   await command('Page.navigate', {url:origin});
-  await waitFor('document.getElementById("choices")?.children.length === 5 && !document.getElementById("submit").disabled');
-  assert.equal(await evaluate('document.querySelectorAll(".choice").length'), 5, 'main menu buttons');
+  await waitFor('document.getElementById("choices")?.children.length === 6 && !document.getElementById("submit").disabled');
+  assert.equal(await evaluate('document.querySelectorAll(".choice").length'), 6, 'main menu buttons including the monster codex');
+  assert.equal(await evaluate('document.getElementById("choices").innerText.includes("Monster Codex")'), true, 'Monster Codex is selectable from the gateway');
+  assert.equal(await evaluate('document.getElementById("command-form").hidden'), true, 'numbered gateway choices do not require typing');
   assert.equal(/[\u3400-\u9fff]/.test(await evaluate('document.body.innerText')), false, 'English screen contains no Chinese UI');
   await evaluate('document.getElementById("shell-language").click()');
   await waitFor('document.querySelectorAll(".choice").length === 2 && !document.getElementById("submit").disabled');
-  assert.equal(/[\u3400-\u9fff]/.test(await evaluate('document.body.innerText')), false, 'English language chooser stays English');
+  assert.equal(await evaluate('document.body.innerText.includes("简体中文")'), true, 'Chinese language name stays Chinese');
+  assert.equal(await evaluate('document.body.innerText.includes("Simplified Chinese")'), false, 'English translation does not replace the Chinese language name');
   await send('2');
   await waitFor('document.getElementById("screen").innerText.includes("深渊之门")');
   assert.equal(/[A-Za-z]{3,}/.test(await evaluate('document.body.innerText')), false, 'Chinese page, branding and menu contain no English UI');
   await evaluate('document.getElementById("show-history").click()');
   assert.equal(/[A-Za-z]{3,}/.test(await evaluate('document.getElementById("history-text").innerText')), false, 'Chinese journal contains only Chinese history');
   await evaluate('document.getElementById("close-history").click()');
-  await send('5'); await send('1');
-  assert.equal(/[\u3400-\u9fff]/.test(await evaluate('document.body.innerText')), false, 'switching back synchronizes full English page');
-  await send('5'); await send('2');
+  await send('6'); await send('1');
+  assert.equal(await evaluate('document.documentElement.lang'), 'en', 'switching back synchronizes the active English interface');
+  await send('6'); await send('2');
   await command('Page.reload');
-  await waitFor('document.documentElement.lang === "zh-CN" && document.querySelectorAll(".choice").length === 5 && !document.getElementById("submit").disabled');
+  await waitFor('document.documentElement.lang === "zh-CN" && document.querySelectorAll(".choice").length === 6 && !document.getElementById("submit").disabled');
   assert.equal(/[A-Za-z]{3,}/.test(await evaluate('document.body.innerText')), false, 'selected language survives refresh');
   const shot = await command('Page.captureScreenshot', {format:'png'});
   await writeFile(join(profile, 'desktop.png'), Buffer.from(shot.data, 'base64'));

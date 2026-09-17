@@ -14,6 +14,7 @@ public final class Hero implements HeroContext
 {
     private final String name;
     private final HeroClass heroClass;
+    private final Difficulty difficulty;
     private final Skill skill;
     private final Random random;
     private final CombatResolver resolver;
@@ -31,6 +32,7 @@ public final class Hero implements HeroContext
     {
         this.name = name;
         this.heroClass = heroClass;
+        this.difficulty = difficulty;
         this.skill = HeroSkillCatalog.forClassName(heroClass.getName());
         this.random = random;
         this.resolver = resolver;
@@ -53,6 +55,7 @@ public final class Hero implements HeroContext
     @Override public boolean isPlayer() { return true; }
     @Override public List<StatusEffect> getStatuses() { return statuses; }
     public HeroClass getHeroClass() { return heroClass; }
+    public Difficulty getDifficulty() { return difficulty; }
     public Skill getSkill() { return skill; }
     @Override public int getLevel() { return level; }
     @Override public int getCritBonus() { return critBonus; }

@@ -12,6 +12,7 @@ public final class AchievementBook {
     private final Path file;
     private final EnumSet<Achievement> unlocked = EnumSet.noneOf(Achievement.class);
     private final EnumSet<Achievement> recent = EnumSet.noneOf(Achievement.class);
+    private final Map<String, Integer> monsterKills = new HashMap<>();
     private final Properties properties = new Properties();
     private boolean writable = true;
     private boolean dirty;
@@ -23,6 +24,17 @@ public final class AchievementBook {
             properties.load(reader);
             for (Achievement a : Achievement.values())
                 if ("true".equals(properties.getProperty(a.name()))) unlocked.add(a);
+            for (String key : properties.stringPropertyNames()) {
+                if (!key.startsWith("monster.")) continue;
+                String value = properties.getProperty(key);
+                // Profiles from the first codex version stored true/false; retain each old discovery as one kill.
+                try {
+                    int kills = "true".equals(value) ? 1 : Integer.parseInt(value);
+                    if (kills > 0) monsterKills.put(key.substring(8), kills);
+                } catch (NumberFormatException ignored) {
+                    // An unknown third-party codex field cannot invalidate achievements or the whole profile.
+                }
+            }
         } catch (IOException | IllegalArgumentException e) {
             writable = false;
             System.out.println(abyss.ui.Language.t("Achievement profile could not be read. Existing file preserved; this session is read-only."));
@@ -30,6 +42,17 @@ public final class AchievementBook {
     }
     public Set<Achievement> unlocked() { return Set.copyOf(unlocked); }
     public Set<Achievement> recent() { return Set.copyOf(recent); }
+    public Set<String> defeatedMonsters() { return Set.copyOf(monsterKills.keySet()); }
+    public boolean hasDefeatedMonster(String name) { return monsterKillCount(name) > 0; }
+    public int monsterKillCount(String name) { return monsterKills.getOrDefault(name, 0); }
+
+    /** Monster names are stable content IDs; elite variants share the base roster entry. */
+    public void recordMonster(String name) {
+        String baseName = name.startsWith("Elite ") ? name.substring(6) : name;
+        int total = monsterKills.merge(baseName, 1, Integer::sum);
+        properties.setProperty("monster." + baseName, Integer.toString(total));
+        dirty = true;
+    }
 
     public void unlock(Achievement achievement) {
         if (unlocked.add(achievement)) {

@@ -2,8 +2,8 @@
 const $ = id => document.getElementById(id);
 let state = null, busy = false, connected = false, paused = false, language = "zh", pollTimer, generation = 0;
 const words = {
-  zh: {title:"深渊之门",subtitle:"八层深渊。一段属于你的传奇。",chronicle:"远征手记",loading:"火炬正在点燃，深渊之门即将开启…",trial:"双核试炼",puzzleRule:"推箱子撞动守卫，让守卫击碎两个金色核心。WASD / 方向键移动，也可以点击下方方向按钮。",legendPlayer:"◆ 你",legendBox:"▣ 箱子",legendMonster:"♜ 守卫",legendCore:"✦ 核心",quitTrial:"放弃试炼",return:"返回远征",inputLabel:"你的行动",send:"确定 ↵",inputHint:"点击选项即可行动；需要继续时，留空按确定。",ended:"这段旅程已告一段落，你的存档与成就仍在。",gateway:"返回主页",supplies:"行囊与记录",saveNote:"进度会在游戏检查点自动保存。刷新页面可继续当前会话，服务重启后从最近检查点恢复。",backup:"↓ 下载存档备份",pause:"⏸ 暂停并返回",history:"冒险记录",historyNote:"回看本次会话中的战斗、选择与收获。",openHistory:"打开手记 →",storageNote:"存档属于当前浏览器。清除网站数据、使用无痕模式或更换设备前，请下载备份。种子用于查找本档案内的进度，不是跨设备存档码。",footer:"每一次远征，都值得被铭记。",online:"已连接",working:"处理中…",offline:"连接已中断",placeholder:"输入选项、名字或种子…",pauseConfirm:"返回主页后，从最近检查点继续。当前未保存的战斗操作会丢失，确定吗？",quitConfirm:"放弃会按原规则结算失败惩罚，确定吗？",victory:"双核已破碎 · 试炼胜利",defeat:"步数已用尽 · 试炼失败",reconnect:"重新连接",network:"连接暂时中断。恢复连接后会同步当前回合；请勿反复提交。",busy:"服务器暂不可用，请稍后点击重新连接。"},
-  en: {title:"The Gateway",subtitle:"Eight floors below. A legend of your own.",chronicle:"Expedition journal",loading:"Lighting the torches. The gateway is opening…",trial:"The Twin Cores",puzzleRule:"Push a crate into the guardian to move it onto both golden cores. Use WASD, arrow keys, or the buttons below.",legendPlayer:"◆ You",legendBox:"▣ Crate",legendMonster:"♜ Guardian",legendCore:"✦ Core",quitTrial:"Abandon trial",return:"Return to expedition",inputLabel:"Your next move",send:"Enter ↵",inputHint:"Choose an action, or type a response. Send an empty line to continue.",ended:"This chapter has ended. Your checkpoints and achievements remain.",gateway:"Return to gateway",supplies:"Provisions & records",saveNote:"Progress saves at game checkpoints. Refresh to rejoin the current session; after a server restart, resume from the last checkpoint.",backup:"↓ Download save backup",pause:"⏸ Pause & return",history:"Your chronicle",historyNote:"Revisit the battles, choices, and discoveries of this session.",openHistory:"Open journal →",storageNote:"Your archive belongs to this browser. Download a backup before clearing site data, using private browsing, or changing devices. A seed looks up progress in this archive; it is not a cross-device save code.",footer:"Every descent writes another legend.",online:"Connected",working:"Working…",offline:"Disconnected",placeholder:"Option, name, or seed…",pauseConfirm:"Return to the gateway and resume from the last checkpoint? Unsaved combat actions will be lost.",quitConfirm:"Abandon the trial and take the normal failure penalty?",victory:"Both cores shattered · Victory",defeat:"No moves left · Defeat",reconnect:"Reconnect",network:"Connection interrupted. Reconnecting will synchronize the current turn; do not repeatedly submit.",busy:"Server unavailable. Please reconnect in a moment."}
+  zh: {title:"深渊之门",subtitle:"八层深渊 一段属于你的传奇",chronicle:"远征手记",loading:"火炬正在点燃，深渊之门即将开启…",trial:"双核试炼",puzzleRule:"推箱子撞动守卫，让守卫击碎两个金色核心。WASD / 方向键移动，也可以点击下方方向按钮。",legendPlayer:"◆ 你",legendBox:"▣ 箱子",legendMonster:"♜ 守卫",legendCore:"✦ 核心",quitTrial:"放弃试炼",return:"返回远征",inputLabel:"你的行动",send:"确定 ↵",inputHint:"只有名字、种子和隐藏口令需要输入。",ended:"这段旅程已告一段落，你的存档与成就仍在。",gateway:"返回主页",supplies:"行囊与记录",saveNote:"进度会在游戏检查点自动保存。刷新页面可继续当前会话，服务重启后从最近检查点恢复。",backup:"↓ 下载存档备份",pause:"⏸ 暂停并返回",history:"冒险记录",historyNote:"回看本次会话中的战斗、选择与收获。",openHistory:"打开手记 →",storageNote:"存档属于当前浏览器。清除网站数据、使用无痕模式或更换设备前，请下载备份。种子用于查找本档案内的进度，不是跨设备存档码。",footer:"每一次远征，都值得被铭记。",online:"已连接",working:"处理中…",offline:"连接已中断",placeholder:"输入名字、种子或隐藏口令…",pauseConfirm:"返回主页后，从最近检查点继续。当前未保存的战斗操作会丢失，确定吗？",quitConfirm:"放弃会按原规则结算失败惩罚，确定吗？",victory:"双核已破碎 · 试炼胜利",defeat:"步数已用尽 · 试炼失败",reconnect:"重新连接",network:"连接暂时中断。恢复连接后会同步当前回合；请勿反复提交。",busy:"服务器暂不可用，请稍后点击重新连接。",continue:"继续",browseSaves:"查看保留存档",randomSeed:"随机生成种子"},
+  en: {title:"The Gateway",subtitle:"Eight floors below  A legend of your own",chronicle:"Expedition journal",loading:"Lighting the torches. The gateway is opening…",trial:"The Twin Cores",puzzleRule:"Push a crate into the guardian to move it onto both golden cores. Use WASD, arrow keys, or the buttons below.",legendPlayer:"◆ You",legendBox:"▣ Crate",legendMonster:"♜ Guardian",legendCore:"✦ Core",quitTrial:"Abandon trial",return:"Return to expedition",inputLabel:"Your next move",send:"Enter ↵",inputHint:"Only a name, seed, or hidden passphrase needs typing.",ended:"This chapter has ended. Your checkpoints and achievements remain.",gateway:"Return to gateway",supplies:"Provisions & records",saveNote:"Progress saves at game checkpoints. Refresh to rejoin the current session; after a server restart, resume from the last checkpoint.",backup:"↓ Download save backup",pause:"⏸ Pause & return",history:"Your chronicle",historyNote:"Revisit the battles, choices, and discoveries of this session.",openHistory:"Open journal →",storageNote:"Your archive belongs to this browser. Download a backup before clearing site data, using private browsing, or changing devices. A seed looks up progress in this archive; it is not a cross-device save code.",footer:"Every descent writes another legend.",online:"Connected",working:"Working…",offline:"Disconnected",placeholder:"Name, seed, or hidden passphrase…",pauseConfirm:"Return to the gateway and resume from the last checkpoint? Unsaved combat actions will be lost.",quitConfirm:"Abandon the trial and take the normal failure penalty?",victory:"Both cores shattered · Victory",defeat:"No moves left · Defeat",reconnect:"Reconnect",network:"Connection interrupted. Reconnecting will synchronize the current turn; do not repeatedly submit.",busy:"Server unavailable. Please reconnect in a moment.",continue:"Continue",browseSaves:"Browse retained saves",randomSeed:"Generate random seed"}
 };
 Object.assign(words.zh, {
   brand:"深渊",brandSubtitle:"远征",fullTitle:"深渊远征",eyebrow:"来自深渊的冒险纪事",seal:"深入深渊",edition:"网页版 · 0.1",trialEyebrow:"双核守卫的考验",fieldNotes:"远征指南",archive:"深渊档案",importBackup:"↑ 导入存档备份",switchLanguage:"切换语言",languageHint:"在游戏主页切换语言",importTooLarge:"备份不能超过 8 MB。",importConfirm:"将切换到导入的档案。请先下载当前档案备份；未保存的行动会丢失。继续？",invalidBackup:"备份无效或不兼容，原档案未改动。",invalidRequest:"输入无效，请检查后重试。",stale:"此回合已变化，已刷新，请重新选择。",requestFailed:"请求失败，最近检查点仍保留。",up:"向上",down:"向下",left:"向左",right:"向右",boardLabel:"八乘八试炼棋盘",gameLabel:"游戏",choicesLabel:"可选行动",movementLabel:"移动",close:"关闭"
@@ -11,9 +11,22 @@ Object.assign(words.zh, {
 Object.assign(words.en, {
   brand:"ABYSS",brandSubtitle:"EXPEDITION",fullTitle:"Abyss Expedition",eyebrow:"A CHRONICLE OF THE DEPTHS",seal:"INTO THE ABYSS",edition:"WEB · 0.1",trialEyebrow:"TRIAL OF THE TWIN CORES",fieldNotes:"FIELD NOTES",archive:"THE ARCHIVE",importBackup:"↑ Import save backup",switchLanguage:"Language",languageHint:"Change language at the game gateway",importTooLarge:"Maximum backup size: 8 MB.",importConfirm:"Switch to the imported archive? Back up your current archive first. Unsaved actions will be lost.",invalidBackup:"Backup is invalid or incompatible; your current archive is unchanged.",invalidRequest:"Invalid input. Please check and try again.",stale:"This turn has changed. The page has been refreshed; choose again.",requestFailed:"Request failed. Your last checkpoint is retained.",up:"Up",down:"Down",left:"Left",right:"Right",boardLabel:"Eight by eight trial board",gameLabel:"Game",choicesLabel:"Available choices",movementLabel:"Movement",close:"Close"
 });
+words.zh.thanks = "感谢你踏入深渊";
+words.en.thanks = "Thank you for venturing into the abyss";
+words.zh.edition = "版本 · 1.1.7";
+words.en.edition = "VERSION · 1.1.7";
+words.zh.versionLabel = "版本";
+words.en.versionLabel = "VERSION";
+words.zh.releaseVersion = "1.1.7";
+words.en.releaseVersion = "1.1.7";
+words.zh.releaseNote = "怪兽图鉴、深渊界面与结局感谢更新";
+words.en.releaseNote = "Monster Codex, abyss visuals, and ending thanks";
 const t = key => words[language][key] || key;
 function languageAvailable() {
-  return state?.ready && !state.ended && !state.puzzle && /^(Language|语言)\s/.test(choicesFrom(state.screen).get("5") || "");
+  return state?.ready && !state.ended && !state.puzzle && [...choicesFrom(state.screen).entries()].some(([, label]) => /^(Language|语言)\s/.test(label));
+}
+function languageChoiceNumber() {
+  return [...choicesFrom(state?.screen || "").entries()].find(([, label]) => /^(Language|语言)\s/.test(label))?.[0];
 }
 function errorText(error, fallback = "network") {
   return t(({400:"invalidRequest",401:"reconnect",403:"requestFailed",409:"stale",410:"reconnect",413:"importTooLarge",500:"requestFailed",503:"busy"})[error.status] || fallback);
@@ -53,6 +66,15 @@ function choicesFrom(text) {
   }
   return choices;
 }
+function isClassSelection(text) { return /CHOOSE YOUR CHAMPION|选择你的角色/.test(text); }
+function isSeedPrompt(text) { return /(?:Seed|种子)\s*>\s*$/m.test(text); }
+function needsContinue(text) { return /Press Enter to (?:enter|return)|按回车(?:进入|返回)/.test(text); }
+function addChoice(number, label, action) {
+  const button = document.createElement("button"); button.className = "choice"; button.type = "button";
+  if (number) { const badge = document.createElement("span"); badge.className = "number"; badge.textContent = number; button.append(badge); }
+  const name = document.createElement("span"); name.className = "label"; name.textContent = label;
+  button.append(name); button.addEventListener("click", action); $("choices").append(button);
+}
 function renderText(text) {
   $("screen").replaceChildren();
   const gateway = Math.max(text.lastIndexOf("THE GATEWAY"), text.lastIndexOf("深渊之门"));
@@ -91,15 +113,19 @@ function render(next) {
     renderText(next.screen);
     $("history-text").textContent = next.history;
     $("choices").replaceChildren();
-    if (!next.puzzle && !next.ended) for (const [number, label] of choicesFrom(next.screen)) {
-      const button = document.createElement("button"); button.className = "choice"; button.type = "button";
-      const badge = document.createElement("span"); badge.className = "number"; badge.textContent = number;
-      const name = document.createElement("span"); name.className = "label"; name.textContent = label;
-      button.append(badge, name); button.addEventListener("click", () => send(number)); $("choices").append(button);
+    const numberedChoices = choicesFrom(next.screen);
+    if (!next.puzzle && !next.ended) {
+      for (const [number, label] of numberedChoices) addChoice(number, label, () => send(number));
+      if (!numberedChoices.size && needsContinue(next.screen)) addChoice("", t("continue"), () => send(""));
+      if (isSeedPrompt(next.screen)) {
+        addChoice("", t("browseSaves"), () => send(language === "zh" ? "列表" : "LIST"));
+        addChoice("", t("randomSeed"), () => send(""));
+      }
     }
     $("screen").hidden = !!next.puzzle;
     $("puzzle").hidden = !next.puzzle;
-    $("command-form").hidden = !!next.puzzle || next.ended;
+    const requiresTyping = !numberedChoices.size || isClassSelection(next.screen);
+    $("command-form").hidden = !!next.puzzle || next.ended || !requiresTyping;
     $("ended").hidden = !next.ended;
     $("restart").textContent = t("gateway");
     if (next.puzzle) renderPuzzle(next.puzzle);
@@ -160,7 +186,7 @@ async function send(text) {
 }
 $("command-form").addEventListener("submit", e => { e.preventDefault(); send($("command").value); });
 $("restart").addEventListener("click", () => connect(connected && state?.ended));
-$("shell-language").addEventListener("click", () => { if (languageAvailable()) send("5"); });
+$("shell-language").addEventListener("click", () => { const choice = languageChoiceNumber(); if (choice) send(choice); });
 $("show-history").addEventListener("click", () => $("history-dialog").showModal());
 $("close-history").addEventListener("click", () => $("history-dialog").close());
 $("pause").addEventListener("click", async () => {

@@ -47,6 +47,18 @@ public final class ConsoleBattle {
         printCombatant(Language.t(enemy.getName()), enemy);
         System.out.println("  ────────────────────────────────────────────────────────────");
     }
+    public static void printBattleState(Hero hero, Enemy enemy, List<Enemy> minions)
+    {
+        printBattleState(hero, enemy);
+        if (!minions.isEmpty()) {
+            System.out.println(Language.isChinese() ? "  召唤物：" : "  Summoned foes:");
+            for (int index = 0; index < minions.size(); index++) {
+                System.out.print("  " + (index + 1) + ". ");
+                printCombatant(Language.t(minions.get(index).getName()), minions.get(index));
+            }
+            System.out.println("  ────────────────────────────────────────────────────────────");
+        }
+    }
     private static void printCombatant(String label, abyss.combat.Combatant combatant)
     {
         System.out.println("  " + ConsoleLayout.padded(label, 20) + bar(combatant.getHealth(), combatant.getMaxHealth())
@@ -80,6 +92,9 @@ public final class ConsoleBattle {
         return status.getName() + "(" + status.getTurns() + "t" + (status.getPower() > 0 ? "," + status.getPower() : "") + ")";
     }
     public static void printActions(Hero hero, Enemy enemy) {
+        printActions(hero, enemy, List.of());
+    }
+    public static void printActions(Hero hero, Enemy enemy, List<Enemy> minions) {
         String skill = Language.t(hero.getSkill().getName());
         if (Language.isChinese()) {
             String cooldown = hero.getSkillCooldown() > 0 ? "（冷却 " + hero.getSkillCooldown() + " 回合）" : "（可施放）";
@@ -91,6 +106,12 @@ public final class ConsoleBattle {
             String label = skill + (hero.getSkillCooldown() > 0 ? " (CD:" + hero.getSkillCooldown() + ")" : "");
             System.out.println("  1. Attack          2. " + label);
             System.out.println("  3. Drink Potion (" + hero.getPotions() + ")    4. View Status" + (enemy.isBoss() ? "" : "  5. Retreat"));
+        }
+        int firstMinionChoice = enemy.isBoss() ? 5 : 6;
+        for (int index = 0; index < minions.size(); index++) {
+            Enemy minion = minions.get(index);
+            String label = Language.isChinese() ? "普通攻击 " + Language.t(minion.getName()) : "Attack " + minion.getName();
+            System.out.println("  [" + (firstMinionChoice + index) + "] " + label);
         }
         System.out.println("  ────────────────────────────────────────────────────────────");
     }

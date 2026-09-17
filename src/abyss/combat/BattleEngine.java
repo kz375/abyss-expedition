@@ -11,6 +11,7 @@ public final class BattleEngine {
     public BattleEngine(java.util.function.IntBinaryOperator choice, RunStatistics statistics) { this.choice = choice; this.statistics = statistics; }
     public boolean battle(Hero hero, Enemy enemy)
     {
+        java.util.List<Enemy> minions = new java.util.ArrayList<>();
         String rank = enemy.isBoss() ? "BOSS " : enemy.isElite() ? "ELITE " : "";
         System.out.println(Language.isChinese()
                 ? "\n❉ " + (enemy.isBoss() ? "首领战" : enemy.isElite() ? "精英战" : "遭遇战") + " · "
@@ -30,16 +31,17 @@ public final class BattleEngine {
             boolean usedSkill = false;
             if (hero.isAlive() && stunned)
             {
-                printBattleState(hero, enemy);
+                printBattleState(hero, enemy, minions);
                 System.out.println(Language.battle("You are stunned and lose your turn!"));
             }
             else if (hero.isAlive())
             {
                 while (true)
                 {
-                printBattleState(hero, enemy);
-                ConsoleBattle.printActions(hero, enemy);
-                int maxChoice = enemy.isBoss() ? 4 : 5;
+                printBattleState(hero, enemy, minions);
+                ConsoleBattle.printActions(hero, enemy, minions);
+                int baseChoices = enemy.isBoss() ? 4 : 5;
+                int maxChoice = baseChoices + minions.size();
                 int choice = this.choice.applyAsInt(1, maxChoice);
 
                 if (choice == 4)
@@ -47,7 +49,7 @@ public final class BattleEngine {
                     ConsoleStatus.printHero(hero, 22);
                     continue;
                 }
-                if (choice == 5)
+                if (choice == 5 && !enemy.isBoss())
                 {
                     System.out.println(Language.battle("You retreat safely and keep this expedition's rewards."));
                     hero.clearStatuses();
@@ -76,13 +78,22 @@ public final class BattleEngine {
                 }
                 else
                 {
-                    int damage = hero.dealDamage(enemy, 1.0);
+                    Enemy target = choice > baseChoices ? minions.get(choice - baseChoices - 1) : enemy;
+                    int damage = hero.dealDamage(target, 1.0);
                     System.out.println(Language.battle("You attack for ") + damage + Language.battle(" damage."));
                     for (RelicEffect relic : hero.getEquippedRelics())
                     {
-                        relic.onBasicAttack(hero, enemy);
+                        relic.onBasicAttack(hero, target);
                     }
-                    hero.getHeroClass().onBasicAttack(hero, enemy);
+                    hero.getHeroClass().onBasicAttack(hero, target);
+                    minions.removeIf(add -> !add.isAlive());
+                    if (enemy.isAlive() && enemy.isUltraNightmareFinalBoss()) {
+                        Enemy minion = enemy.summonUltraNightmareMinion();
+                        minions.add(minion);
+                        System.out.println(Language.isChinese()
+                                ? "超级噩梦【深渊召唤】：深渊领主回应普通攻击，召唤了" + Language.t(minion.getName()) + "！"
+                                : "Ultra Nightmare [Abyssal Summoning]: The Abyss Lord answers your basic attack and summons " + minion.getName() + "!");
+                    }
                 }
                 break;
                 }
@@ -98,6 +109,10 @@ public final class BattleEngine {
             if (!hero.isAlive())
             {
                 break;
+            }
+            for (Enemy minion : minions) {
+                enemyTurn(hero, minion);
+                if (!hero.isAlive()) break;
             }
         }
         hero.clearStatuses();

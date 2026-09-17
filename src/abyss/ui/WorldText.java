@@ -7,6 +7,14 @@ final class WorldText {
     private WorldText() { }
     private static final Map<String, String> ZH = Map.ofEntries(
         Map.entry("Language", "语言"),
+        Map.entry("Ancient Shrine", "古老神龛"), Map.entry("Locked Chest", "上锁宝箱"),
+        Map.entry("Wandering Healer", "流浪医师"), Map.entry("Mystic Spring", "神秘泉水"),
+        Map.entry("Trapped Adventurer", "受困冒险者"), Map.entry("Dice Gambler", "掷骰赌徒"),
+        Map.entry("Ancient Library", "古老图书馆"), Map.entry("Whispering Well", "低语之井"),
+        Map.entry("Masked Card Sharp", "蒙面牌手"), Map.entry("Blind Oracle", "盲眼预言家"),
+        Map.entry("Relic Curator", "圣遗物收藏家"), Map.entry("Rift Gate", "裂隙之门"),
+        Map.entry("Forgotten Forge", "遗忘熔炉"), Map.entry("Echoing Altar", "回响祭坛"),
+        Map.entry("Moonlit Caravan", "月光商队"), Map.entry("Starved Idol", "饥饿神像"),
         Map.entry("Campfire: 1. Rest (restore 35% health)  2. Train (lose 12 health, gain 2 attack)", "篝火：1. 休息（恢复 35% 生命）  2. 训练（消耗 12 生命，增加 2 攻击）"),
         Map.entry("  3. Investigate the embers  4. Leave", "  3. 探查余烬  4. 离开"),
         Map.entry("You rest by the fire and restore ", "你在篝火旁休息，恢复 "),

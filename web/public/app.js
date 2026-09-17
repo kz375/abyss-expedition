@@ -1,6 +1,7 @@
 "use strict";
 const $ = id => document.getElementById(id);
 let state = null, busy = false, connected = false, paused = false, language = "zh", pollTimer, generation = 0;
+let healthSnapshot = new Map();
 const words = {
   zh: {title:"深渊之门",subtitle:"八层深渊 一段属于你的传奇",chronicle:"远征手记",loading:"火炬正在点燃，深渊之门即将开启…",trial:"双核试炼",puzzleRule:"推箱子撞动守卫，让守卫击碎两个金色核心。WASD / 方向键移动，也可以点击下方方向按钮。",legendPlayer:"◆ 你",legendBox:"▣ 箱子",legendMonster:"♜ 守卫",legendCore:"✦ 核心",quitTrial:"放弃试炼",return:"返回远征",inputLabel:"你的行动",send:"确定 ↵",inputHint:"只有名字、种子和隐藏口令需要输入。",ended:"这段旅程已告一段落，你的存档与成就仍在。",gateway:"返回主页",supplies:"行囊与记录",saveNote:"进度会在游戏检查点自动保存。刷新页面可继续当前会话，服务重启后从最近检查点恢复。",backup:"↓ 下载存档备份",pause:"⏸ 暂停并返回",history:"冒险记录",historyNote:"回看本次会话中的战斗、选择与收获。",openHistory:"打开手记 →",storageNote:"存档属于当前浏览器。清除网站数据、使用无痕模式或更换设备前，请下载备份。种子用于查找本档案内的进度，不是跨设备存档码。",footer:"每一次远征，都值得被铭记。",online:"已连接",working:"处理中…",offline:"连接已中断",placeholder:"输入名字、种子或隐藏口令…",pauseConfirm:"返回主页后，从最近检查点继续。当前未保存的战斗操作会丢失，确定吗？",quitConfirm:"放弃会按原规则结算失败惩罚，确定吗？",victory:"双核已破碎 · 试炼胜利",defeat:"步数已用尽 · 试炼失败",reconnect:"重新连接",network:"连接暂时中断。恢复连接后会同步当前回合；请勿反复提交。",busy:"服务器暂不可用，请稍后点击重新连接。",continue:"继续",browseSaves:"查看保留存档",randomSeed:"随机生成种子"},
   en: {title:"The Gateway",subtitle:"Eight floors below  A legend of your own",chronicle:"Expedition journal",loading:"Lighting the torches. The gateway is opening…",trial:"The Twin Cores",puzzleRule:"Push a crate into the guardian to move it onto both golden cores. Use WASD, arrow keys, or the buttons below.",legendPlayer:"◆ You",legendBox:"▣ Crate",legendMonster:"♜ Guardian",legendCore:"✦ Core",quitTrial:"Abandon trial",return:"Return to expedition",inputLabel:"Your next move",send:"Enter ↵",inputHint:"Only a name, seed, or hidden passphrase needs typing.",ended:"This chapter has ended. Your checkpoints and achievements remain.",gateway:"Return to gateway",supplies:"Provisions & records",saveNote:"Progress saves at game checkpoints. Refresh to rejoin the current session; after a server restart, resume from the last checkpoint.",backup:"↓ Download save backup",pause:"⏸ Pause & return",history:"Your chronicle",historyNote:"Revisit the battles, choices, and discoveries of this session.",openHistory:"Open journal →",storageNote:"Your archive belongs to this browser. Download a backup before clearing site data, using private browsing, or changing devices. A seed looks up progress in this archive; it is not a cross-device save code.",footer:"Every descent writes another legend.",online:"Connected",working:"Working…",offline:"Disconnected",placeholder:"Name, seed, or hidden passphrase…",pauseConfirm:"Return to the gateway and resume from the last checkpoint? Unsaved combat actions will be lost.",quitConfirm:"Abandon the trial and take the normal failure penalty?",victory:"Both cores shattered · Victory",defeat:"No moves left · Defeat",reconnect:"Reconnect",network:"Connection interrupted. Reconnecting will synchronize the current turn; do not repeatedly submit.",busy:"Server unavailable. Please reconnect in a moment.",continue:"Continue",browseSaves:"Browse retained saves",randomSeed:"Generate random seed"}
@@ -13,14 +14,14 @@ Object.assign(words.en, {
 });
 words.zh.thanks = "感谢你踏入深渊";
 words.en.thanks = "Thank you for venturing into the abyss";
-words.zh.edition = "版本 · 1.1.11";
-words.en.edition = "VERSION · 1.1.11";
+words.zh.edition = "版本 · 1.2.1";
+words.en.edition = "VERSION · 1.2.1";
 words.zh.versionLabel = "版本";
 words.en.versionLabel = "VERSION";
-words.zh.releaseVersion = "1.1.11";
-words.en.releaseVersion = "1.1.11";
-words.zh.releaseNote = "单次随机事件与简洁角色卡片更新";
-words.en.releaseNote = "Single-choice events and streamlined hero cards";
+words.zh.releaseVersion = "1.2.1";
+words.en.releaseVersion = "1.2.1";
+words.zh.releaseNote = "血条动画、护盾召唤物与战斗平衡更新";
+words.en.releaseNote = "Animated vitality, ward summons, and combat balance";
 const t = key => words[language][key] || key;
 function languageAvailable() {
   return state?.ready && !state.ended && !state.puzzle && [...choicesFrom(state.screen).entries()].some(([, label]) => /^(Language|语言)\s/.test(label));
@@ -50,7 +51,7 @@ async function api(path, body) {
 }
 function updateEnabled() {
   const canInput = connected && !busy && state?.ready && !state?.ended;
-  document.querySelectorAll("#choices button, #submit, #command, [data-move], #quit-trial, #finish-trial").forEach(el => { el.disabled = !canInput; });
+  document.querySelectorAll("#choices button, #submit, #command, [data-move], #quit-trial, #finish-trial").forEach(el => { el.disabled = !canInput || el.dataset.locked === "true"; });
   $("pause").disabled = !connected || busy || !state || state.ended;
   $("restart").disabled = busy;
   $("shell-language").disabled = !connected || busy || !languageAvailable();
@@ -69,9 +70,10 @@ function choicesFrom(text) {
 function isClassSelection(text) { return /CHOOSE YOUR CHAMPION|选择你的角色/.test(text); }
 function isSeedPrompt(text) { return /(?:Seed|种子)\s*>\s*$/m.test(text); }
 function needsContinue(text) { return /Press Enter to (?:enter|return)|按回车(?:进入|返回)/.test(text); }
-function addChoice(number, label, action, variant = "") {
+function addChoice(number, label, action, variant = "", locked = false) {
   const button = document.createElement("button"); button.className = "choice"; button.type = "button";
   if (variant) button.classList.add(variant);
+  if (locked) { button.dataset.locked = "true"; button.setAttribute("aria-disabled", "true"); }
   if (number) { const badge = document.createElement("span"); badge.className = "number"; badge.textContent = number; button.append(badge); }
   const name = document.createElement("span"); name.className = "label"; name.textContent = label;
   button.append(name); button.addEventListener("click", action); $("choices").append(button);
@@ -109,9 +111,22 @@ function renderText(text) {
       const summoned = /^\d+\.\s/.test(health[1].trim());
       const row = document.createElement("div"); row.className = `health-row ${player ? "player-health" : "enemy-health"}${summoned ? " summon-health" : ""}`;
       const label = document.createElement("span"); label.textContent = health[1].trim();
-      const bar = document.createElement("progress"); bar.max = Math.max(1, Number(health[3])); bar.value = Number(health[2]); bar.setAttribute("aria-label", label.textContent);
+      const current = Number(health[2]), maximum = Math.max(1, Number(health[3]));
+      const key = `${player ? "hero" : "enemy"}:${health[1].trim()}`;
+      const previous = healthSnapshot.get(key);
+      const percent = Math.max(0, Math.min(100, current / maximum * 100));
+      const meter = document.createElement("span"); meter.className = "health-meter"; meter.setAttribute("role", "meter");
+      meter.setAttribute("aria-label", label.textContent); meter.setAttribute("aria-valuemin", "0"); meter.setAttribute("aria-valuemax", String(maximum)); meter.setAttribute("aria-valuenow", String(current));
+      const fill = document.createElement("span"); fill.className = "health-fill"; fill.style.width = `${percent}%`;
+      meter.append(fill);
+      if (previous && previous.maximum === maximum && previous.current > current) {
+        const trail = document.createElement("span"); trail.className = "damage-trail";
+        trail.style.left = `${percent}%`; trail.style.width = `${Math.max(0, previous.current / maximum * 100 - percent)}%`;
+        meter.append(trail);
+      }
+      healthSnapshot.set(key, {current, maximum});
       const value = document.createElement("span"); value.textContent = `${health[2]} / ${health[3]}${health[4]}`;
-      row.append(label, bar, value); $("screen").append(row); continue;
+      row.append(label, meter, value); $("screen").append(row); continue;
     }
     const row = document.createElement("div");
     if (/^\s*(Summoned foes:|召唤物：)\s*$/.test(line)) {
@@ -144,7 +159,10 @@ function render(next) {
     const classSelection = isClassSelection(next.screen);
     $("choices").classList.toggle("class-choices", classSelection);
     if (!next.puzzle && !next.ended) {
-      for (const [number, label] of numberedChoices) addChoice(number, label, () => send(number), classSelection ? "class-choice" : "");
+      for (const [number, label] of numberedChoices) {
+        const locked = /\s\[(?:closed|已关闭)\]$/.test(label);
+        addChoice(number, label, () => send(number), classSelection ? "class-choice" : "", locked);
+      }
       if (!numberedChoices.size && needsContinue(next.screen)) addChoice("", t("continue"), () => send(""));
       if (isSeedPrompt(next.screen)) {
         addChoice("", t("browseSaves"), () => send(language === "zh" ? "列表" : "LIST"));

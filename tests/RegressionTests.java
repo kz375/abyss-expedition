@@ -72,6 +72,12 @@ public final class RegressionTests {
         FloorRoutes expanded = new FloorRoutes(new Random(91));
         check(expanded.types().length == 4 && Arrays.stream(expanded.types()).distinct().count() == 4,
                 "each new floor has four distinct random side routes alongside the two permanent battles");
+        ConsoleInput newDeckInput = new ConsoleInput(new Scanner("3\n4\n1\n"));
+        expanded.choose(newDeckInput);
+        check(expanded.visited() == 15 && expanded.chosenRoute() == 0,
+                "choosing a discovery card closes every other card on that floor");
+        check(expanded.choose(newDeckInput).getLabel().equals("Battle"),
+                "a closed discovery card cannot be selected after the choice is saved");
         check(FloorRoutes.valid(new int[]{0, 2}, 1), "two-route legacy checkpoints remain loadable");
     }
     private static void combat() {
@@ -108,9 +114,10 @@ public final class RegressionTests {
         };
         Hero hero = new Hero("Mechanic", HeroClass.WARRIOR, Difficulty.ULTRA_NIGHTMARE, new Random(21), resolver, stats);
         Enemy boss = Enemy.spawn(8, false, Difficulty.ULTRA_NIGHTMARE, 8, new Random(9), stats::addDamageDealt);
-        new BattleEngine((minimum, maximum) -> stats.getTotalTurns() == 1 ? 1 : 2, stats).battle(hero, boss);
-        check(heroHits[0] >= 2, "Ultra Nightmare boss basic attack summons a foe that joins the same enemy turn");
-        check(enemyHits[0] == 2 && !boss.isAlive(), "skill attacks do not summon and can finish the boss");
+        int[] actions = {1, 5, 2}, actionIndex = {0};
+        new BattleEngine((minimum, maximum) -> actions[Math.min(actionIndex[0]++, actions.length - 1)], stats).battle(hero, boss);
+        check(heroHits[0] >= 3, "Ultra Nightmare boss basic attack summons a foe that joins the same enemy turn");
+        check(enemyHits[0] == 3 && !boss.isAlive(), "a summoned foe must be defeated before the boss can take damage again");
         Enemy sampler = Enemy.spawn(8, false, Difficulty.ULTRA_NIGHTMARE, 8, new Random(44), n -> { });
         int elites = 0;
         Set<MonsterType> summons = EnumSet.noneOf(MonsterType.class);
@@ -123,6 +130,12 @@ public final class RegressionTests {
         }
         check(elites >= 25 && elites <= 75, "Ultra Nightmare boss summon elite rate remains near five percent");
         check(summons.size() == 19, "Ultra Nightmare boss can summon every regular codex monster");
+        int bossHealth = sampler.getHealth(), bossAttack = sampler.getAttack(), bossDefense = sampler.getDefense();
+        sampler.setProtectedBySummons(true); sampler.takeDamage(999999);
+        check(sampler.getHealth() == bossHealth, "a living summon makes the Ultra Nightmare boss immune to damage");
+        sampler.setProtectedBySummons(false); sampler.weakenAfterSummonDefeat();
+        check(sampler.getHealth() < bossHealth && sampler.getAttack() < bossAttack && sampler.getDefense() < bossDefense,
+                "each defeated summon permanently weakens all boss combat stats by three percent");
         Enemy regular = Enemy.spawn(5, false, Difficulty.ADVENTURER, 8, new Random(72), n -> { });
         Enemy elite = Enemy.spawn(5, true, Difficulty.ADVENTURER, 8, new Random(72), n -> { });
         check(elite.getMaxHealth() > regular.getMaxHealth() && elite.getAttack() > regular.getAttack() && elite.getDefense() > regular.getDefense(),
@@ -185,6 +198,12 @@ public final class RegressionTests {
         check(loaded.getRandom().nextInt()==expected,"random getter returns independent state");
         check(loaded.isMechanismEncounterUsed(),"once-per-run flag persists");
         check(loaded.restoreRoutes(new Random()).visited()==1,"visited route persists");
+        FloorRoutes selectedRoutes = new FloorRoutes(new Random(12));
+        selectedRoutes.choose(new ConsoleInput(new Scanner("3\n")));
+        SaveData selectedData = SaveData.capture(5,Difficulty.ADVENTURER,h,stats,rng,true,selectedRoutes);
+        check(selectedData.restoreRoutes(new Random()).chosenRoute() == 0
+                        && selectedData.restoreRoutes(new Random()).visited() == 15,
+                "v2 saves retain the selected discovery card and closed-card state");
         Hero restored=hero(HeroClass.MAGE);
         loaded.restoreHero(restored, RelicCatalog.all());
         check(restored.getAttack()==h.getAttack() && restored.getMaxHealth()==h.getMaxHealth()
@@ -379,7 +398,7 @@ public final class RegressionTests {
         String chinese=launch(dir,"6\n2\n3\n\n1\n333\nWarrior\n1\n1\n5\n");
         check(chinese.contains("深渊之门") && chinese.contains("成就图鉴"),"home switches immediately to Chinese");
         check(chinese.contains("深渊成就录") && chinese.contains("初战告捷"),"achievement titles and descriptions translated");
-        check(chinese.contains("选择你的角色") && chinese.contains("每场战斗开始时获得 60 护盾"),"class descriptions translated");
+        check(chinese.contains("选择你的角色") && chinese.contains("每场战斗开始时获得 70 护盾"),"class descriptions translated");
         check(chinese.contains("远征已暂停") && chinese.contains("远征战报"),"ending translated");
         check(chinese.contains("Warrior  /  战士"),"user name remains untouched while class display is translated");
         Path archive=dir.resolve("expeditions/333.save");

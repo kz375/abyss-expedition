@@ -33,6 +33,8 @@ public final class Enemy implements Combatant
     private boolean enraged;
     private boolean phaseTwo;
     private boolean phaseThree;
+    /** An Ultra Nightmare final boss cannot be harmed while one of its adds lives. */
+    private boolean protectedBySummons;
     private final EliteAffix affix;
     private EnemyIntent intent = EnemyIntent.ATTACK;
     private final List<StatusEffect> statuses = new ArrayList<>();
@@ -98,8 +100,11 @@ public final class Enemy implements Combatant
         EnemyTier tier = EnemyTier.forFloor(floor);
         String name = elite ? "Elite " + monster.monsterName() : monster.monsterName();
         double rank = elite ? difficulty.eliteRankMultiplier() * 1.15 : 1.0;
+        double healthMultiplier = rank * difficulty.enemyHealthMultiplier();
+        // Floors one and two should introduce the run; ordinary foes stay below every starter's health pool.
+        if (!elite && floor <= 2) healthMultiplier *= floor == 1 ? 0.85 : 0.90;
         return new Enemy(name,
-                scaled(tier.getBaseHealth() + monster.healthOffset() + floor * 14 + random.nextInt(12), rank * difficulty.enemyHealthMultiplier()),
+                scaled(tier.getBaseHealth() + monster.healthOffset() + floor * 14 + random.nextInt(12), healthMultiplier),
                 scaled(tier.getBaseAttack() + monster.attackOffset() + floor * 3, rank * difficulty.enemyAttackMultiplier()),
                 scaled(Math.max(0, tier.getBaseDefense() + monster.defenseOffset() + floor), elite ? 1.15 : 1.0), false, elite, false,
                 scaled(16 + floor * 6, difficulty.rewardMultiplier() * rank),
@@ -123,6 +128,8 @@ public final class Enemy implements Combatant
     public boolean isElite() { return elite; }
     public boolean isFinalBoss() { return finalBoss; }
     public boolean isUltraNightmareFinalBoss() { return finalBoss && ultraNightmare; }
+    public boolean isProtectedBySummons() { return protectedBySummons; }
+    public void setProtectedBySummons(boolean protectedBySummons) { this.protectedBySummons = protectedBySummons; }
     public EnemyBehavior getBehavior() { return behavior; }
     public int getGoldReward() { return goldReward; }
     public int getExperienceReward() { return experienceReward; }
@@ -158,10 +165,31 @@ public final class Enemy implements Combatant
         boolean eliteMinion = random.nextInt(100) < 5;
         Enemy minion = spawnRegular(MonsterType.randomSummon(random), 8, eliteMinion,
                 Difficulty.ULTRA_NIGHTMARE, random, damageDealtRecorder);
+        minion.halveHealthForSummon();
         minion.prepareEliteAffix();
         minion.prepareUltraNightmare();
         minion.prepareIntent();
         return minion;
+    }
+
+    /** Adds are deliberately fragile: their displayed and actual health are half of the regular monster's value. */
+    private void halveHealthForSummon()
+    {
+        health = Math.max(1, health / 2);
+        maxHealth = health;
+    }
+
+    /** Defeating a protecting add permanently reduces the final boss's current and future combat stats by 3%. */
+    public void weakenAfterSummonDefeat()
+    {
+        if (!isUltraNightmareFinalBoss()) return;
+        health = Math.max(1, health * 97 / 100);
+        maxHealth = Math.max(1, maxHealth * 97 / 100);
+        health = Math.min(health, maxHealth);
+        attack = Math.max(1, attack * 97 / 100);
+        defense = Math.max(0, defense * 97 / 100);
+        shield = Math.max(0, shield * 97 / 100);
+        skillChance = Math.max(0, skillChance * 97 / 100);
     }
 
     public void prepareEliteAffix()
@@ -193,19 +221,18 @@ public final class Enemy implements Combatant
                 + bonus + abyss.ui.Language.battle(" attack, and acts more aggressively!"));
     }
 
-    /** The final quarter is a true third phase: health, attack, and defense each rise by fifteen percent. */
+    /** The final quarter is a true third phase: maximum health, attack, and defense each rise by fifteen percent. */
     public void enterPhaseThreeIfNeeded()
     {
         if (!boss || phaseThree || health > maxHealth / 4) return;
         phaseThree = true;
         int healthBonus = Math.max(1, maxHealth * 15 / 100);
         maxHealth += healthBonus;
-        health += healthBonus;
         attack = scaled(attack, 1.15);
         defense = scaled(defense, 1.15);
         skillChance = Math.min(100, skillChance + 15);
         System.out.println(abyss.ui.Language.battle("BOSS PHASE III: ") + abyss.ui.Language.t(name)
-                + abyss.ui.Language.battle(" surges with power! Health, attack, and defense rise by 15%."));
+                + abyss.ui.Language.battle(" surges with power! Maximum health, attack, and defense rise by 15%."));
     }
 
     public void enrageIfNeeded()
@@ -222,6 +249,7 @@ public final class Enemy implements Combatant
     @Override public void takeDamage(int amount)
     {
         if (amount < 0) throw new IllegalArgumentException("Damage cannot be negative");
+        if (protectedBySummons) return;
         int blocked = Math.min(shield, amount);
         shield -= blocked;
         health = Math.max(0, health - amount + blocked);
@@ -230,6 +258,7 @@ public final class Enemy implements Combatant
 
     @Override public void sufferStatusDamage(int amount)
     {
+        if (protectedBySummons) return;
         int lost = Math.min(health, Math.max(0, amount - shield));
         takeDamage(amount);
         damageDealtRecorder.accept(lost);

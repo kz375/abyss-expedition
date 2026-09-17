@@ -7,23 +7,23 @@ import abyss.combat.HeroContext;
 public enum HeroClass
 {
     WARRIOR("Warrior", 220, 32, 12, "Armor Break", "Iron Will",
-            "Deal 220% attack damage and sunder enemy defense", "Start every battle with 60 shield")
+            "Deal 240% attack damage and sunder enemy defense", "Start every battle with 70 shield")
     {
         @Override public void onBattleStart(HeroContext hero, Combatant enemy)
         {
-            hero.addShield(60);
-            System.out.println(abyss.ui.Language.battle("Passive [Iron Will]: You begin with 60 shield."));
+            hero.addShield(70);
+            System.out.println(abyss.ui.Language.battle("Passive [Iron Will]: You begin with 70 shield."));
         }
     },
-    MAGE("Mage", 173, 35, 10, "Arcane Burst", "Mana Flow",
-            "Deal 260% attack damage and set the enemy ablaze", "Skills have 1 less cooldown turn"),
+    MAGE("Mage", 188, 35, 10, "Arcane Burst", "Mana Flow",
+            "Deal 270% attack damage and set the enemy ablaze", "Skills have 1 less cooldown turn"),
     RANGER("Ranger", 214, 36, 11, "Double Shot", "Hunter's Focus",
-            "Two arrows (130% each) that mark the target (+15% damage taken)",
-            "12% chance for a small bonus hit after attacking")
+            "Two arrows (140% each) that mark the target (+15% damage taken)",
+            "15% chance for a small bonus hit after attacking")
     {
         @Override public void onBasicAttack(HeroContext hero, Combatant enemy)
         {
-            if (enemy.isAlive() && hero.rollChance(12))
+            if (enemy.isAlive() && hero.rollChance(15))
             {
                 int damage = Math.max(1, hero.getAttack() / 3);
                 int actual = Math.min(enemy.getHealth(), Math.max(0, damage - enemy.getShield()));
@@ -33,15 +33,15 @@ public enum HeroClass
             }
         }
     },
-    CREATOR("Creator", 190, 33, 10, "Reality Rend", "Execution",
-            "Five strikes (140%-220%) and Empower yourself (+15% damage, 2 turns)",
-            "Instantly destroy enemies below 65 health")
+    CREATOR("Creator", 180, 31, 10, "Reality Rend", "Execution",
+            "Five strikes (100%-140%) and Empower yourself (+8% damage, 1 turn)",
+            "Instantly destroy enemies below 40 health")
     {
         @Override public boolean tryExecution(HeroContext hero, Combatant enemy)
         {
-            if (enemy.getHealth() < 65 && enemy.isAlive())
+            if (enemy.getHealth() < 40 && enemy.isAlive())
             {
-                System.out.println(abyss.ui.Language.battle("Passive [Execution]: ") + abyss.ui.Language.t(enemy.getName()) + abyss.ui.Language.battle(" has less than 65 health and is erased."));
+                System.out.println(abyss.ui.Language.battle("Passive [Execution]: ") + abyss.ui.Language.t(enemy.getName()) + abyss.ui.Language.battle(" has less than 40 health and is erased."));
                 int health = enemy.getHealth();
                 enemy.takeDamage(health + enemy.getShield());
                 hero.recordDamageDealt(health);
@@ -51,23 +51,23 @@ public enum HeroClass
         }
     },
     PALADIN("Paladin", 226, 31, 13, "Holy Judgment", "Divine Aegis",
-            "Deal 200% damage, restore health, and Stun the enemy for 1 turn",
-            "Gain 8 shield at the start of every turn")
+            "Deal 215% damage, restore health, and Stun the enemy for 1 turn",
+            "Gain 10 shield at the start of every turn")
     {
         @Override public void onTurnStart(HeroContext hero)
         {
-            hero.addShield(8);
-            System.out.println(abyss.ui.Language.battle("Passive [Divine Aegis]: You gain 8 shield."));
+            hero.addShield(10);
+            System.out.println(abyss.ui.Language.battle("Passive [Divine Aegis]: You gain 10 shield."));
         }
     },
     NECROMANCER("Necromancer", 200, 32, 10, "Soul Drain", "Curse",
-            "Deal 180% damage, drain 50% of it as health, and inflict Poison",
-            "Enemies start battle Cursed: +20% damage taken for 3 turns")
+            "Deal 200% damage, drain 50% of it as health, and inflict Poison",
+            "Enemies start battle Cursed: +25% damage taken for 3 turns")
     {
         @Override public void onBattleStart(HeroContext hero, Combatant enemy)
         {
-            enemy.applyStatus("Curse", 3, 20, false);
-            System.out.println(abyss.ui.Language.battle("Passive [Curse]: ") + abyss.ui.Language.t(enemy.getName()) + abyss.ui.Language.battle(" takes 20% more damage for 3 turns."));
+            enemy.applyStatus("Curse", 3, 25, false);
+            System.out.println(abyss.ui.Language.battle("Passive [Curse]: ") + abyss.ui.Language.t(enemy.getName()) + abyss.ui.Language.battle(" takes 25% more damage for 3 turns."));
         }
     };
 

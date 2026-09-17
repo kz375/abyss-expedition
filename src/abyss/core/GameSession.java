@@ -87,6 +87,11 @@ public final class GameSession
             GameSession.this.resolveEvent(hero, floor, difficulty);
         }
 
+        @Override public void resolveEventCard(GameEvent event, Hero hero, int floor, Difficulty difficulty)
+        {
+            GameSession.this.resolveEventCard(event, hero, floor, difficulty);
+        }
+
         @Override public void visitCamp(Hero hero) { GameSession.this.visitCamp(hero); }
         @Override public void visitShop(Hero hero) { GameSession.this.visitShop(hero); }
     };
@@ -135,6 +140,7 @@ public final class GameSession
         boolean escaped = battleEngine.battle(hero, enemy);
         if (hero.isAlive() && !escaped)
         {
+            achievements.recordMonster(enemy.getName());
             rewards.victory(hero, enemy);
             if (enemy.isFinalBoss())
             {
@@ -163,6 +169,12 @@ public final class GameSession
     private void resolveEvent(Hero hero, int floor, Difficulty difficulty)
     {
         GameEvent.resolveRandom(EVENT_SERVICES, hero, floor, difficulty);
+        STATS.addEventResolved();
+    }
+
+    private void resolveEventCard(GameEvent event, Hero hero, int floor, Difficulty difficulty)
+    {
+        event.resolve(EVENT_SERVICES, hero, floor, difficulty);
         STATS.addEventResolved();
     }
 

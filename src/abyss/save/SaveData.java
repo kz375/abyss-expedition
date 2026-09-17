@@ -20,11 +20,13 @@ import java.util.Random;
 public final class SaveData implements Serializable
 {
     @Serial private static final long serialVersionUID = 1L;
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;
 
     private final int version;
     private int[] routeTypes;
     private int visitedRoutes;
+    /** Added in v2; v1 saves intentionally restore with no known chosen card. */
+    private int chosenRoute = -1;
     private boolean seeded;
     private long seed;
     private int outcome; // 0: active checkpoint, 1: victory, 2: defeat
@@ -72,14 +74,14 @@ public final class SaveData implements Serializable
                                    Random random, boolean mechanismEncounterUsed, abyss.content.FloorRoutes routes)
     {
         SaveData data = capture(floor, difficulty, hero, statistics, random, mechanismEncounterUsed);
-        if (routes != null) { data.routeTypes = routes.types(); data.visitedRoutes = routes.visited(); }
+        if (routes != null) { data.routeTypes = routes.types(); data.visitedRoutes = routes.visited(); data.chosenRoute = routes.chosenRoute(); }
         return data;
     }
 
     public abyss.content.FloorRoutes restoreRoutes(Random random)
     {
         return routeTypes == null ? new abyss.content.FloorRoutes(random)
-                : new abyss.content.FloorRoutes(routeTypes, visitedRoutes);
+                : new abyss.content.FloorRoutes(routeTypes, visitedRoutes, version >= 2 ? chosenRoute : -1);
     }
 
     public SaveData withIdentity(long seed, int outcome) {
@@ -115,7 +117,7 @@ public final class SaveData implements Serializable
 
     public boolean isCompatible()
     {
-        if (version != VERSION || floor < 1 || floor > 8 || difficulty == null || random == null
+        if ((version < 1 || version > VERSION) || floor < 1 || floor > 8 || difficulty == null || random == null
                 || random.getClass() != Random.class || heroName == null || heroName.length() > 200
                 || heroClassName == null || relicNames == null || relicNames.size() > 13
                 || outcome < 0 || outcome > 2 || (outcome == 2 ? health != 0 : health < 1)
@@ -126,7 +128,8 @@ public final class SaveData implements Serializable
                 || normalKills < 0 || eliteKills < 0 || bossKills < 0 || damageDealt < 0 || damageTaken < 0
                 || goldEarned < 0 || potionsDrunk < 0 || eventsResolved < 0 || totalTurns < 0
                 || floorReached < 0 || floorReached > 8
-                || routeTypes != null && !abyss.content.FloorRoutes.valid(routeTypes, visitedRoutes)) return false;
+                || routeTypes != null && !abyss.content.FloorRoutes.valid(routeTypes, visitedRoutes)
+                || version >= 2 && routeTypes != null && (chosenRoute < -1 || chosenRoute >= routeTypes.length)) return false;
         try {
             abyss.content.HeroClass type = abyss.content.HeroClass.valueOf(heroClassName);
             if (maxHealth < (int)(type.getBaseHealth() * difficulty.heroStatMultiplier())) return false;

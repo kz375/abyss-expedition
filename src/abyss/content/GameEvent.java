@@ -86,6 +86,36 @@ public enum GameEvent
 
     public abstract void resolve(EventServices services, Hero hero, int floor, Difficulty difficulty);
 
+    /** The discoverable event deck. The mechanism encounter remains a rare separate surprise. */
+    public static List<GameEvent> cardPool() {
+        return List.of(ANCIENT_SHRINE, LOCKED_CHEST, WANDERING_HEALER, MYSTIC_SPRING, TRAPPED_ADVENTURER,
+                DICE_GAMBLER, ANCIENT_LIBRARY, WHISPERING_WELL, CARD_SHARP, ORACLE, RELIC_CURATOR, RIFT_GATE,
+                FORGOTTEN_FORGE, ECHOING_ALTAR, MOONLIT_CARAVAN, STARVED_IDOL);
+    }
+
+    /** Short card names reveal a route's theme without exposing its outcome. */
+    public String cardLabel() {
+        return switch (this) {
+            case ANCIENT_SHRINE -> "Ancient Shrine";
+            case LOCKED_CHEST -> "Locked Chest";
+            case WANDERING_HEALER -> "Wandering Healer";
+            case MYSTIC_SPRING -> "Mystic Spring";
+            case TRAPPED_ADVENTURER -> "Trapped Adventurer";
+            case DICE_GAMBLER -> "Dice Gambler";
+            case ANCIENT_LIBRARY -> "Ancient Library";
+            case WHISPERING_WELL -> "Whispering Well";
+            case CARD_SHARP -> "Masked Card Sharp";
+            case ORACLE -> "Blind Oracle";
+            case RELIC_CURATOR -> "Relic Curator";
+            case RIFT_GATE -> "Rift Gate";
+            case FORGOTTEN_FORGE -> "Forgotten Forge";
+            case ECHOING_ALTAR -> "Echoing Altar";
+            case MOONLIT_CARAVAN -> "Moonlit Caravan";
+            case STARVED_IDOL -> "Starved Idol";
+            case MYSTERIOUS_STALKER -> "Mysterious Stalker";
+        };
+    }
+
     public static void resolveRandom(EventServices services, Hero hero, int floor, Difficulty difficulty)
     {
         if (floor >= 5 && services.canEncounterMechanism() && services.nextInt(100) < 5)
@@ -93,10 +123,7 @@ public enum GameEvent
             MYSTERIOUS_STALKER.resolve(services, hero, floor, difficulty);
             return;
         }
-        GameEvent[] regularEvents = {
-                ANCIENT_SHRINE, LOCKED_CHEST, WANDERING_HEALER, MYSTIC_SPRING, TRAPPED_ADVENTURER,
-                DICE_GAMBLER, ANCIENT_LIBRARY, WHISPERING_WELL, CARD_SHARP, ORACLE, RELIC_CURATOR, RIFT_GATE,
-                FORGOTTEN_FORGE, ECHOING_ALTAR, MOONLIT_CARAVAN, STARVED_IDOL};
-        regularEvents[services.nextInt(regularEvents.length)].resolve(services, hero, floor, difficulty);
+        List<GameEvent> regularEvents = cardPool();
+        regularEvents.get(services.nextInt(regularEvents.size())).resolve(services, hero, floor, difficulty);
     }
 }

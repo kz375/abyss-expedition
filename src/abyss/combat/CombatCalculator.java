@@ -10,6 +10,7 @@ public final class CombatCalculator
 
     public static int hitEnemy(Hero hero, Enemy enemy, double multiplier, RunStatistics statistics, java.util.Random random)
     {
+        if (enemy.isProtectedBySummons()) return 0;
         DamageRoll roll = calculate(hero.getCurrentAttack(), enemy.getCurrentDefense(), multiplier,
                 15 + hero.getCritBonus(), random);
         boolean critical = roll.critical;

@@ -79,6 +79,11 @@ public final class ConsoleBattle {
             {
                 System.out.println("  " + ConsoleLayout.padded(Language.t("Boss Phase"), 20) + (enemy.isPhaseThree() ? "III" : "II"));
             }
+            if (enemy.isProtectedBySummons())
+            {
+                System.out.println("  " + ConsoleLayout.padded(Language.isChinese() ? "深渊护盾" : "Abyssal Shield", 20)
+                        + (Language.isChinese() ? "先击败召唤物才能伤害首领" : "Defeat the summon to damage the boss"));
+            }
             String intentText = enemy.getIntent() == EnemyIntent.SPECIAL
                     ? Language.t(enemy.getIntent().label()) + (Language.isChinese() ? "：" : ": ") + Language.t(enemy.getBehavior().getSkillName())
                     : Language.t(enemy.getIntent().label());
@@ -98,13 +103,13 @@ public final class ConsoleBattle {
         String skill = Language.t(hero.getSkill().getName());
         if (Language.isChinese()) {
             String cooldown = hero.getSkillCooldown() > 0 ? "（冷却 " + hero.getSkillCooldown() + " 回合）" : "（可施放）";
-            System.out.println("  [1] 普通攻击");
+            System.out.println("  [1] " + (enemy.isProtectedBySummons() ? "攻击召唤物护盾" : "普通攻击"));
             System.out.println("  [2] " + skill + cooldown);
             System.out.println("  [3] 使用药水（剩余 " + hero.getPotions() + " 瓶）");
             System.out.println("  [4] 查看状态" + (enemy.isBoss() ? "" : "    [5] 撤退"));
         } else {
             String label = skill + (hero.getSkillCooldown() > 0 ? " (CD:" + hero.getSkillCooldown() + ")" : "");
-            System.out.println("  1. Attack          2. " + label);
+            System.out.println("  1. " + (enemy.isProtectedBySummons() ? "Attack ward summon" : "Attack") + "          2. " + label);
             System.out.println("  3. Drink Potion (" + hero.getPotions() + ")    4. View Status" + (enemy.isBoss() ? "" : "  5. Retreat"));
         }
         int firstMinionChoice = enemy.isBoss() ? 5 : 6;

@@ -73,7 +73,8 @@ public final class EnemyBehaviors
         @Override public void useSpecial(HeroContext hero, Combatant enemy)
         {
             int damage = hero.receiveDamageFrom(enemy, 1.15);
-            int healing = Math.max(1, damage / 2);
+            // Reflected damage may have killed the attacker; draining cannot revive it.
+            int healing = enemy.isAlive() ? damage / 2 : 0;
             enemy.restoreHealth(healing);
             System.out.println(abyss.ui.Language.t(enemy.getName()) + abyss.ui.Language.battle(" uses [Blood Drain]: ") + damage
                     + abyss.ui.Language.battle(" damage and restores ") + healing + abyss.ui.Language.battle(" health."));

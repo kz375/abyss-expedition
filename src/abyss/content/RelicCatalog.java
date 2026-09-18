@@ -76,9 +76,9 @@ public final class RelicCatalog
         {
             if (damage <= 0 || !enemy.isAlive()) return;
             int thorns = Math.max(1, damage * 20 / 100);
-            int actual = Math.min(enemy.getHealth(), Math.max(0, thorns - enemy.getShield()));
+            int before = enemy.getHealth();
             enemy.takeDamage(thorns);
-            hero.recordDamageDealt(actual);
+            hero.recordDamageDealt(Math.max(0, before - enemy.getHealth()));
             System.out.println(abyss.ui.Language.battle("[Thorn Mail] reflects ") + thorns + abyss.ui.Language.battle(" damage."));
         }
     }

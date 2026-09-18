@@ -52,7 +52,7 @@ public final class GameSession
 
     // ---------------- Run statistics ----------------
     private final RunStatistics STATS = new RunStatistics();
-    private final BattleEngine battleEngine = new BattleEngine(INPUT, STATS);
+    private final BattleEngine battleEngine = new BattleEngine(INPUT::readChoice, STATS, name -> this.achievements.recordMonster(name));
     private final abyss.content.ExpeditionRewards rewards = new abyss.content.ExpeditionRewards(INPUT, STATS, () -> RANDOM);
     private boolean gameWon;
     private boolean mechanismEncounterUsed;
@@ -176,6 +176,9 @@ public final class GameSession
     {
         event.resolve(EVENT_SERVICES, hero, floor, difficulty);
         STATS.addEventResolved();
+        // Named discovery cards replaced generic events; keep the rare trial reachable.
+        if (hero.isAlive() && floor >= 5 && !mechanismEncounterUsed && RANDOM.nextInt(100) < 5)
+            resolveMechanismEncounter(hero, floor, difficulty);
     }
 
     private void resolveMechanismEncounter(Hero hero, int floor, Difficulty difficulty)
@@ -335,7 +338,8 @@ public final class GameSession
                 printFloorHeader(floor);
                 showStatus(hero);
                 GameNode node = floor == FINAL_FLOOR ? FINAL_NODE : routes.choose(INPUT);
-                saveCheckpoint(hero, floor, difficulty);
+                // Commit the consumed discovery together with its outcome below. If input closes
+                // at an event's choice prompt, resume the previous complete checkpoint.
                 boolean advanceFloor = node.resolve(GAME_SERVICES, hero, floor, difficulty);
                 if (advanceFloor)
                 {

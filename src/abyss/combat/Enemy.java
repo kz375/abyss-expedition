@@ -13,7 +13,8 @@ import java.util.function.IntConsumer;
 /** Enemy state, spawning, intent selection, and Ultra Nightmare modifiers. */
 public final class Enemy implements Combatant
 {
-    private static final int HIGHEST_STARTING_HERO_HEALTH = 226;
+    private static final int HIGHEST_STARTING_HERO_HEALTH = java.util.Arrays.stream(abyss.content.HeroClass.values())
+            .mapToInt(abyss.content.HeroClass::getBaseHealth).max().orElseThrow();
     private final String name;
     private final boolean boss;
     private final boolean elite;
@@ -108,10 +109,15 @@ public final class Enemy implements Combatant
         if (floor >= 3) healthMultiplier *= difficulty == Difficulty.ULTRA_NIGHTMARE ? 1.08 : 1.18;
         double attackMultiplier = rank * difficulty.enemyAttackMultiplier() * (floor >= 3 ? 1.08 : 1.0);
         int health = scaled(tier.getBaseHealth() + monster.healthOffset() + floor * 14 + random.nextInt(12), healthMultiplier);
-        if (!elite && floor <= 2) {
+        if (floor <= 2) {
             int strongestStarter = (int) (HIGHEST_STARTING_HERO_HEALTH * difficulty.heroStatMultiplier());
             int target = strongestStarter + (floor == 1 ? 12 : 26);
-            health = Math.min(strongestStarter + 80, Math.max(health, target));
+            // Apply the same opening baseline to both ranks before the elite bonus.
+            int ordinaryHealth = scaled(tier.getBaseHealth() + monster.healthOffset() + floor * 14,
+                    difficulty.enemyHealthMultiplier());
+            health = elite ? Math.max(health, scaled(Math.min(strongestStarter + 80,
+                    Math.max(ordinaryHealth, target)), rank))
+                    : Math.min(strongestStarter + 80, Math.max(health, target));
         }
         return new Enemy(name, health,
                 scaled(tier.getBaseAttack() + monster.attackOffset() + floor * 3, attackMultiplier),

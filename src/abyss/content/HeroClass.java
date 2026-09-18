@@ -39,7 +39,8 @@ public enum HeroClass
     {
         @Override public boolean tryExecution(HeroContext hero, Combatant enemy)
         {
-            if (enemy.getHealth() * 10 < enemy.getMaxHealth() && enemy.isAlive())
+            if ((long) enemy.getHealth() * 10 < enemy.getMaxHealth() && enemy.isAlive()
+                    && (!(enemy instanceof abyss.combat.Enemy target) || !target.isProtectedBySummons()))
             {
                 System.out.println(abyss.ui.Language.battle("Passive [Execution]: ") + abyss.ui.Language.t(enemy.getName()) + abyss.ui.Language.battle(" has less than 10% maximum health and is erased."));
                 int health = enemy.getHealth();

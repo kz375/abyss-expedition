@@ -31,6 +31,8 @@ public final class CombatCalculator
     public static int hitHero(Hero hero, Enemy enemy, double multiplier, RunStatistics statistics, java.util.Random random)
     {
         int damage = calculate(enemy.getCurrentAttack(), hero.getCurrentDefense(), multiplier, 5, random).damage;
+        StatusEffect curse = hero.findStatus("Curse");
+        if (curse != null) damage = damage * (100 + curse.getPower()) / 100;
         StatusEffect empower = enemy.findStatus("Empower");
         if (empower != null) damage = damage * (100 + empower.getPower()) / 100;
         for (RelicEffect relic : hero.getEquippedRelics()) damage = relic.modifyIncomingDamage(hero, enemy, damage);

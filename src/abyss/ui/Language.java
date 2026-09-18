@@ -76,6 +76,8 @@ public final class Language {
         Map.entry("Event choices and high-floor combat balance", "事件按钮与中后期战斗平衡更新"),
         Map.entry("Early-floor enemy health balance", "前两层怪物生命平衡更新"),
         Map.entry("Early foes now outlast starter heroes", "前两层怪物生命略高于开局角色更新"),
+        Map.entry("Random events now use choice buttons", "随机事件现已使用选择按钮"),
+        Map.entry("Smooth wards, event choices, and combat fixes", "护盾动画、事件交互与战斗修复"),
         Map.entry("❉  VICTORY  /  THE STAR RELIC RECLAIMED", "❉  远征胜利  /  星辰圣遗物已夺回"),
         Map.entry("☠  DEFEAT  /  A LEGEND REMEMBERED", "☠  远征失败  /  勇者的传说长存"),
         Map.entry("░  EXPEDITION PAUSED", "░  远征已暂停"),

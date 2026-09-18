@@ -1,6 +1,16 @@
-/* Additive combat-meter layer: it deliberately does not change any game values. */
-.health-row{grid-template-columns:minmax(105px,1fr) minmax(120px,205px) minmax(86px,auto)}
-.health-meter{justify-self:start;width:100%;max-width:205px}
-.shield-fill{position:absolute;z-index:1;top:0;bottom:0;border-radius:0 999px 999px 0;background:linear-gradient(90deg,#7b828a,#bcc2c9);box-shadow:0 0 8px #bdc4cc55}
-.health-fill{z-index:2}
-@media(max-width:500px){.health-row{grid-template-columns:minmax(76px,1fr) minmax(80px,1.25fr) auto}.health-meter{max-width:none}}
+/* Two aligned tracks: gray ward above vitality; both use maximum HP as their scale. */
+.health-row{grid-template-columns:minmax(80px,1fr) minmax(90px,185px) 150px;gap:12px;min-width:0}
+.health-row.summon-health{margin-left:0;padding-left:23px}
+.health-row>span{min-width:0}
+.health-value{overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.health-meter{justify-self:start;width:100%;max-width:185px;height:16px;overflow:hidden;background:linear-gradient(to bottom,#78818c22 0 4px,transparent 4px 7px,#294938 7px);border-radius:3px;box-shadow:none}
+.enemy-health .health-meter{background:linear-gradient(to bottom,#78818c22 0 4px,transparent 4px 7px,#4c2928 7px)}
+.health-meter .health-fill,.health-meter .damage-trail,.health-meter .shield-fill,.health-meter .shield-trail{position:absolute;inset:7px 0 0;width:100%;border-radius:2px;transform-origin:left;transition:none;animation:none;will-change:transform;box-shadow:none}
+.health-meter .health-fill{z-index:2;background:linear-gradient(90deg,#49bb79,#9af0a4)}
+.enemy-health .health-meter .health-fill{background:linear-gradient(90deg,#b84d49,#f28c77)}
+.health-meter .damage-trail,.health-meter .shield-trail{z-index:1;background:#f2ce59}
+.enemy-health .health-meter .damage-trail,.enemy-health .health-meter .shield-trail{background:#ad7e26}
+.health-meter .shield-fill,.health-meter .shield-trail{inset:0 0 auto;height:4px}
+.health-meter .shield-fill{z-index:2;background:linear-gradient(90deg,#87939f,#d4d9df)}
+@media(max-width:600px){.health-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 10px;padding:8px}.health-row .health-meter{grid-column:1/-1;grid-row:2;max-width:185px}.health-value{grid-column:2;grid-row:1}.health-row.summon-health{margin-left:8px}}
+@media(prefers-reduced-motion:reduce){.health-meter *{will-change:auto}}

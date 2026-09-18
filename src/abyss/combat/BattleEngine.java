@@ -8,8 +8,13 @@ public final class BattleEngine {
     private static final int MAX_ULTRA_BOSS_SUMMONS = 1;
     private final java.util.function.IntBinaryOperator choice;
     private final RunStatistics statistics;
+    private final java.util.function.Consumer<String> defeatedSummon;
     public BattleEngine(ConsoleInput input, RunStatistics statistics) { this(input::readChoice, statistics); }
-    public BattleEngine(java.util.function.IntBinaryOperator choice, RunStatistics statistics) { this.choice = choice; this.statistics = statistics; }
+    public BattleEngine(java.util.function.IntBinaryOperator choice, RunStatistics statistics) { this(choice, statistics, name -> { }); }
+    public BattleEngine(java.util.function.IntBinaryOperator choice, RunStatistics statistics,
+                        java.util.function.Consumer<String> defeatedSummon) {
+        this.choice = choice; this.statistics = statistics; this.defeatedSummon = defeatedSummon;
+    }
     public boolean battle(Hero hero, Enemy enemy)
     {
         java.util.List<Enemy> minions = new java.util.ArrayList<>();
@@ -24,10 +29,11 @@ public final class BattleEngine {
         {
             refreshBossProtection(enemy, minions);
             statistics.addTurn();
-            if (minions.isEmpty() && hero.getHeroClass().tryExecution(hero, enemy) && !enemy.isAlive())
-            {
-                break;
-            }
+            Enemy executionTarget = minions.isEmpty() ? enemy : minions.get(0);
+            hero.getHeroClass().tryExecution(hero, executionTarget);
+            weakenForDefeatedSummons(enemy, minions);
+            refreshBossProtection(enemy, minions);
+            if (!enemy.isAlive()) break;
 
             boolean stunned = heroTurnStart(hero);
             boolean usedSkill = false;
@@ -98,6 +104,7 @@ public final class BattleEngine {
                     if (target == enemy && enemy.isAlive() && enemy.isUltraNightmareFinalBoss() && minions.size() < MAX_ULTRA_BOSS_SUMMONS) {
                         Enemy minion = enemy.summonUltraNightmareMinion();
                         minions.add(minion);
+                        refreshBossProtection(enemy, minions);
                         System.out.println(Language.isChinese()
                                 ? "超级噩梦【深渊召唤】：深渊领主回应普通攻击，召唤了" + Language.t(minion.getName()) + "！"
                                 : "Ultra Nightmare [Abyssal Summoning]: The Abyss Lord answers your basic attack and summons " + minion.getName() + "!");
@@ -117,7 +124,7 @@ public final class BattleEngine {
                 break;
             }
             enemyTurn(hero, enemy);
-            if (!hero.isAlive())
+            if (!hero.isAlive() || !enemy.isAlive())
             {
                 break;
             }
@@ -138,7 +145,12 @@ public final class BattleEngine {
     private void weakenForDefeatedSummons(Enemy boss, java.util.List<Enemy> minions)
     {
         int before = minions.size();
-        minions.removeIf(add -> !add.isAlive());
+        minions.removeIf(add -> {
+            if (add.isAlive()) return false;
+            defeatedSummon.accept(add.getName());
+            if (add.isElite()) statistics.addEliteKill(); else statistics.addNormalKill();
+            return true;
+        });
         int defeated = before - minions.size();
         for (int index = 0; index < defeated; index++) boss.weakenAfterSummonDefeat();
         if (defeated > 0 && boss.isUltraNightmareFinalBoss()) {
@@ -146,12 +158,6 @@ public final class BattleEngine {
                     ? "超级噩梦【深渊破绽】：召唤物被击败，首领全部数值永久降低 3%。"
                     : "Ultra Nightmare [Abyssal Breach]: A summon falls. The boss permanently loses 3% of all stats.");
         }
-    }
-    private void printSummonProtection()
-    {
-        System.out.println(Language.isChinese()
-                ? "超级噩梦【深渊护盾】：必须先击败召唤物，才能伤害首领。"
-                : "Ultra Nightmare [Abyssal Shield]: Defeat the summoned foe before damaging the boss.");
     }
     private void triggerBattleStart(Hero hero, Enemy enemy)
     {

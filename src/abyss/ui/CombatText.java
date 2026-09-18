@@ -99,7 +99,7 @@ final class CombatText {
         Map.entry("Passive [Iron Will]: You begin with 70 shield.", "被动【钢铁意志】：战斗开始时获得 70 护盾。"),
         Map.entry("Passive [Hunter's Focus]: A bonus hit deals ", "被动【猎手专注】：追加攻击造成 "),
         Map.entry("Passive [Execution]: ", "被动【处决】："),
-        Map.entry(" has less than 40 health and is erased.", "的生命低于 40，被立即抹除。"),
+        Map.entry(" has less than 10% maximum health and is erased.", "的生命低于最大生命 10%，被立即抹除。"),
         Map.entry("Passive [Divine Aegis]: You gain 10 shield.", "被动【神圣庇护】：获得 10 护盾。"),
         Map.entry("Passive [Curse]: ", "被动【诅咒】："),
         Map.entry(" takes 25% more damage for 3 turns.", "受到的伤害增加 25%，持续 3 回合。"),

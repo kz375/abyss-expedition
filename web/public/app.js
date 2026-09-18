@@ -14,14 +14,14 @@ Object.assign(words.en, {
 });
 words.zh.thanks = "感谢你踏入深渊";
 words.en.thanks = "Thank you for venturing into the abyss";
-words.zh.edition = "版本 · 1.2.1";
-words.en.edition = "VERSION · 1.2.1";
+words.zh.edition = "版本 · 1.2.4";
+words.en.edition = "VERSION · 1.2.4";
 words.zh.versionLabel = "版本";
 words.en.versionLabel = "VERSION";
-words.zh.releaseVersion = "1.2.1";
-words.en.releaseVersion = "1.2.1";
-words.zh.releaseNote = "血条动画、护盾召唤物与战斗平衡更新";
-words.en.releaseNote = "Animated vitality, ward summons, and combat balance";
+words.zh.releaseVersion = "1.2.4";
+words.en.releaseVersion = "1.2.4";
+words.zh.releaseNote = "护盾显示、事件按钮与战斗平衡更新";
+words.en.releaseNote = "Shield display, event choices, and combat balance";
 const t = key => words[language][key] || key;
 function languageAvailable() {
   return state?.ready && !state.ended && !state.puzzle && [...choicesFrom(state.screen).entries()].some(([, label]) => /^(Language|语言)\s/.test(label));
@@ -61,9 +61,15 @@ function choicesFrom(text) {
   const choices = new Map();
   for (const line of text.split("\n")) {
     // Only numbered action lines, never numbers embedded in prose or stat bars.
-    if (!/^\s*(?:\[\d+\]|\d+[.)])\s/.test(line)) continue;
+    const numberedLine = /^\s*(?:\[\d+\]|\d+[.)])\s/.test(line);
+    const eventAlternatives = /\s1\.\s/.test(line);
+    if (!numberedLine && !eventAlternatives) continue;
     const matches = [...line.matchAll(/(?:^|\s{2,})(?:\[(\d+)\]|(\d+)[.)])\s+(.+?)(?=\s{2,}(?:\[\d+\]|\d+[.)])\s|$)/g)];
     for (const match of matches) choices.set(match[1] || match[2], match[3].trim());
+    // Event narration writes its alternatives mid-sentence; expose those as the same clickable choice buttons.
+    if (eventAlternatives) for (const match of line.matchAll(/(?:^|\s)(\d+)\.\s+(.+?)(?=\s+\d+\.\s+|$)/g)) {
+      choices.set(match[1], match[2].trim());
+    }
   }
   return choices;
 }
@@ -112,12 +118,18 @@ function renderText(text) {
       const row = document.createElement("div"); row.className = `health-row ${player ? "player-health" : "enemy-health"}${summoned ? " summon-health" : ""}`;
       const label = document.createElement("span"); label.textContent = health[1].trim();
       const current = Number(health[2]), maximum = Math.max(1, Number(health[3]));
+      const shield = Number((health[4].match(/(?:Shield|护盾)\s+(\d+)/) || [, "0"])[1]);
       const key = `${player ? "hero" : "enemy"}:${health[1].trim()}`;
       const previous = healthSnapshot.get(key);
       const percent = Math.max(0, Math.min(100, current / maximum * 100));
       const meter = document.createElement("span"); meter.className = "health-meter"; meter.setAttribute("role", "meter");
       meter.setAttribute("aria-label", label.textContent); meter.setAttribute("aria-valuemin", "0"); meter.setAttribute("aria-valuemax", String(maximum)); meter.setAttribute("aria-valuenow", String(current));
       const fill = document.createElement("span"); fill.className = "health-fill"; fill.style.width = `${percent}%`;
+      if (shield > 0) {
+        const shieldFill = document.createElement("span"); shieldFill.className = "shield-fill";
+        shieldFill.style.left = `${percent}%`; shieldFill.style.width = `${Math.min(100 - percent, shield / maximum * 100)}%`;
+        shieldFill.setAttribute("aria-hidden", "true"); meter.append(shieldFill);
+      }
       meter.append(fill);
       if (previous && previous.maximum === maximum && previous.current > current) {
         const trail = document.createElement("span"); trail.className = "damage-trail";

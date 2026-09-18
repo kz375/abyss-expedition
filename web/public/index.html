@@ -8,6 +8,7 @@
   <title>深渊远征</title>
   <link rel="icon" href="/mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/shield-bars.css">
   <script src="/app.js" defer></script>
 </head>
 <body>
@@ -42,7 +43,7 @@
         <div id="ended" class="ended" hidden><p data-i18n="ended">这段旅程已告一段落，你的存档与成就仍在。</p><p class="thanks" data-i18n="thanks">感谢你踏入深渊</p><button id="restart" class="primary" data-i18n="gateway">返回主页</button></div>
       </section>
       <aside>
-        <section class="side-card"><p class="eyebrow" data-i18n="fieldNotes">远征指南</p><h2 data-i18n="supplies">行囊与记录</h2><p data-i18n="saveNote">进度会在游戏检查点自动保存。刷新页面可继续当前会话，服务重启后从最近检查点恢复。</p><p class="release-note"><span data-i18n="versionLabel">版本</span> <strong data-i18n="releaseVersion">1.2.1</strong><br><span data-i18n="releaseNote">血条动画、护盾召唤物与战斗平衡更新</span></p><a href="/api/backup" class="side-action" id="backup" data-i18n="backup">↓ 下载存档备份</a><button id="pause" class="side-action" data-i18n="pause">⏸ 暂停并返回</button></section>
+        <section class="side-card"><p class="eyebrow" data-i18n="fieldNotes">远征指南</p><h2 data-i18n="supplies">行囊与记录</h2><p data-i18n="saveNote">进度会在游戏检查点自动保存。刷新页面可继续当前会话，服务重启后从最近检查点恢复。</p><p class="release-note"><span data-i18n="versionLabel">版本</span> <strong data-i18n="releaseVersion">1.2.4</strong><br><span data-i18n="releaseNote">护盾显示、事件按钮与战斗平衡更新</span></p><a href="/api/backup" class="side-action" id="backup" data-i18n="backup">↓ 下载存档备份</a><button id="pause" class="side-action" data-i18n="pause">⏸ 暂停并返回</button></section>
         <section class="side-card"><p class="eyebrow" data-i18n="archive">深渊档案</p><h2 data-i18n="history">冒险记录</h2><p data-i18n="historyNote">回看本次会话中的战斗、选择与收获。</p><button id="show-history" class="side-action" data-i18n="openHistory">打开手记 →</button><button id="import-backup" class="side-action" data-i18n="importBackup">↑ 导入存档备份</button><input id="backup-file" type="file" accept=".zip,application/zip" hidden></section>
         <div class="footnote"><span class="spark">✧</span><p data-i18n="storageNote">存档属于当前浏览器。清除网站数据、使用无痕模式或更换设备前，请下载备份。种子用于查找本档案内的进度，不是跨设备存档码。</p></div>
       </aside>

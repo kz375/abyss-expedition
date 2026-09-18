@@ -35,13 +35,13 @@ public enum HeroClass
     },
     CREATOR("Creator", 180, 31, 10, "Reality Rend", "Execution",
             "Five strikes (100%-140%) and Empower yourself (+8% damage, 1 turn)",
-            "Instantly destroy enemies below 40 health")
+            "Instantly destroy enemies below 10% maximum health")
     {
         @Override public boolean tryExecution(HeroContext hero, Combatant enemy)
         {
-            if (enemy.getHealth() < 40 && enemy.isAlive())
+            if (enemy.getHealth() * 10 < enemy.getMaxHealth() && enemy.isAlive())
             {
-                System.out.println(abyss.ui.Language.battle("Passive [Execution]: ") + abyss.ui.Language.t(enemy.getName()) + abyss.ui.Language.battle(" has less than 40 health and is erased."));
+                System.out.println(abyss.ui.Language.battle("Passive [Execution]: ") + abyss.ui.Language.t(enemy.getName()) + abyss.ui.Language.battle(" has less than 10% maximum health and is erased."));
                 int health = enemy.getHealth();
                 enemy.takeDamage(health + enemy.getShield());
                 hero.recordDamageDealt(health);

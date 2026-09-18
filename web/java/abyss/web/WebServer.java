@@ -13,7 +13,7 @@ import java.util.zip.*;
 /** Dependency-free HTTP host. Each browser owns an opaque cookie and isolated save directory. */
 public final class WebServer implements AutoCloseable {
     private static final String COOKIE = "abyss_player";
-    private static final Set<String> ASSETS = Set.of("index.html", "app.js", "styles.css", "mark.svg");
+    private static final Set<String> ASSETS = Set.of("index.html", "app.js", "styles.css", "shield-bars.css", "mark.svg");
     private final HttpServer server;
     private final Path assets, data;
     private final Map<String, GameProcess> games = new HashMap<>();

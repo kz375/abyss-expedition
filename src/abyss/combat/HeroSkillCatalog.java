@@ -96,7 +96,7 @@ public final class HeroSkillCatalog
 
     private static final class PaladinSkill extends BaseSkill
     {
-        private PaladinSkill() { super("Holy Judgment", 2); }
+        private PaladinSkill() { super("Holy Judgment", 3); }
         @Override public void use(HeroContext hero, Combatant enemy)
         {
             System.out.println(abyss.ui.Language.battle("Casting [Holy Judgment]!"));

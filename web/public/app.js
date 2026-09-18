@@ -57,7 +57,9 @@ function updateEnabled() {
   $("shell-language").disabled = !connected || busy || !languageAvailable();
   $("connection").textContent = t(!connected ? "offline" : busy || state && !state.ready && !state.ended ? "working" : "online");
 }
-const healthLine = /^\s*(.+?)\s+\[[#.]+\]\s*(\d+)\/(\d+)(.*)$/;
+// Console padding disappears when a long enemy name reaches the label width, producing
+// "Elite Shadow Assassin[#####]". Accept both that form and the normal spaced form.
+const healthLine = /^\s*(.*?)\s*\[([#.]+)\]\s*(\d+)\/(\d+)(.*)$/;
 function choiceLine(line) {
   // A numbered summon HP row is state, never an action.
   if (healthLine.test(line)) return {prefix:line, choices:[]};
@@ -83,6 +85,10 @@ function addChoice(number, label, action, variant = "", locked = false) {
   const name = document.createElement("span"); name.className = "label"; name.textContent = label;
   button.append(name); button.addEventListener("click", action); $("choices").append(button);
 }
+function isEventScreen(text) {
+  return /(?:篝火|神龛|宝箱|医师|泉水|冒险者|赌徒|图书馆|低语之井|牌手|预言家|收藏家|裂隙|熔炉|祭坛|商队|神像|Campfire|Shrine|Chest|Healer|Spring|Adventurer|Gambler|Library|Well|Card Sharp|Oracle|Curator|Rift|Forge|Altar|Caravan|Idol)/.test(text)
+    && !/(?:ENCOUNTER:|遭遇战|ELITE|精英战|BOSS|首领战)/.test(text);
+}
 function isCriticalLine(line) { return /CRITICAL HIT|暴击/.test(line); }
 function basicDamage(line) {
   return line.match(/^You attack for (\d+) damage\.$/) || line.match(/^你发动普通攻击，造成 (\d+) 点伤害。$/);
@@ -107,12 +113,28 @@ function animateMeter(layer, fraction, previous, duration, delay = 0) {
       {duration, delay, easing:"cubic-bezier(.22,.7,.22,1)", fill:"backwards"});
   }
 }
+function pulseHealth(entry, kind) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  entry.row.classList.remove("health-hit", "shield-break");
+  void entry.row.offsetWidth;
+  entry.row.classList.add(kind);
+  entry.row.addEventListener("animationend", () => entry.row.classList.remove(kind), {once:true});
+}
+function damageBurst(entry, amount) {
+  if (!amount || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const burst = document.createElement("span");
+  burst.className = "damage-burst";
+  burst.textContent = `-${amount}`;
+  burst.setAttribute("aria-hidden", "true");
+  entry.meter.append(burst);
+  burst.addEventListener("animationend", () => burst.remove(), {once:true});
+}
 function renderHealth(health, seen) {
   const name = health[1].trim();
   const player = /^(You|你|Health|生命)$/.test(name);
   const key = `${player ? "hero" : "enemy"}:${name}`;
-  const current = Number(health[2]), maximum = Math.max(1, Number(health[3]));
-  const shield = Number((health[4].match(/(?:Shield|护盾)\s+(\d+)/) || [, "0"])[1]);
+  const current = Number(health[3]), maximum = Math.max(1, Number(health[4]));
+  const shield = Number((health[5].match(/(?:Shield|护盾)\s+(\d+)/) || [, "0"])[1]);
   let entry = healthSnapshot.get(key);
   if (!entry) {
     const row = document.createElement("div");
@@ -130,6 +152,11 @@ function renderHealth(health, seen) {
   }
   const hp = Math.max(0, Math.min(1, current / maximum));
   const ward = Math.max(0, Math.min(1, shield / maximum));
+  if (entry.hp != null && hp < entry.hp) {
+    pulseHealth(entry, "health-hit");
+    damageBurst(entry, Math.max(1, Math.round((entry.hp - hp) * maximum)));
+  }
+  if (entry.ward != null && ward === 0 && entry.ward > 0) pulseHealth(entry, "shield-break");
   // Both tracks use max HP as their scale. A full HP bar never hides the shield.
   for (const [kind, fraction, old, duration, delay] of [
     ["health-fill", hp, entry.hp, 360, 0], ["damage-trail", hp, entry.hp, 620, hp < entry.hp ? 160 : 0],
@@ -138,7 +165,7 @@ function renderHealth(health, seen) {
   entry.meter.setAttribute("aria-valuemax", String(maximum));
   entry.meter.setAttribute("aria-valuenow", String(current));
   entry.meter.setAttribute("aria-valuetext", `${current} / ${maximum}; ${language === "zh" ? "护盾" : "Shield"} ${shield}`);
-  entry.value.textContent = `${health[2]} / ${health[3]}${health[4]}`;
+  entry.value.textContent = `${health[3]} / ${health[4]}${health[5]}`;
   entry.hp = hp; entry.ward = ward; seen.set(key, entry);
   return entry.row;
 }
@@ -165,7 +192,7 @@ function renderText(text) {
     if (health) {
       if (/^(Health|生命)$/.test(health[1].trim())) {
         const ward = (lines[index + 1] || "").match(/(?:Shield|护盾)\s+\d+/);
-        if (ward) health[4] += `  ${ward[0]}`;
+        if (ward) health[5] += `  ${ward[0]}`;
       }
       fragment.append(renderHealth(health, seen)); continue;
     }
@@ -201,11 +228,13 @@ function render(next) {
     $("choices").replaceChildren();
     const numberedChoices = choicesFrom(next.screen);
     const classSelection = isClassSelection(next.screen);
+    const eventScreen = isEventScreen(next.screen);
     $("choices").classList.toggle("class-choices", classSelection);
+    $("choices").classList.toggle("event-choices", eventScreen);
     if (!next.puzzle && !next.ended) {
       for (const [number, label] of numberedChoices) {
         const locked = /\s\[(?:closed|chosen|已关闭|已选择)\]$/.test(label);
-        addChoice(number, label, () => send(number), classSelection ? "class-choice" : "", locked);
+        addChoice(number, label, () => send(number), classSelection ? "class-choice" : eventScreen ? "event-choice" : "", locked);
       }
       if (!numberedChoices.size && needsContinue(next.screen)) addChoice("", t("continue"), () => send(""));
       if (isSeedPrompt(next.screen)) {

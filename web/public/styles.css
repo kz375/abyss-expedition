@@ -14,3 +14,26 @@ body{background:radial-gradient(ellipse at 20% -10%,#39452e88 0,transparent 43%)
 @media(min-width:851px){.screen{max-height:620px}}
 @media(max-width:850px){.workspace{grid-template-columns:minmax(0,1fr)!important}}
 @media(max-width:500px){aside{grid-template-columns:minmax(0,1fr)}.panel-heading{gap:8px;flex-wrap:wrap}}
+
+/* Combat feedback is visual-only; it never changes a turn, a stat, or a save. */
+.health-row{position:relative;transform-origin:center}
+.health-row.health-hit{animation:health-hit .34s ease-out both}
+.health-row.enemy-health.health-hit{animation-name:enemy-health-hit}
+.health-row.shield-break .health-meter{animation:shield-break .48s ease-out both}
+.damage-burst{position:absolute;z-index:5;right:5px;top:-17px;color:#f4cf62;font:700 14px/1 ui-monospace,"SFMono-Regular","PingFang SC",monospace;text-shadow:0 2px 5px #000;pointer-events:none;animation:damage-burst .68s cubic-bezier(.2,.76,.32,1) forwards}
+.enemy-health .damage-burst{color:#da9b37}
+.combat-event{animation:combat-event-in .26s ease-out both}
+.combat-event.critical-hit{animation:critical-event-in .42s cubic-bezier(.18,.84,.28,1.18) both}
+@keyframes health-hit{0%{background:#f7d25a3d;transform:translateX(0)}30%{background:#f7d25a50;transform:translateX(3px)}100%{background:transparent;transform:translateX(0)}}
+@keyframes enemy-health-hit{0%{background:#ff79644b;transform:translateX(0)}30%{background:#ff796468;transform:translateX(-3px)}100%{background:transparent;transform:translateX(0)}}
+@keyframes shield-break{0%,30%{filter:brightness(1.8);transform:translateX(0)}45%{filter:brightness(2.4);transform:translateX(-2px)}65%{transform:translateX(2px)}100%{filter:none;transform:translateX(0)}}
+@keyframes damage-burst{0%{opacity:0;transform:translateY(5px) scale(.8)}20%{opacity:1}100%{opacity:0;transform:translateY(-24px) scale(1.08)}}
+@keyframes combat-event-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes critical-event-in{0%{opacity:0;transform:scale(.8)}55%{opacity:1;transform:scale(1.1)}100%{transform:scale(1)}}
+
+/* Random events use clear tap targets. The server still decides which options are locked. */
+.choices.event-choices{grid-template-columns:1fr;gap:8px}
+.choice.event-choice{min-height:52px;padding:11px 15px;border-left:3px solid #b8974d;background:linear-gradient(105deg,#252b1d,#182219)!important;box-shadow:inset 0 0 22px #d0ac5310}
+.choice.event-choice:hover:not(:disabled){border-left-color:#f0cf84;transform:translateX(2px);box-shadow:inset 0 0 24px #d0ac5320,0 5px 16px #0003}
+.choice.event-choice .number{width:28px;height:28px;display:grid;place-items:center;border:1px solid #b8974d88;border-radius:50%;font-size:14px;color:#f5d68e}
+@media(prefers-reduced-motion:reduce){.health-row.health-hit,.health-row.shield-break .health-meter,.combat-event,.combat-event.critical-hit,.damage-burst{animation:none!important}}

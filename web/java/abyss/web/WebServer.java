@@ -49,6 +49,9 @@ public final class WebServer implements AutoCloseable {
         app.start();
         System.out.println("Abyss Expedition web: http://" + host + ":" + app.port());
         System.out.println("Web saves: " + app.data);
+        // HttpServer does not keep every JDK/runtime combination alive after main returns.
+        // Keep the web process running until the host (Docker/Render/local user) stops it.
+        new CountDownLatch(1).await();
     }
 
     private static String env(String name, String fallback) { return System.getenv().getOrDefault(name, fallback); }

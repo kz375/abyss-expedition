@@ -14,14 +14,14 @@ Object.assign(words.en, {
 });
 words.zh.thanks = "感谢你踏入深渊";
 words.en.thanks = "Thank you for venturing into the abyss";
-words.zh.edition = "版本 · 1.2.5";
-words.en.edition = "VERSION · 1.2.5";
+words.zh.edition = "版本 · 1.2.6";
+words.en.edition = "VERSION · 1.2.6";
 words.zh.versionLabel = "版本";
 words.en.versionLabel = "VERSION";
-words.zh.releaseVersion = "1.2.5";
-words.en.releaseVersion = "1.2.5";
-words.zh.releaseNote = "随机事件全按钮选择修正";
-words.en.releaseNote = "Random events now use choice buttons";
+words.zh.releaseVersion = "1.2.6";
+words.en.releaseVersion = "1.2.6";
+words.zh.releaseNote = "护盾动画、事件交互与战斗修复";
+words.en.releaseNote = "Smooth wards, event choices, and combat fixes";
 const t = key => words[language][key] || key;
 function languageAvailable() {
   return state?.ready && !state.ended && !state.puzzle && [...choicesFrom(state.screen).entries()].some(([, label]) => /^(Language|语言)\s/.test(label));
@@ -57,22 +57,22 @@ function updateEnabled() {
   $("shell-language").disabled = !connected || busy || !languageAvailable();
   $("connection").textContent = t(!connected ? "offline" : busy || state && !state.ready && !state.ended ? "working" : "online");
 }
+// Console padding disappears when a long enemy name reaches the label width, producing
+// "Elite Shadow Assassin[#####]". Accept both that form and the normal spaced form.
+const healthLine = /^\s*(.*?)\s*\[([#.]+)\]\s*(\d+)\/(\d+)(.*)$/;
+function choiceLine(line) {
+  // A numbered summon HP row is state, never an action.
+  if (healthLine.test(line)) return {prefix:line, choices:[]};
+  const start = line.match(/^\s*(?=\[\d+\]\s|\d+[.)]\s)/)
+    || line.match(/(?:^|[\s。！？.!?:：])(?=1\.\s+)/);
+  if (!start) return {prefix:line, choices:[]};
+  const offset = start.index + start[0].length;
+  const choices = [...line.slice(offset).matchAll(/(?:^|\s+)(?:\[(\d+)\]|(\d+)[.)])\s+(.+?)(?=\s+(?:\[\d+\]|\d+[.)])\s|$)/g)]
+    .map(match => [match[1] || match[2], match[3].trim()]);
+  return {prefix:line.slice(0, offset).trimEnd(), choices};
+}
 function choicesFrom(text) {
-  const choices = new Map();
-  for (const line of text.split("\n")) {
-    // Only numbered action lines, never numbers embedded in prose or stat bars.
-    const numberedLine = /^\s*(?:\[\d+\]|\d+[.)])\s/.test(line);
-    // Supports both "shrine. 1. Offer" and "神龛。1. 献祭" event text.
-    const eventAlternatives = /(?:^|[\s。！？.!?])1\.\s+/.test(line);
-    if (!numberedLine && !eventAlternatives) continue;
-    const matches = [...line.matchAll(/(?:^|\s{2,})(?:\[(\d+)\]|(\d+)[.)])\s+(.+?)(?=\s{2,}(?:\[\d+\]|\d+[.)])\s|$)/g)];
-    for (const match of matches) choices.set(match[1] || match[2], match[3].trim());
-    // Event narration writes its alternatives mid-sentence; expose those as the same clickable choice buttons.
-    if (eventAlternatives) for (const match of line.matchAll(/(?:^|[\s。！？.!?])(\d+)\.\s+(.+?)(?=(?:\s|[。！？.!?])\d+\.\s+|$)/g)) {
-      choices.set(match[1], match[2].trim());
-    }
-  }
-  return choices;
+  return new Map(text.split("\n").flatMap(line => choiceLine(line).choices));
 }
 function isClassSelection(text) { return /CHOOSE YOUR CHAMPION|选择你的角色/.test(text); }
 function isSeedPrompt(text) { return /(?:Seed|种子)\s*>\s*$/m.test(text); }
@@ -99,73 +99,106 @@ function combatEvent(row, icon, value, kind, label = "") {
   const number = document.createElement("strong"); number.className = "combat-number"; number.textContent = value;
   row.append(glyph, text, number);
 }
+function animateMeter(layer, fraction, previous, duration, delay = 0) {
+  const target = `scaleX(${fraction})`;
+  const from = previous == null ? target : getComputedStyle(layer).transform;
+  layer.getAnimations().forEach(animation => animation.cancel());
+  layer.style.transform = target;
+  if (previous != null && previous !== fraction && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    layer.animate([{transform:from === "none" ? `scaleX(${previous})` : from}, {transform:target}],
+      {duration, delay, easing:"cubic-bezier(.22,.7,.22,1)", fill:"backwards"});
+  }
+}
+function renderHealth(health, seen) {
+  const name = health[1].trim();
+  const player = /^(You|你|Health|生命)$/.test(name);
+  const key = `${player ? "hero" : "enemy"}:${name}`;
+  const current = Number(health[3]), maximum = Math.max(1, Number(health[4]));
+  const shield = Number((health[5].match(/(?:Shield|护盾)\s+(\d+)/) || [, "0"])[1]);
+  let entry = healthSnapshot.get(key);
+  if (!entry) {
+    const row = document.createElement("div");
+    row.className = `health-row ${player ? "player-health" : "enemy-health"}${/^\d+\.\s/.test(name) ? " summon-health" : ""}`;
+    const label = document.createElement("span"); label.textContent = name; label.title = name;
+    const meter = document.createElement("span"); meter.className = "health-meter";
+    meter.setAttribute("role", "meter"); meter.setAttribute("aria-label", name); meter.setAttribute("aria-valuemin", "0");
+    const layers = {};
+    for (const kind of ["damage-trail", "health-fill", "shield-trail", "shield-fill"]) {
+      layers[kind] = document.createElement("span"); layers[kind].className = kind;
+      layers[kind].setAttribute("aria-hidden", "true"); meter.append(layers[kind]);
+    }
+    const value = document.createElement("span"); value.className = "health-value";
+    row.append(label, meter, value); entry = {row, meter, value, layers};
+  }
+  const hp = Math.max(0, Math.min(1, current / maximum));
+  const ward = Math.max(0, Math.min(1, shield / maximum));
+  // Both tracks use max HP as their scale. A full HP bar never hides the shield.
+  for (const [kind, fraction, old, duration, delay] of [
+    ["health-fill", hp, entry.hp, 360, 0], ["damage-trail", hp, entry.hp, 620, hp < entry.hp ? 160 : 0],
+    ["shield-fill", ward, entry.ward, 320, 0], ["shield-trail", ward, entry.ward, 540, ward < entry.ward ? 100 : 0]
+  ]) if (old !== fraction) animateMeter(entry.layers[kind], fraction, old, duration, delay);
+  entry.meter.setAttribute("aria-valuemax", String(maximum));
+  entry.meter.setAttribute("aria-valuenow", String(current));
+  entry.meter.setAttribute("aria-valuetext", `${current} / ${maximum}; ${language === "zh" ? "护盾" : "Shield"} ${shield}`);
+  entry.value.textContent = `${health[3]} / ${health[4]}${health[5]}`;
+  entry.hp = hp; entry.ward = ward; seen.set(key, entry);
+  return entry.row;
+}
 function renderText(text) {
-  $("screen").replaceChildren();
+  const fragment = document.createDocumentFragment(), seen = new Map();
+  // A new encounter must not inherit the last same-named enemy's animation.
+  if (/>> (?:BOSS |ELITE )?ENCOUNTER:|❉ (?:首领战|精英战|遭遇战) ·/.test(text)) healthSnapshot.clear();
   const gateway = Math.max(text.lastIndexOf("THE GATEWAY"), text.lastIndexOf("深渊之门"));
   if (gateway >= 0) text = text.substring(gateway);
   const classMenu = /CHOOSE YOUR CHAMPION|THE HIDDEN PATH|选择你的角色|隐藏之路/.test(text);
   let blank = false;
   const lines = text.split("\n");
   for (let index = 0; index < lines.length; index++) {
-    const line = lines[index];
-    if (!classMenu && choicesFrom(line).size) continue;
+    let line = lines[index];
+    const actions = choiceLine(line);
+    if (!classMenu && actions.choices.length) {
+      line = actions.prefix;
+      if (!line.trim()) continue;
+    }
     if (/^\s*>\s*$/.test(line) || /Type a number, then press Enter\.|输入编号后按回车。/.test(line)) continue;
     if (!line.trim() && blank) continue;
     blank = !line.trim();
-    const health = line.match(/^\s*(.+?)\s+\[[#.]+\]\s*(\d+)\/(\d+)(.*)$/);
+    const health = line.match(healthLine);
     if (health) {
-      const player = /^(You|你)$/.test(health[1].trim());
-      const summoned = /^\d+\.\s/.test(health[1].trim());
-      const row = document.createElement("div"); row.className = `health-row ${player ? "player-health" : "enemy-health"}${summoned ? " summon-health" : ""}`;
-      const label = document.createElement("span"); label.textContent = health[1].trim();
-      const current = Number(health[2]), maximum = Math.max(1, Number(health[3]));
-      const shield = Number((health[4].match(/(?:Shield|护盾)\s+(\d+)/) || [, "0"])[1]);
-      const key = `${player ? "hero" : "enemy"}:${health[1].trim()}`;
-      const previous = healthSnapshot.get(key);
-      const percent = Math.max(0, Math.min(100, current / maximum * 100));
-      const meter = document.createElement("span"); meter.className = "health-meter"; meter.setAttribute("role", "meter");
-      meter.setAttribute("aria-label", label.textContent); meter.setAttribute("aria-valuemin", "0"); meter.setAttribute("aria-valuemax", String(maximum)); meter.setAttribute("aria-valuenow", String(current));
-      const fill = document.createElement("span"); fill.className = "health-fill"; fill.style.width = `${percent}%`;
-      if (shield > 0) {
-        const shieldFill = document.createElement("span"); shieldFill.className = "shield-fill";
-        shieldFill.style.left = `${percent}%`; shieldFill.style.width = `${Math.min(100 - percent, shield / maximum * 100)}%`;
-        shieldFill.setAttribute("aria-hidden", "true"); meter.append(shieldFill);
+      if (/^(Health|生命)$/.test(health[1].trim())) {
+        const ward = (lines[index + 1] || "").match(/(?:Shield|护盾)\s+\d+/);
+        if (ward) health[5] += `  ${ward[0]}`;
       }
-      meter.append(fill);
-      if (previous && previous.maximum === maximum && previous.current > current) {
-        const trail = document.createElement("span"); trail.className = "damage-trail";
-        trail.style.left = `${percent}%`; trail.style.width = `${Math.max(0, previous.current / maximum * 100 - percent)}%`;
-        meter.append(trail);
-      }
-      healthSnapshot.set(key, {current, maximum});
-      const value = document.createElement("span"); value.textContent = `${health[2]} / ${health[3]}${health[4]}`;
-      row.append(label, meter, value); $("screen").append(row); continue;
+      fragment.append(renderHealth(health, seen)); continue;
     }
     const row = document.createElement("div");
     if (/^\s*(Summoned foes:|召唤物：)\s*$/.test(line)) {
-      row.className = "summon-heading"; row.textContent = line.trim(); $("screen").append(row); continue;
+      row.className = "summon-heading"; row.textContent = line.trim(); fragment.append(row); continue;
     }
     const critical = index > 0 && isCriticalLine(lines[index - 1]);
     const outgoing = basicDamage(line), incoming = incomingDamage(line);
     if (isCriticalLine(line) && (basicDamage(lines[index + 1] || "") || incomingDamage(lines[index + 1] || ""))) continue;
-    if (outgoing) { combatEvent(row, critical ? "✦" : "⚔", outgoing[1], critical ? "critical-hit" : "player-hit"); $("screen").append(row); continue; }
-    if (incoming) { combatEvent(row, critical ? "✦" : "☠", incoming[2], critical ? "critical-hit enemy-hit" : "enemy-hit", incoming[1]); $("screen").append(row); continue; }
+    if (outgoing) { combatEvent(row, critical ? "✦" : "⚔", outgoing[1], critical ? "critical-hit" : "player-hit"); fragment.append(row); continue; }
+    if (incoming) { combatEvent(row, critical ? "✦" : "☠", incoming[2], critical ? "critical-hit enemy-hit" : "enemy-hit", incoming[1]); fragment.append(row); continue; }
     const divider = /^\s*[─━═+\-|░▒▓▄☠❉ ]{8,}\s*$/.test(line) && /[─━═\-]/.test(line);
     row.className = divider ? "divider" : "text-line";
     if (/❉|CHOOSE YOUR|THE GATEWAY|深渊之门|选择你的|选择冒险/.test(line)) row.classList.add("heading-line");
     if (!divider) row.textContent = line;
-    $("screen").append(row);
+    fragment.append(row);
   }
+  healthSnapshot = seen;
+  $("screen").replaceChildren(fragment);
   $("screen").scrollTop = 0;
 }
 function render(next) {
   if (state && next.revision < state.revision) return;
   const changed = !state || state.revision !== next.revision;
+  const screenChanged = !state || state.screen !== next.screen || state.language !== next.language;
   state = next; connected = true;
   if (changed) {
     language = next.language === "zh" ? "zh" : "en";
     translate();
-    renderText(next.screen);
+    if (screenChanged) renderText(next.screen);
     $("history-text").textContent = next.history;
     $("choices").replaceChildren();
     const numberedChoices = choicesFrom(next.screen);
@@ -173,7 +206,7 @@ function render(next) {
     $("choices").classList.toggle("class-choices", classSelection);
     if (!next.puzzle && !next.ended) {
       for (const [number, label] of numberedChoices) {
-        const locked = /\s\[(?:closed|已关闭)\]$/.test(label);
+        const locked = /\s\[(?:closed|chosen|已关闭|已选择)\]$/.test(label);
         addChoice(number, label, () => send(number), classSelection ? "class-choice" : "", locked);
       }
       if (!numberedChoices.size && needsContinue(next.screen)) addChoice("", t("continue"), () => send(""));
@@ -217,7 +250,7 @@ function renderPuzzle(p) {
 async function connect(restart = false) {
   ++generation;
   busy = true; paused = false; updateEnabled(); clearTimeout(pollTimer);
-  try { state = null; render(await api(restart ? "/api/restart" : "/api/session", "")); notice(""); }
+  try { state = null; healthSnapshot.clear(); render(await api(restart ? "/api/restart" : "/api/session", "")); notice(""); }
   catch (e) { disconnected(errorText(e, "busy")); }
   finally { busy = false; updateEnabled(); schedulePoll(); }
 }

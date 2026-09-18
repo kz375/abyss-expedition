@@ -14,14 +14,14 @@ Object.assign(words.en, {
 });
 words.zh.thanks = "感谢你踏入深渊";
 words.en.thanks = "Thank you for venturing into the abyss";
-words.zh.edition = "版本 · 1.2.1";
-words.en.edition = "VERSION · 1.2.1";
+words.zh.edition = "版本 · 1.2.5";
+words.en.edition = "VERSION · 1.2.5";
 words.zh.versionLabel = "版本";
 words.en.versionLabel = "VERSION";
-words.zh.releaseVersion = "1.2.1";
-words.en.releaseVersion = "1.2.1";
-words.zh.releaseNote = "血条动画、护盾召唤物与战斗平衡更新";
-words.en.releaseNote = "Animated vitality, ward summons, and combat balance";
+words.zh.releaseVersion = "1.2.5";
+words.en.releaseVersion = "1.2.5";
+words.zh.releaseNote = "随机事件全按钮选择修正";
+words.en.releaseNote = "Random events now use choice buttons";
 const t = key => words[language][key] || key;
 function languageAvailable() {
   return state?.ready && !state.ended && !state.puzzle && [...choicesFrom(state.screen).entries()].some(([, label]) => /^(Language|语言)\s/.test(label));
@@ -61,9 +61,16 @@ function choicesFrom(text) {
   const choices = new Map();
   for (const line of text.split("\n")) {
     // Only numbered action lines, never numbers embedded in prose or stat bars.
-    if (!/^\s*(?:\[\d+\]|\d+[.)])\s/.test(line)) continue;
+    const numberedLine = /^\s*(?:\[\d+\]|\d+[.)])\s/.test(line);
+    // Supports both "shrine. 1. Offer" and "神龛。1. 献祭" event text.
+    const eventAlternatives = /(?:^|[\s。！？.!?])1\.\s+/.test(line);
+    if (!numberedLine && !eventAlternatives) continue;
     const matches = [...line.matchAll(/(?:^|\s{2,})(?:\[(\d+)\]|(\d+)[.)])\s+(.+?)(?=\s{2,}(?:\[\d+\]|\d+[.)])\s|$)/g)];
     for (const match of matches) choices.set(match[1] || match[2], match[3].trim());
+    // Event narration writes its alternatives mid-sentence; expose those as the same clickable choice buttons.
+    if (eventAlternatives) for (const match of line.matchAll(/(?:^|[\s。！？.!?])(\d+)\.\s+(.+?)(?=(?:\s|[。！？.!?])\d+\.\s+|$)/g)) {
+      choices.set(match[1], match[2].trim());
+    }
   }
   return choices;
 }

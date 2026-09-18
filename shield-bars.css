@@ -1,0 +1,6 @@
+/* Additive combat-meter layer: it deliberately does not change any game values. */
+.health-row{grid-template-columns:minmax(105px,1fr) minmax(120px,205px) minmax(86px,auto)}
+.health-meter{justify-self:start;width:100%;max-width:205px}
+.shield-fill{position:absolute;z-index:1;top:0;bottom:0;border-radius:0 999px 999px 0;background:linear-gradient(90deg,#7b828a,#bcc2c9);box-shadow:0 0 8px #bdc4cc55}
+.health-fill{z-index:2}
+@media(max-width:500px){.health-row{grid-template-columns:minmax(76px,1fr) minmax(80px,1.25fr) auto}.health-meter{max-width:none}}

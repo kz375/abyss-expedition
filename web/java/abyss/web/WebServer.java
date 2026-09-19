@@ -13,7 +13,7 @@ import java.util.zip.*;
 /** Dependency-free HTTP host. Each browser owns an opaque cookie and isolated save directory. */
 public final class WebServer implements AutoCloseable {
     private static final String COOKIE = "abyss_player";
-    private static final Set<String> ASSETS = Set.of("index.html", "app.js", "styles.css", "shield-bars.css", "mark.svg", "assets/abyss-gateway-v1.png", "realtime-test/index.html");
+    private static final Set<String> ASSETS = Set.of("index.html", "app.js", "styles.css", "shield-bars.css", "mark.svg", "assets/abyss-gateway-v1.png", "realtime-test/index.html", "realtime-test/style.css", "realtime-test/campaign.js");
     private final HttpServer server;
     private final Path assets, data;
     private final Map<String, GameProcess> games = new HashMap<>();
@@ -63,11 +63,7 @@ public final class WebServer implements AutoCloseable {
             Headers headers = exchange.getResponseHeaders();
             headers.set("X-Content-Type-Options", "nosniff");
             headers.set("Referrer-Policy", "no-referrer");
-            String requestedPath = exchange.getRequestURI().getPath();
-            boolean realTimePrototype = requestedPath.equals("/realtime-test/") || requestedPath.equals("/realtime-test/index.html");
-            headers.set("Content-Security-Policy", realTimePrototype
-                    ? "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
-                    : "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+            headers.set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
             headers.set("Cache-Control", "no-store");
             String path = exchange.getRequestURI().getPath(), method = exchange.getRequestMethod();
             if (path.equals("/healthz") && method.equals("GET")) { send(exchange, 200, "application/json", "{\"ok\":true}"); return; }

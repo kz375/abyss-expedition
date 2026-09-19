@@ -100,6 +100,50 @@ try {
   assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'), true, 'mobile page does not overflow');
   const mobile = await command('Page.captureScreenshot', {format:'png'});
   await writeFile(join(profile, 'mobile.png'), Buffer.from(mobile.data, 'base64'));
+  // Deterministic protocol fixtures cover the state combinations real random play may miss.
+  await evaluate('paused=true;clearTimeout(pollTimer)');
+  const translations = await readFile(new URL('../../src/abyss/ui/WorldText.java', import.meta.url), 'utf8');
+  for (const pair of translations.matchAll(/Map\.entry\(("(?:[^"\\]|\\.)*"), ("(?:[^"\\]|\\.)*")\)/g)) {
+    const en = JSON.parse(pair[1]), zh = JSON.parse(pair[2]);
+    if (!en.includes('1. ') || !en.includes('2. ')) continue;
+    for (const text of [en,zh]) {
+      const expected = [...text.matchAll(/(\d+)\. /g)].map(m=>m[1]);
+      assert.deepEqual(await evaluate(`[...choicesFrom(${JSON.stringify(text)}).keys()]`), expected, `all event buttons: ${text}`);
+    }
+  }
+  await evaluate(`globalThis.fixture=(hp,shield)=>'你 [##########] '+hp+'/100  护盾 '+shield+'\\n深渊领主 [##########] 300/300\\n召唤物：\\n1. 洞窟蝙蝠 [##########] 50/100  护盾 20\\n[1] 普通攻击\\n[2] 技能';
+    healthSnapshot.clear();renderText(fixture(100,40));globalThis.heroRow=document.querySelector('.player-health');`);
+  assert.deepEqual(await evaluate('[...choicesFrom(fixture(100,40)).keys()]'), ['1','2'], 'summon health is never an action');
+  assert.equal(await evaluate('document.querySelectorAll(".summon-health").length'),1,'summon HP is visible below the boss');
+  assert.equal(await evaluate('document.querySelector(".player-health .shield-fill").getBoundingClientRect().width>0'),true,'full HP still shows ward');
+  await evaluate('renderText(fixture(70,0))');
+  assert.equal(await evaluate('heroRow===document.querySelector(".player-health")'),true,'health DOM reused between turns');
+  assert.equal(await evaluate('heroRow.querySelector(".health-fill").getAnimations().length>0'),true,'HP transition actually runs');
+  assert.equal(await evaluate('heroRow.querySelector(".shield-trail").getAnimations().length>0'),true,'breaking shield leaves a trail');
+  await evaluate('renderText(fixture(45,10))');
+  await delay(950);
+  assert.equal(await evaluate('getComputedStyle(heroRow.querySelector(".health-fill")).transform'), 'matrix(0.45, 0, 0, 1, 0, 0)', 'rapid damage settles at exact final HP');
+  assert.equal(await evaluate('getComputedStyle(heroRow.querySelector(".shield-fill")).transform'), 'matrix(0.1, 0, 0, 1, 0, 0)', 'ward settles at exact final value');
+  await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  await evaluate('renderText(fixture(65,30))');
+  assert.equal(await evaluate('heroRow.querySelector(".health-fill").getAnimations().length'),0,'reduced motion is respected');
+  await command('Emulation.setEmulatedMedia',{features:[]});
+  await evaluate('renderText("生命 [#####.....] 50/100")');
+  assert.equal(await evaluate('document.querySelectorAll(".player-health").length'),1,'status HP is green, not enemy red');
+  await evaluate('renderText("Elite Shadow Assassin[######################] 1085/1085  Shield 97")');
+  assert.equal(await evaluate('document.querySelectorAll(".enemy-health").length'),1,'long enemy names without padding still render a health row');
+  assert.equal(await evaluate('document.getElementById("screen").innerText.includes("[######################]")'),false,'long enemy health text is replaced by the meter');
+  for (const width of [320,390,768,851,1024,1280]) {
+    await command('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<600});
+    await evaluate('renderText(fixture(100,40))');
+    assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true,`page fits ${width}px`);
+    assert.equal(await evaluate('document.querySelector(".health-row").scrollWidth<=document.querySelector(".health-row").clientWidth'),true,`health row fits ${width}px`);
+    assert.notEqual(await evaluate('getComputedStyle(document.documentElement).overflowY'),'hidden','document scrolling enabled');
+  }
+  const meters = await command('Page.captureScreenshot',{format:'png'});
+  await writeFile(join(profile,'shield-desktop.png'),Buffer.from(meters.data,'base64'));
+  await evaluate(`renderText('你发现一座古老神龛。1. 献祭 15 生命  2. 离开')`);
+  assert.equal(await evaluate('document.getElementById("screen").innerText.includes("你发现一座古老神龛。")'),true,'event narration is retained');
   // Render an actual protocol-shaped puzzle snapshot and test key & touch controls separately from mechanics (covered by Java tests).
   await evaluate(`state = {...state, ready:true, puzzle:{size:8,moves:4,limit:40,player:10,monster:27,boxes:[18,36],targets:[21,45],shattered:-1,finished:false,won:false},revision:state.revision+1}; const example=state; state=null; render(example); paused=true; clearTimeout(pollTimer);`);
   assert.equal(await evaluate('document.querySelectorAll(".cell").length'), 64, '64 puzzle cells');
@@ -110,6 +154,17 @@ try {
   assert.equal(await evaluate('globalThis.capturedMove'), 'LEFT', 'arrow key without Enter');
   await evaluate(`document.querySelector('[data-move="DOWN"]').click()`);
   assert.equal(await evaluate('globalThis.capturedMove'), 'DOWN', 'touch direction button');
+  // The real-time beta is intentionally separate from saves, but its full browser flow must remain usable.
+  await command('Page.navigate', {url:`${origin}/realtime-test/`});
+  await waitFor('document.querySelectorAll("[data-hero]").length === 5');
+  await evaluate('document.querySelector("[data-hero=warrior]").click()');
+  await waitFor('document.querySelectorAll("#skills .skill").length === 4');
+  const betaEnemyHp = await evaluate('document.getElementById("enemy-hp-text").textContent');
+  await evaluate('document.querySelector("#skills .skill").click()');
+  await waitFor(`document.getElementById("enemy-hp-text").textContent !== ${JSON.stringify(betaEnemyHp)}`);
+  assert.equal(await evaluate('document.querySelector("#skills .skill").disabled'), true, 'real-time beta applies an ability cooldown');
+  await evaluate('document.getElementById("pause").click()');
+  assert.equal(await evaluate('document.getElementById("pause").textContent'), '继续', 'real-time beta can pause both sides');
   assert.deepEqual(errors, [], 'no browser exceptions');
   console.log(`PASS: Chrome main menu, Chinese, hidden Creator, combat, refresh, mobile layout, puzzle rendering and controls. Screenshots: ${profile}`);
 } finally {

@@ -13,7 +13,7 @@ import java.util.zip.*;
 /** Dependency-free HTTP host. Each browser owns an opaque cookie and isolated save directory. */
 public final class WebServer implements AutoCloseable {
     private static final String COOKIE = "abyss_player";
-    private static final Set<String> ASSETS = Set.of("index.html", "app.js", "styles.css", "shield-bars.css", "mark.svg", "assets/abyss-gateway-v1.png");
+    private static final Set<String> ASSETS = Set.of("index.html", "app.js", "styles.css", "shield-bars.css", "mark.svg", "assets/abyss-gateway-v1.png", "realtime-test/index.html");
     private final HttpServer server;
     private final Path assets, data;
     private final Map<String, GameProcess> games = new HashMap<>();
@@ -63,13 +63,17 @@ public final class WebServer implements AutoCloseable {
             Headers headers = exchange.getResponseHeaders();
             headers.set("X-Content-Type-Options", "nosniff");
             headers.set("Referrer-Policy", "no-referrer");
-            headers.set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+            String requestedPath = exchange.getRequestURI().getPath();
+            boolean realTimePrototype = requestedPath.equals("/realtime-test/") || requestedPath.equals("/realtime-test/index.html");
+            headers.set("Content-Security-Policy", realTimePrototype
+                    ? "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+                    : "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
             headers.set("Cache-Control", "no-store");
             String path = exchange.getRequestURI().getPath(), method = exchange.getRequestMethod();
             if (path.equals("/healthz") && method.equals("GET")) { send(exchange, 200, "application/json", "{\"ok\":true}"); return; }
             if (!path.startsWith("/api/")) {
                 if (!method.equals("GET")) { error(exchange, 405, "Method not allowed"); return; }
-                String file = path.equals("/") ? "index.html" : path.substring(1);
+                String file = path.equals("/") ? "index.html" : path.equals("/realtime-test/") ? "realtime-test/index.html" : path.substring(1);
                 if (!ASSETS.contains(file)) { error(exchange, 404, "Not found"); return; }
                 String type = file.endsWith(".js") ? "text/javascript" : file.endsWith(".css") ? "text/css" : file.endsWith(".svg") ? "image/svg+xml" : file.endsWith(".png") ? "image/png" : "text/html";
                 send(exchange, 200, type, Files.readAllBytes(assets.resolve(file))); return;

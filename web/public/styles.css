@@ -37,3 +37,8 @@ body{background:radial-gradient(ellipse at 20% -10%,#39452e88 0,transparent 43%)
 .choice.event-choice:hover:not(:disabled){border-left-color:#f0cf84;transform:translateX(2px);box-shadow:inset 0 0 24px #d0ac5320,0 5px 16px #0003}
 .choice.event-choice .number{width:28px;height:28px;display:grid;place-items:center;border:1px solid #b8974d88;border-radius:50%;font-size:14px;color:#f5d68e}
 @media(prefers-reduced-motion:reduce){.health-row.health-hit,.health-row.shield-break .health-meter,.combat-event,.combat-event.critical-hit,.damage-burst{animation:none!important}}
+
+/* Original gateway illustration: darkened beneath the interface so text stays readable. */
+body{background:linear-gradient(90deg,#07100ce8 0%,#0b1510bd 31%,#08110dbd 69%,#07100ce8 100%),linear-gradient(#07100c75,#07100ce8),url("/assets/abyss-gateway-v1.png") center top/cover fixed,#08100c!important;background-attachment:fixed,fixed,fixed,scroll}
+body:after{opacity:.58}
+@media(max-width:850px){body{background-attachment:scroll,scroll,scroll,scroll;background-position:center top,center top,center top,center top}}

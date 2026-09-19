@@ -13,7 +13,7 @@ import java.util.zip.*;
 /** Dependency-free HTTP host. Each browser owns an opaque cookie and isolated save directory. */
 public final class WebServer implements AutoCloseable {
     private static final String COOKIE = "abyss_player";
-    private static final Set<String> ASSETS = Set.of("index.html", "app.js", "styles.css", "shield-bars.css", "mark.svg");
+    private static final Set<String> ASSETS = Set.of("index.html", "app.js", "styles.css", "shield-bars.css", "mark.svg", "assets/abyss-gateway-v1.png");
     private final HttpServer server;
     private final Path assets, data;
     private final Map<String, GameProcess> games = new HashMap<>();
@@ -71,7 +71,7 @@ public final class WebServer implements AutoCloseable {
                 if (!method.equals("GET")) { error(exchange, 405, "Method not allowed"); return; }
                 String file = path.equals("/") ? "index.html" : path.substring(1);
                 if (!ASSETS.contains(file)) { error(exchange, 404, "Not found"); return; }
-                String type = file.endsWith(".js") ? "text/javascript" : file.endsWith(".css") ? "text/css" : file.endsWith(".svg") ? "image/svg+xml" : "text/html";
+                String type = file.endsWith(".js") ? "text/javascript" : file.endsWith(".css") ? "text/css" : file.endsWith(".svg") ? "image/svg+xml" : file.endsWith(".png") ? "image/png" : "text/html";
                 send(exchange, 200, type, Files.readAllBytes(assets.resolve(file))); return;
             }
             if (!sameOrigin(exchange)) { error(exchange, 403, "Cross-site request rejected"); return; }

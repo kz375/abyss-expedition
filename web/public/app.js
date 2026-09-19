@@ -7,10 +7,10 @@ const words = {
   en: {title:"The Gateway",subtitle:"Eight floors below  A legend of your own",chronicle:"Expedition journal",loading:"Lighting the torches. The gateway is opening…",trial:"The Twin Cores",puzzleRule:"Push a crate into the guardian to move it onto both golden cores. Use WASD, arrow keys, or the buttons below.",legendPlayer:"◆ You",legendBox:"▣ Crate",legendMonster:"♜ Guardian",legendCore:"✦ Core",quitTrial:"Abandon trial",return:"Return to expedition",inputLabel:"Your next move",send:"Enter ↵",inputHint:"Only a name, seed, or hidden passphrase needs typing.",ended:"This chapter has ended. Your checkpoints and achievements remain.",gateway:"Return to gateway",supplies:"Provisions & records",saveNote:"Progress saves at game checkpoints. Refresh to rejoin the current session; after a server restart, resume from the last checkpoint.",backup:"↓ Download save backup",pause:"⏸ Pause & return",history:"Your chronicle",historyNote:"Revisit the battles, choices, and discoveries of this session.",openHistory:"Open journal →",storageNote:"Your archive belongs to this browser. Download a backup before clearing site data, using private browsing, or changing devices. A seed looks up progress in this archive; it is not a cross-device save code.",footer:"Every descent writes another legend.",online:"Connected",working:"Working…",offline:"Disconnected",placeholder:"Name, seed, or hidden passphrase…",pauseConfirm:"Return to the gateway and resume from the last checkpoint? Unsaved combat actions will be lost.",quitConfirm:"Abandon the trial and take the normal failure penalty?",victory:"Both cores shattered · Victory",defeat:"No moves left · Defeat",reconnect:"Reconnect",network:"Connection interrupted. Reconnecting will synchronize the current turn; do not repeatedly submit.",busy:"Server unavailable. Please reconnect in a moment.",continue:"Continue",browseSaves:"Browse retained saves",randomSeed:"Generate random seed"}
 };
 Object.assign(words.zh, {
-  brand:"深渊",brandSubtitle:"远征",fullTitle:"深渊远征",eyebrow:"来自深渊的冒险纪事",seal:"深入深渊",edition:"网页版 · 0.1",trialEyebrow:"双核守卫的考验",fieldNotes:"远征指南",archive:"深渊档案",importBackup:"↑ 导入存档备份",switchLanguage:"切换语言",languageHint:"在游戏主页切换语言",importTooLarge:"备份不能超过 8 MB。",importConfirm:"将切换到导入的档案。请先下载当前档案备份；未保存的行动会丢失。继续？",invalidBackup:"备份无效或不兼容，原档案未改动。",invalidRequest:"输入无效，请检查后重试。",stale:"此回合已变化，已刷新，请重新选择。",requestFailed:"请求失败，最近检查点仍保留。",up:"向上",down:"向下",left:"向左",right:"向右",boardLabel:"八乘八试炼棋盘",gameLabel:"游戏",choicesLabel:"可选行动",movementLabel:"移动",close:"关闭"
+  brand:"深渊",brandSubtitle:"远征",fullTitle:"深渊远征",eyebrow:"来自深渊的冒险纪事",seal:"深入深渊",edition:"网页版 · 0.1",trialEyebrow:"双核守卫的考验",fieldNotes:"远征指南",archive:"深渊档案",importBackup:"↑ 导入存档备份",switchLanguage:"切换语言",languageHint:"在游戏主页切换语言",importTooLarge:"备份不能超过 8 MB。",importConfirm:"将切换到导入的档案。请先下载当前档案备份；未保存的行动会丢失。继续？",invalidBackup:"备份无效或不兼容，原档案未改动。",invalidRequest:"输入无效，请检查后重试。",stale:"此回合已变化，已刷新，请重新选择。",requestFailed:"请求失败，最近检查点仍保留。",up:"向上",down:"向下",left:"向左",right:"向右",boardLabel:"八乘八试炼棋盘",gameLabel:"游戏",choicesLabel:"可选行动",movementLabel:"移动",close:"关闭",hiddenLabel:"隐藏角色口令",hiddenPlaceholder:"输入口令后点击确定",hiddenHint:"普通角色请直接点击上方按钮。",seedLabel:"种子档案",seedPlaceholder:"输入已有种子以恢复进度",seedHint:"也可以点击下方按钮查看存档或生成新种子。"
 });
 Object.assign(words.en, {
-  brand:"ABYSS",brandSubtitle:"EXPEDITION",fullTitle:"Abyss Expedition",eyebrow:"A CHRONICLE OF THE DEPTHS",seal:"INTO THE ABYSS",edition:"WEB · 0.1",trialEyebrow:"TRIAL OF THE TWIN CORES",fieldNotes:"FIELD NOTES",archive:"THE ARCHIVE",importBackup:"↑ Import save backup",switchLanguage:"Language",languageHint:"Change language at the game gateway",importTooLarge:"Maximum backup size: 8 MB.",importConfirm:"Switch to the imported archive? Back up your current archive first. Unsaved actions will be lost.",invalidBackup:"Backup is invalid or incompatible; your current archive is unchanged.",invalidRequest:"Invalid input. Please check and try again.",stale:"This turn has changed. The page has been refreshed; choose again.",requestFailed:"Request failed. Your last checkpoint is retained.",up:"Up",down:"Down",left:"Left",right:"Right",boardLabel:"Eight by eight trial board",gameLabel:"Game",choicesLabel:"Available choices",movementLabel:"Movement",close:"Close"
+  brand:"ABYSS",brandSubtitle:"EXPEDITION",fullTitle:"Abyss Expedition",eyebrow:"A CHRONICLE OF THE DEPTHS",seal:"INTO THE ABYSS",edition:"WEB · 0.1",trialEyebrow:"TRIAL OF THE TWIN CORES",fieldNotes:"FIELD NOTES",archive:"THE ARCHIVE",importBackup:"↑ Import save backup",switchLanguage:"Language",languageHint:"Change language at the game gateway",importTooLarge:"Maximum backup size: 8 MB.",importConfirm:"Switch to the imported archive? Back up your current archive first. Unsaved actions will be lost.",invalidBackup:"Backup is invalid or incompatible; your current archive is unchanged.",invalidRequest:"Invalid input. Please check and try again.",stale:"This turn has changed. The page has been refreshed; choose again.",requestFailed:"Request failed. Your last checkpoint is retained.",up:"Up",down:"Down",left:"Left",right:"Right",boardLabel:"Eight by eight trial board",gameLabel:"Game",choicesLabel:"Available choices",movementLabel:"Movement",close:"Close",hiddenLabel:"Hidden character passphrase",hiddenPlaceholder:"Enter a passphrase, then confirm",hiddenHint:"Choose a normal character with the buttons above.",seedLabel:"Seed archive",seedPlaceholder:"Enter an existing seed to restore progress",seedHint:"Or use the buttons below to browse saves or create a new seed."
 });
 words.zh.thanks = "感谢你踏入深渊";
 words.en.thanks = "Thank you for venturing into the abyss";
@@ -41,6 +41,14 @@ function translate() {
   $("shell-language").title = t(languageAvailable() ? "switchLanguage" : "languageHint");
   $("command").placeholder = t("placeholder");
   updateEnabled();
+}
+function updateCommandHelp(classSelection = false, seedPrompt = false) {
+  let label = t("inputLabel"), placeholder = t("placeholder"), hint = t("inputHint");
+  if (classSelection) ({label, placeholder, hint} = {label:t("hiddenLabel"), placeholder:t("hiddenPlaceholder"), hint:t("hiddenHint")});
+  else if (seedPrompt) ({label, placeholder, hint} = {label:t("seedLabel"), placeholder:t("seedPlaceholder"), hint:t("seedHint")});
+  document.querySelector('label[for="command"]').textContent = label;
+  $("command").placeholder = placeholder;
+  $("input-hint").textContent = hint;
 }
 function notice(message) { $("notice").textContent = message; $("notice").hidden = !message; }
 async function api(path, body) {
@@ -229,6 +237,7 @@ function render(next) {
     const numberedChoices = choicesFrom(next.screen);
     const classSelection = isClassSelection(next.screen);
     const eventScreen = isEventScreen(next.screen);
+    const seedPrompt = isSeedPrompt(next.screen);
     $("choices").classList.toggle("class-choices", classSelection);
     $("choices").classList.toggle("event-choices", eventScreen);
     if (!next.puzzle && !next.ended) {
@@ -237,7 +246,7 @@ function render(next) {
         addChoice(number, label, () => send(number), classSelection ? "class-choice" : eventScreen ? "event-choice" : "", locked);
       }
       if (!numberedChoices.size && needsContinue(next.screen)) addChoice("", t("continue"), () => send(""));
-      if (isSeedPrompt(next.screen)) {
+      if (seedPrompt) {
         addChoice("", t("browseSaves"), () => send(language === "zh" ? "列表" : "LIST"));
         addChoice("", t("randomSeed"), () => send(""));
       }
@@ -246,6 +255,7 @@ function render(next) {
     $("puzzle").hidden = !next.puzzle;
     const requiresTyping = !numberedChoices.size || classSelection;
     $("command-form").hidden = !!next.puzzle || next.ended || !requiresTyping;
+    updateCommandHelp(classSelection, seedPrompt);
     $("ended").hidden = !next.ended;
     $("restart").textContent = t("gateway");
     if (next.puzzle) renderPuzzle(next.puzzle);

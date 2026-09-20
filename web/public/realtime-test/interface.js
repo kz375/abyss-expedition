@@ -4,24 +4,27 @@ let skillSignature="",creatorUnlocked=false;
 const nameOfSkill=s=>label(SKILL_NAMES.find(pair=>pair[0]===s[0])||[s[0],s[0]]);
 function feedback(target,value,type){const card=$(target+"-card");if(!card||value<.5)return;const node=document.createElement("span");node.className=`floating ${type}`;node.textContent=`${type==="heal"?"+":"−"}${Math.round(value)}`;node.style.left="50%";node.style.top="40%";card.append(node);card.classList.add("hit");setTimeout(()=>{node.remove();card.classList.remove("hit")},650);}
 function buttons(items,attribute){return items.map((item,i)=>`<button class="card" ${attribute}="${esc(item.id??i)}" ${item.disabled?"disabled":""}><strong>${esc(label(item.name))}</strong>${item.desc?`<small>${esc(label(item.desc))}</small>`:""}</button>`).join("");}
-function modal(title,description,html){$("overlay").hidden=false;$("overlay").innerHTML=`<div class="modal"><h2>${esc(label(title))}</h2><p>${esc(label(description))}</p>${html}</div>`;}
+function modal(title,description,html){$("overlay").hidden=false;$("overlay").innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><h2 id="dialog-title">${esc(label(title))}</h2><p>${esc(label(description))}</p>${html}</div>`;}
 function bind(selector,fn){const revision=game.revision;document.querySelectorAll(selector).forEach(button=>button.onclick=()=>{if(game.revision===revision&&!archiveKind)fn(button);});}
 function hasLocalSave(){try{return !!localStorage.getItem(BETA_RUN_KEY)}catch{return false}}
 function menu(){
   const previousSeed=$("seed")?.value||"",previousDifficulty=$("difficulty")?.value||"adventurer";
   modal(["选择远征职业","Choose an expedition class"],["种子只决定随机路线；恢复完整进度请使用续局或导入存档","Seeds determine random routes. Use Continue or Import to restore full progress"],`
+    <div class="save-actions"><button id="menu-language">${profile.locale==="en"?"简体中文":"English"}</button><button id="menu-codex">${tx("图鉴","Codex")}</button><button id="menu-achievements">${tx("成就","Achievements")}</button></div>
+    ${saveError?`<p class="menu-error" role="alert">${esc(saveError)}</p>`:""}
     <div class="setup"><label>${tx("难度","Difficulty")}<select id="difficulty">${Object.entries(DIFFICULTIES).map(([id,d])=>`<option value="${id}" ${id==="adventurer"?"selected":""}>${esc(label(d.name))}</option>`).join("")}</select></label><label>${tx("路线种子（可留空）","Route seed (optional)")}<input id="seed" maxlength="100" placeholder="${tx("输入种子仅生成新路线","A seed starts a NEW route")}"></label></div>
     <div class="save-actions">${hasLocalSave()?`<button id="resume-run">${tx("继续本地远征","Continue local run")}</button><button id="raw-backup">${tx("下载原始存档备份","Download original save backup")}</button>`:""}<button id="import-menu">${tx("导入 Beta 存档","Import Beta save")}</button></div>
     <div class="cards">${Object.entries(HEROES).filter(([id])=>id!=="creator"||creatorUnlocked).map(([id,h])=>`<button class="card" data-hero="${id}"><strong>${esc(tx(h.name,h.enName))}</strong><small>${tx("基础生命","Base health")} ${h.hp} · ${tx("攻击","Attack")} ${h.attack}<br>${esc(tx(h.passive,h.enPassive))}</small></button>`).join("")}</div>
     ${creatorUnlocked?"":`<div class="secret"><input id="creator-code" placeholder="${tx("已知隐藏口令？在这里输入","Know a secret code? Enter it here")}" aria-label="${tx("隐藏角色口令","Secret character code")}"><button id="unlock-creator">${tx("确认","Confirm")}</button></div>`}<a class="back" href="/">← ${tx("返回正式版","Return to the main game")}</a>`);
   bind("[data-hero]",button=>{if(hasLocalSave()&&!confirm(tx("开始新远征会替换本地续局，确定吗？","Starting a new run replaces the local save. Continue?")))return;newRun(button.dataset.hero,$("seed").value,$("difficulty").value);});
   $("seed").value=previousSeed;$("difficulty").value=previousDifficulty;
+  $("menu-language").onclick=()=>$("language").click();$("menu-codex").onclick=()=>openArchive("codex");$("menu-achievements").onclick=()=>openArchive("achievements");
   $("raw-backup")?.addEventListener("click",()=>{try{const raw=localStorage.getItem(BETA_RUN_KEY),url=URL.createObjectURL(new Blob([raw],{type:"application/json"})),a=document.createElement("a");a.href=url;a.download="abyss-original-save-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch{saveError=tx("无法读取原存档","Cannot read original save");render();}});
   $("resume-run")?.addEventListener("click",()=>restoreRun());$("import-menu").onclick=()=>$("import-file").click();
   $("unlock-creator")?.addEventListener("click",()=>{if($("creator-code").value.trim().toLowerCase()==="kz"){creatorUnlocked=true;const seed=$("seed").value,d=$("difficulty").value;menu();$("seed").value=seed;$("difficulty").value=d;}});
 }
 function eventTitle(id){const e=EVENT_CATALOG.find(e=>e[0]===id);return e?[e[1],e[2]]:["事件","Event"];}
-function renderScene(){if(!game)return;applyLocale();render();
+function renderScene(){if(!game)return;$("archive-layer").hidden=!archiveKind;applyLocale();render();
   if(game.phase==="menu"){menu();return;}
   if(game.phase==="battle"){$("overlay").hidden=true;return;}
   if(game.phase==="reward"){
@@ -61,7 +64,7 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId;
   $("potion").textContent=`${tx("药水","Potion")} (${game.potions||0})`;$("potion").disabled=game.phase!=="battle"||game.paused||!game.potions||!!archiveKind;
   $("export-save").disabled=!active||game.finished;
   $("journal").textContent=active?`${tx("种子","Seed")}: ${game.seed} · ${tx("已击败","Defeated")}: ${game.stats.kills} · ${tx("护卫上限 2","Guardian cap: 2")}`:tx("选择职业或导入存档开始","Choose a class or import a save");
-  $("save-status").textContent=saveError||(active&&!game.finished?tx("自动保存中 · 可导出存档跨设备恢复 · 种子不包含进度","Autosaving · Export for cross-device recovery · Seeds do not contain progress"):tx("正式版存档保持不变 · 实时测试版 1.4.0","Main-game saves stay untouched · Real-time Beta 1.4.0"));
+  $("save-status").textContent=saveError||(active&&!game.finished?tx("自动保存中 · 可导出存档跨设备恢复 · 种子不包含进度","Autosaving · Export for cross-device recovery · Seeds do not contain progress"):tx("正式版存档保持不变 · 实时测试版 1.4.1","Main-game saves stay untouched · Real-time Beta 1.4.1"));
   const status=(element,entries)=>{const key=JSON.stringify(entries.map(([n,v])=>[n,Math.ceil(v)]));if(element.dataset.key===key)return;element.dataset.key=key;element.innerHTML=entries.filter(([,v])=>v>0).map(([n,v])=>`<span class="status">${esc(n)} ${Math.ceil(v)}s</span>`).join("");};
   status($("hero-status"),active?Object.entries(game.statuses).map(([k,v])=>[label(ACTION_NAMES[k]||[k,k]),v]):[]);
   status($("enemy-status"),m?[[tx("眩晕","Stun"),m.stunned],[tx("灼烧","Burn"),m.burn],[tx("中毒","Poison"),m.poison],[tx("反击","Counter"),m.counter],[tx("狂暴","Frenzy"),m.rage]]:[]);
@@ -72,7 +75,7 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId;
 }
 function applyLocale(){document.documentElement.lang=profile.locale==="en"?"en":"zh-CN";document.title=tx("深渊远征 · 实时测试版","Abyss Expedition · Real-time Beta");
   $("language").textContent=profile.locale==="en"?"简体中文":"English";$("codex").textContent=tx("图鉴","Codex");$("achievements").textContent=tx("成就","Achievements");
-  $("title").textContent=tx("深渊流战 · 八层远征","Abyss Flow · Eight-Floor Expedition");$("eyebrow").textContent=tx("深渊远征 · 实时测试版 1.4.0","ABYSS EXPEDITION · REAL-TIME BETA 1.4.0");
+  $("title").textContent=tx("深渊流战 · 八层远征","Abyss Flow · Eight-Floor Expedition");$("eyebrow").textContent=tx("深渊远征 · 实时测试版 1.4.1","ABYSS EXPEDITION · REAL-TIME BETA 1.4.1");
   $("sub").textContent=tx("自主释放技能，敌人独立行动；数字键或点击技能按钮","Cast freely while enemies act independently. Click skills or use keys 1–4");
   $("notice").textContent=tx("独立测试版：职业、怪物、遗物、四选一事件、商店、双核试炼与存档备份。实时数值仍需实战调优","Standalone Beta: classes, monsters, relics, one-of-four events, shops, Twin Cores and save backups. Real-time balance remains under playtesting");
   $("restart").textContent=tx("返回选角色","Character selection");$("export-save").textContent=tx("导出存档","Export save");$("import-save").textContent=tx("导入存档","Import save");
@@ -96,6 +99,9 @@ function renderTrial(){const t=game.trial;
   bind("[data-dir]",b=>trialMove(...b.dataset.dir.split(",").map(Number)));$("trial-quit").onclick=()=>{if(confirm(tx("放弃将扣当前生命、金币和一件遗物，确定吗？","Forfeit loses current health, gold and one relic. Continue?"))){settleTrial(false);commit();}};
 }
 function init(){
+  // A transformed/animated arena establishes its own fixed-position containing block.
+  // Mount dialogs directly on body so all controls remain reachable on short screens.
+  document.body.append($("overlay"));
   profile.locale=profile.locale==="en"?"en":"zh";for(const key of ["kills","achievements","progress"])if(!profile[key]||typeof profile[key]!=="object"||Array.isArray(profile[key]))profile[key]={};
   profile.kills=Object.fromEntries(Object.entries(profile.kills).filter(([name,count])=>Object.hasOwn(MONSTER_EN,name)&&Number.isInteger(count)&&count>=0));profile.relics=Array.isArray(profile.relics)?profile.relics.filter(id=>Object.hasOwn(RELIC_BY_ID,id)):[];
   const toolbar=document.createElement("div");toolbar.className="save-actions";toolbar.innerHTML='<button id="export-save"></button><button id="import-save"></button><input id="import-file" type="file" accept="application/json,.json" hidden>';

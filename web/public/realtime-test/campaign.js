@@ -53,8 +53,8 @@ function newGame() {
     power:1, cooldownMultiplier:1, burn:0, poison:0, playerPoison:0, weak:0, curse:0, sunder:0, stunned:0, paladinPulse:0, eventUsed:false,archiveOpen:false,archivePaused:false,summons:[],bossPhase:1,telegraph:false,stats:{damage:0,taken:0,healed:0,casts:0}};
 }
 function saveRun(now=performance.now()) {
-  if(!game?.hero || game.finished) return;
-  const data={heroId:Object.entries(HEROES).find(([,hero])=>hero===game.hero)?.[0],floor:game.floor,plan:game.plan,hp:game.hp,max:game.max,shield:game.shield,enemy:game.enemy,enemyHp:game.enemyHp,enemyMax:game.enemyMax,enemyShield:game.enemyShield,enemyCount:game.enemyCount,gold:game.gold,relics:game.relics,power:game.power,cooldownMultiplier:game.cooldownMultiplier,burn:game.burn,poison:game.poison,playerPoison:game.playerPoison,weak:game.weak,curse:game.curse,sunder:game.sunder,stunned:game.stunned,summons:game.summons,bossPhase:game.bossPhase,stats:game.stats,cd:game.cd.map(end=>Math.max(0,end-now))};
+  if(!game?.hero || game.finished || game.choice || game.archiveOpen) return;
+  const data={heroId:Object.entries(HEROES).find(([,hero])=>hero===game.hero)?.[0],floor:game.floor,plan:game.plan,hp:game.hp,max:game.max,shield:game.shield,enemy:game.enemy,enemyHp:game.enemyHp,enemyMax:game.enemyMax,enemyShield:game.enemyShield,enemyCount:game.enemyCount,gold:game.gold,relics:game.relics,power:game.power,cooldownMultiplier:game.cooldownMultiplier,burn:game.burn,poison:game.poison,playerPoison:game.playerPoison,weak:game.weak,curse:game.curse,sunder:game.sunder,stunned:game.stunned,summons:game.summons,bossPhase:game.bossPhase,stats:game.stats,thorns:game.thorns,lowHealthPower:game.lowHealthPower,resetCooldowns:game.resetCooldowns,healPower:game.healPower,cd:game.cd.map(end=>Math.max(0,end-now))};
   try { localStorage.setItem(BETA_RUN_KEY,JSON.stringify(data)); } catch {}
 }
 function restoreRun() {
@@ -110,7 +110,8 @@ function damageHero(amount, visual=true) {
   if (visual) float("player",amount,"damage");
 }
 function heal(amount) { const before=game.hp; game.hp=clamp(game.hp+amount*(game.healPower||1),game.max); game.stats.healed+=game.hp-before; float("player",game.hp-before,"heal"); }
-function spawnSummon(){if(game.summons.length>=2)return;const base=choice(ROSTER.filter(monster=>monster.zone!=="BOSS"));const max=Math.round(base.hp*.5*(1+game.floor*.1));game.summons.push({name:base.name,hp:max,max});}
+function spawnSummon(){if(game.summons.length>=2)return;const base=choice(ROSTER.filter(monster=>monster.zone!=="BOSS"));const max=Math.round(base.hp*.5*(1+game.floor*.1));game.summons.push({name:base.name,kind:base.kind,attack:Math.round(base.attack*.55),hp:max,max});}
+function summonAction(){for(const summon of game.summons){damageHero(enemyDamage(summon.attack),false);applyEnemyEffect(summon.kind);}if(game.summons.length)log(tx("召唤护卫发动协同攻击。","Summoned guardians strike alongside the Boss."));}
 function float(target, amount, type) {
   const card=$(target+"-card"), value=document.createElement("span");
   card.classList.remove("hit"); void card.offsetWidth; card.classList.add("hit");
@@ -147,7 +148,7 @@ function enemyAction(now) {
   if (special && enemy.zone === "BOSS") { spawnSummon(); damageHero(enemyDamage(enemy.attack*multiplier)); log(tx(`${monsterName(enemy)} 召唤护卫并发动 ${enemy.special}。`,`${monsterName(enemy)} summons a guardian and uses ${enemy.special}.`)); }
   else if (special && enemy.kind === "drain") { const before=game.hp; damageHero(enemyDamage(enemy.attack*multiplier)); const dealt=before-game.hp; game.enemyHp=clamp(game.enemyHp+dealt*.5,game.enemyMax); log(`${enemy.name} 使用「${enemy.special}」，并吸取生命。`); }
   else { for(let hit=0;hit<hits;hit++) damageHero(enemyDamage(enemy.attack*multiplier)); log(`${enemy.name}${special?`使用「${enemy.special}」`:"发动攻击"}。`); }
-  if (special) applyEnemyEffect(enemy.kind); game.nextEnemy=now+(special?2200:Math.max(1050,1600-game.floor*35)); checkEnd();
+  if (special) applyEnemyEffect(enemy.kind); summonAction(); game.nextEnemy=now+(special?2200:Math.max(1050,1600-game.floor*35)); checkEnd();
 }
 function applyEnemyEffect(kind) {
   if (kind === "poison") game.playerPoison=Math.max(game.playerPoison,5);

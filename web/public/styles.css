@@ -42,3 +42,24 @@ body{background:radial-gradient(ellipse at 20% -10%,#39452e88 0,transparent 43%)
 body{background:linear-gradient(90deg,#07100ce8 0%,#0b1510bd 31%,#08110dbd 69%,#07100ce8 100%),linear-gradient(#07100c75,#07100ce8),url("/assets/abyss-gateway-v1.png") center top/cover fixed,#08100c!important;background-attachment:fixed,fixed,fixed,scroll}
 body:after{opacity:.58}
 @media(max-width:850px){body{background-attachment:scroll,scroll,scroll,scroll;background-position:center top,center top,center top,center top}}
+
+/* Phone-first layout for the original turn-based expedition. Visual and touch changes only. */
+@media(max-width:500px){
+  body{min-height:100dvh;background-position:center top,center top,center top,center top}
+  .topbar{height:auto;min-height:64px;padding:calc(9px + env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 9px max(14px,env(safe-area-inset-left));gap:8px}
+  .brand{min-width:0;font-size:11px;letter-spacing:2px}.brand-light{font-size:7px;letter-spacing:2px}.top-actions{min-width:0;gap:4px}.quiet{min-height:36px;padding:7px 5px;font-size:10px}#connection{display:none}
+  main{padding:0 max(12px,env(safe-area-inset-right)) 28px max(12px,env(safe-area-inset-left))}
+  .abyss-ornament{display:none}.intro{padding:25px 2px 20px!important;gap:12px}.intro h1{margin-bottom:8px;font-size:29px;letter-spacing:3px}.subtitle{line-height:1.5}.seal{width:54px;height:54px;flex:0 0 54px;margin:0;outline-offset:5px}.seal span{font-size:25px}.seal small{font-size:5px;margin-top:6px}
+  .workspace{gap:17px!important;padding-top:14px!important}.game-panel{border-radius:10px;box-shadow:0 12px 34px #0006!important}.panel-heading{min-height:48px;padding:12px 14px;font-size:11px;line-height:1.35}.edition{font-size:8px;letter-spacing:1px}
+  #notice{padding:10px 14px;font-size:11px;line-height:1.55}.screen{min-height:176px;max-height:min(46svh,390px);padding:14px 14px 5px;font-size:12px;line-height:1.7;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.screen .divider{margin:10px 0}
+  .choices{padding:13px 14px;gap:8px}.choice{min-height:52px;padding:10px 11px;gap:10px;font-size:12px;line-height:1.42}.choice .number{flex-basis:21px;font-size:17px}.choice.class-choice{min-height:50px;padding:10px 12px}.choice.event-choice{min-height:54px;padding:11px 12px}.choice.event-choice .number{width:27px;height:27px;flex-basis:27px}
+  #command-form{padding:13px 14px 14px}.input-row{gap:8px;padding:5px 5px 5px 11px}.input-row>span{font-size:20px}#command{min-height:40px;padding:8px 0;font-size:16px}#submit{min-width:76px;min-height:42px;padding:8px 9px;font-size:12px}#input-hint{margin:8px 0 0;font-size:10px;line-height:1.5}
+  .health-row{margin:7px 0;font-size:10px}.health-meter{height:8px}.health-value{font-size:10px}.summon-heading{margin:11px 0 3px 8px;padding:5px 8px;font-size:9px}.health-row.summon-health{margin-left:8px}
+  .puzzle{padding:15px 10px}.trial-heading{align-items:flex-start}.trial-heading h2{margin-bottom:8px}.trial-rule{font-size:11px;line-height:1.6}.board{width:100%;margin:14px auto;gap:2px;padding:4px}.cell{font-size:clamp(13px,7vw,22px)}.legend{gap:7px 11px;font-size:9px}.trial-bottom{align-items:flex-end;gap:7px;margin-top:15px}.dpad{grid-template-columns:repeat(3,43px);gap:4px}.dpad button{height:43px;font-size:20px}.trial-bottom .quiet,.trial-bottom .primary{min-height:43px;padding:8px 9px;font-size:10px}#moves{font-size:19px}
+  aside{gap:10px}.side-card{padding:16px 13px 18px!important;margin:0!important}.side-card .eyebrow{margin-bottom:8px}.side-card h2{margin-bottom:8px;font-size:16px}.side-card>p:not(.eyebrow),.footnote p{margin:8px 0;font-size:11px;line-height:1.65}.side-action{min-height:43px;padding:11px 0;font-size:12px}.footnote{padding:4px 2px 0!important}.release-note{margin:10px 0 3px!important}
+  .ended{padding:12px 14px 20px}.ended p{font-size:12px}.ended .thanks{font-size:14px}.ended button{min-height:44px}
+  dialog{width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:16px 14px;border-radius:10px}.dialog-heading h2{font-size:17px}#close-history{min-width:40px;min-height:40px;padding:5px}#history-text{font-size:11px;line-height:1.65}
+  footer{display:block;padding:20px 2px calc(18px + env(safe-area-inset-bottom));font-size:8px;line-height:1.7;letter-spacing:1px}footer span{display:block}footer span+span{margin-top:4px}
+}
+@media(max-width:350px){.intro h1{font-size:26px}.seal{display:none}.top-actions .quiet{font-size:9px}.choice{font-size:11px}#submit{min-width:65px;font-size:11px}.trial-bottom{flex-wrap:wrap}.trial-bottom .dpad{order:3;margin:auto}.screen{max-height:360px}}
+@media(hover:none){.choice:hover:not(:disabled),.choice.event-choice:hover:not(:disabled),button:hover:not(:disabled){transform:none}.choice:active:not(:disabled),button:active:not(:disabled){transform:scale(.985);border-color:var(--gold)}}

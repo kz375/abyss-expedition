@@ -41,3 +41,43 @@ body:after{background:radial-gradient(ellipse at 50% 120%,#739e5340,transparent 
 @keyframes overlay-in{from{opacity:0}to{opacity:1}}
 @keyframes modal-in{from{opacity:0;transform:translateY(11px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes journal-pulse{50%{opacity:.3;box-shadow:none}}
+
+/* Phone-first combat layout: preserve the left-versus-right battlefield without tiny controls. */
+@media(max-width:480px){
+  .page{width:calc(100% - 18px);padding:17px 0 34px}
+  .eyebrow{margin-bottom:6px;font-size:8px;letter-spacing:.16em}
+  h1{font-size:clamp(25px,8vw,33px);letter-spacing:.025em}
+  .sub{margin:9px 0 13px;font-size:12px;line-height:1.55}
+  .notice{margin:0;padding:8px 10px;font-size:10px;line-height:1.5}
+  .arena{min-height:675px;margin-top:12px;border-radius:12px}
+  .arena-head{top:10px;left:12px;right:12px;gap:7px;font-size:9px}
+  #floor-label{max-width:56%;letter-spacing:.08em;line-height:1.35}
+  #flow{gap:5px;text-align:right;line-height:1.35}
+  #flow i{width:6px;height:6px;flex:none}
+  .fighter{top:55px;bottom:168px;width:calc(50% - 14px);min-height:0;padding:11px 9px;border-radius:10px}
+  .player{left:9px}.enemy{right:9px}
+  .fighter h2{margin:5px 0 12px;font-size:clamp(17px,5.1vw,22px);line-height:1.1;overflow-wrap:anywhere}
+  .role{font-size:8px;letter-spacing:.11em}
+  .meter{display:block;font-size:10px}
+  .meter b{display:none}.meter strong,.meter em{display:block;min-width:0;text-align:left}
+  .meter strong{margin-bottom:5px}.meter em{margin-top:5px;font-size:9px;color:var(--muted)}
+  .bar{width:100%;height:11px}.shield{height:4px;margin-top:4px}
+  .statuses{min-height:0;max-height:61px;gap:4px;margin-top:10px;overflow:hidden}
+  .status{padding:3px 5px;font-size:8px;white-space:nowrap}
+  .passive,.intent{right:9px;bottom:9px;left:9px;padding:7px 8px;border-left-width:2px;font-size:9px;line-height:1.4}
+  .skills{gap:7px;padding:9px;grid-template-columns:repeat(2,1fr)}
+  .skill{min-height:70px;padding:9px 28px 8px 9px;border-radius:8px;touch-action:manipulation}
+  .skill strong{font-size:12px}.skill small{margin-top:4px;font-size:9px;line-height:1.35}.key{right:8px;top:8px;font-size:10px}
+  .overlay{padding:10px;place-items:end center}
+  .modal{max-height:calc(100% - 6px);padding:17px 14px;border-radius:12px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .modal h2{font-size:23px}.modal p{margin:8px 0 12px;font-size:11px;line-height:1.55}
+  .cards{gap:7px}.card{min-height:92px;padding:11px;touch-action:manipulation}.card strong{font-size:14px}.card small{margin-top:6px;font-size:10px;line-height:1.45}.tag{margin-bottom:5px;font-size:8px}
+  .secret{flex-wrap:wrap;gap:6px;margin-top:10px}.secret input{flex-basis:100%;min-height:42px;font-size:16px}.secret button{width:100%;min-height:42px}
+  .back{margin-top:11px;padding:7px 0;font-size:11px}
+  .below{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.journal{grid-column:1/-1;min-height:48px;padding:8px 10px;font-size:10px}.run-stats{grid-column:1/-1;justify-content:space-between}.run-stats span{flex:1;text-align:center;padding:6px;font-size:10px}.below button{min-height:44px;padding:9px;font-size:12px}
+  .fineprint{margin:11px 1px;font-size:9px}
+}
+@media(max-width:350px){
+  .arena{min-height:700px}.fighter{width:calc(50% - 11px);padding:9px 7px}.player{left:7px}.enemy{right:7px}.fighter h2{font-size:16px}.passive,.intent{font-size:8px}.skill small{font-size:8px}
+}
+@media(hover:none){.card:hover,.skill:hover:not(:disabled){transform:none;box-shadow:none}.card:active:not(:disabled){transform:scale(.985);border-color:#efcf7e}.skill:focus-visible,.card:focus-visible,.below button:focus-visible,.secret input:focus-visible,.secret button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}}

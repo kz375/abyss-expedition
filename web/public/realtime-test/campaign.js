@@ -4,9 +4,11 @@ const $ = id => document.getElementById(id);
 const clamp = (value, max) => Math.max(0, Math.min(max, value));
 const choice = list => list[Math.floor(Math.random() * list.length)];
 const BETA_PROFILE_KEY = "abyss-flow-beta-profile-v1";
+const BETA_RUN_KEY = "abyss-flow-beta-run-v1";
 const readProfile = () => { try { return JSON.parse(localStorage.getItem(BETA_PROFILE_KEY)) || {locale:"zh",kills:{},achievements:{}}; } catch { return {locale:"zh",kills:{},achievements:{}}; } };
 const profile = readProfile();
 const writeProfile = () => { try { localStorage.setItem(BETA_PROFILE_KEY, JSON.stringify(profile)); } catch {} };
+const clearRun = () => { try { localStorage.removeItem(BETA_RUN_KEY); } catch {} };
 const tx = (zh, en) => profile.locale === "en" ? en : zh;
 const MONSTER_EN = {"洞窟蝙蝠":"Cave Bat","深渊猎犬":"Abyss Hound","迷失矿工":"Lost Miner","泥沼史莱姆":"Bog Slime","墓穴鼠":"Crypt Rat","暗影刺客":"Shadow Assassin","诅咒人偶":"Cursed Doll","白骨学者":"Bone Scholar","嗜血水蛭":"Blood Leech","镜像幽灵":"Mirror Wraith","虚空潜行者":"Void Stalker","白骨收割者":"Bone Reaper","恐惧怨灵":"Dread Wraith","疫病携带者":"Plaguebearer","钢铁魔像":"Iron Golem","深渊恶魔":"Abyss Demon","末日先驱":"Doom Harbinger","深渊巨蛇":"Abyss Serpent","饥饿巨像":"Hungry Colossus","圣遗物守卫":"Relic Guardian","深渊领主":"Abyss Lord"};
 const EVENT_EN = {"篝火":["Campfire","Rest: recover 30% maximum health"],"预言家":["Oracle","See the next floor's enemy"],"赌徒":["Gambler","Roll for 15–55 gold"],"熔炉":["Forge","Forge a weapon: all damage +6%"],"神龛":["Shrine","Gain 65 ward"],"低语之井":["Whispering Well","Cleanse debuffs and recover 18% maximum health"],"古老图书馆":["Ancient Library","All skill cooldowns -5%"],"流浪商队":["Wandering Caravan","Gain 28 gold and recover 12% maximum health"],"宝箱":["Chest","Open it: gain 42 gold"],"医师":["Healer","Recover 24% maximum health"],"清泉":["Spring","Recover 16% maximum health and gain 28 ward"],"冒险者":["Adventurer","Gain 20 gold and 30 ward"],"收藏家":["Curator","Receive a random unowned relic"],"裂隙":["Rift","All damage +12%"],"祭坛":["Altar","Lose 8% current health; all damage +10%"],"神像":["Idol","Gain 75 ward"]};
@@ -50,6 +52,14 @@ function newGame() {
     paused:true,finished:false,choice:false,last:performance.now(),nextEnemy:0,enemyCount:0,cd:[],gold:0,relics:[],
     power:1, cooldownMultiplier:1, burn:0, poison:0, playerPoison:0, weak:0, curse:0, sunder:0, stunned:0, paladinPulse:0, eventUsed:false,archiveOpen:false,archivePaused:false,summons:[],bossPhase:1,telegraph:false,stats:{damage:0,taken:0,healed:0,casts:0}};
 }
+function saveRun(now=performance.now()) {
+  if(!game?.hero || game.finished) return;
+  const data={heroId:Object.entries(HEROES).find(([,hero])=>hero===game.hero)?.[0],floor:game.floor,plan:game.plan,hp:game.hp,max:game.max,shield:game.shield,enemy:game.enemy,enemyHp:game.enemyHp,enemyMax:game.enemyMax,enemyShield:game.enemyShield,enemyCount:game.enemyCount,gold:game.gold,relics:game.relics,power:game.power,cooldownMultiplier:game.cooldownMultiplier,burn:game.burn,poison:game.poison,playerPoison:game.playerPoison,weak:game.weak,curse:game.curse,sunder:game.sunder,stunned:game.stunned,summons:game.summons,bossPhase:game.bossPhase,stats:game.stats,cd:game.cd.map(end=>Math.max(0,end-now))};
+  try { localStorage.setItem(BETA_RUN_KEY,JSON.stringify(data)); } catch {}
+}
+function restoreRun() {
+  try { const data=JSON.parse(localStorage.getItem(BETA_RUN_KEY)); if(!data?.heroId||!HEROES[data.heroId]||!Array.isArray(data.plan)) return false; const now=performance.now(); game=newGame(); Object.assign(game,data,{hero:HEROES[data.heroId],paused:false,finished:false,choice:false,last:now,nextEnemy:now+900,paladinPulse:now+4000,cd:(data.cd||[]).map(left=>now+Math.max(0,left))}); hideOverlay(); $("player-card").classList.remove("defeated"); $("enemy-card").classList.remove("defeated"); log(tx("已恢复本地 Beta 远征。","Local Beta expedition restored.")); return true; } catch { clearRun(); return false; }
+}
 function makePlan() {
   const byZone = zone => ROSTER.filter(monster => monster.zone === zone);
   return [choice(byZone("EARLY")),choice(byZone("EARLY")),elite(choice(byZone("MID"))),choice(byZone("MID")),elite(choice(byZone("LATE"))),choice(byZone("LATE")),elite(choice(byZone("DEEP"))),choice(ROSTER.filter(monster => monster.zone === "BOSS"))];
@@ -61,12 +71,15 @@ function hideOverlay() { $("overlay").hidden=true; }
 function startChoice() {
   const cards = Object.entries(HEROES).filter(([id]) => id !== "creator" || game.creatorUnlocked).map(([id,hero]) => heroCard(id,hero)).join("");
   const secret = game.creatorUnlocked ? "" : `<div class="secret"><input id="creator-code" aria-label="隐藏角色口令" placeholder="隐藏角色口令"><button id="unlock-creator">确认</button></div>`;
-  show(`<div class="modal"><h2>选择远征职业</h2><p>这是完整实时测试版。普通职业直接选择；隐藏角色仍需使用原正式远征中的口令解锁。</p><div class="cards">${cards}</div>${secret}<a class="back" href="/">← 返回正式远征</a></div>`);
+  const saved=localStorage.getItem(BETA_RUN_KEY) ? `<button class="card" id="resume-run"><strong>${tx("继续本地远征","Continue Local Expedition")}</strong><small>${tx("恢复上次 Beta 战斗进度。","Restore the previous Beta run on this device.")}</small></button>` : "";
+  show(`<div class="modal"><h2>选择远征职业</h2><p>这是完整实时测试版。普通职业直接选择；隐藏角色仍需使用原正式远征中的口令解锁。</p>${saved}<div class="cards">${cards}</div>${secret}<a class="back" href="/">← 返回正式远征</a></div>`);
   document.querySelectorAll("[data-hero]").forEach(button => button.onclick=() => startRun(button.dataset.hero));
   $("unlock-creator")?.addEventListener("click", () => { if ($("creator-code").value.trim().toLowerCase() === "kz") { game.creatorUnlocked=true; startChoice(); } });
+  $("resume-run")?.addEventListener("click",restoreRun);
 }
 function heroCard(id, hero) { return `<button class="card" data-hero="${id}"><span class="tag">${hero.key}</span><strong>${tx(hero.name,hero.enName)}</strong><small>${tx("生命","Health")} ${hero.hp} · ${tx("攻击","Attack")} ${hero.attack}<br>${hero.skills.map(skill => skill[0]).join(" / ")}<br>${tx(hero.passive,hero.enPassive)}</small></button>`; }
 function startRun(id) {
+  clearRun();
   game.hero=HEROES[id]; game.max=game.hero.hp; game.hp=game.max; game.plan=makePlan(); game.paused=false;
   game.paladinPulse=performance.now()+4000; hideOverlay(); beginFloor(); log(`${game.hero.name} 踏入深渊，第 1 层敌人出现。`);
 }
@@ -146,6 +159,7 @@ function applyEnemyEffect(kind) {
 }
 function runStats(){return `<div class="run-summary"><span>${tx("造成伤害","Damage")} <b>${Math.round(game.stats.damage)}</b></span><span>${tx("承受伤害","Taken")} <b>${Math.round(game.stats.taken)}</b></span><span>${tx("治疗","Healing")} <b>${Math.round(game.stats.healed)}</b></span><span>${tx("技能次数","Casts")} <b>${game.stats.casts}</b></span></div>`;}
 function checkEnd() {
+  if(game.finished){if(game.hp<=0)clearRun();return;}
   if (game.enemyHp<=0 && !game.choice && !game.finished) { game.enemyHp=0; game.choice=true; game.paused=true; $("enemy-card").classList.add("defeated"); recordKill(game.enemy); game.gold+=18+game.floor*7+(game.enemy.elite?18:0); log(`${monsterName(game.enemy)} ${tx("被击败。获得金币，选择远征奖励。","was defeated. Gain gold and choose a relic.")}`); rewardChoice(); }
   if (game.hp<=0 && !game.finished) { game.hp=0; game.finished=true; game.paused=true; $("player-card").classList.add("defeated"); log("你被深渊击退。本次 Beta 远征结束。"); show(`<div class="modal"><h2>${tx("远征结束","Expedition Ended")}</h2><p>${tx("这不会影响正式游戏、成就或存档。","This never affects the main game, achievements, or saves.")}</p>${runStats()}<button class="card" id="again"><strong>${tx("重新开始测试","Restart Test")}</strong><small>${tx("重新选择职业与八层路线。","Choose a class and eight-floor route again.")}</small></button><a class="back" href="/">← ${tx("返回正式远征","Return to Main Expedition")}</a></div>`); $("again").onclick=reset; }
 }
@@ -254,9 +268,10 @@ function tick(now) {
     if (game.hero===HEROES.paladin && now>=game.paladinPulse) { game.shield=clamp(game.shield+10,game.max);game.paladinPulse=now+4000; }
     enemyAction(now); checkEnd();
   }
+  if(game.hero&&!game.finished&&now-(game.lastSave||0)>1000){saveRun(now);game.lastSave=now;}
   render(now); requestAnimationFrame(tick);
 }
-function reset() { game=newGame(); $("player-card").classList.remove("defeated");$("enemy-card").classList.remove("defeated");$("pause").textContent="暂停";startChoice();render(performance.now()); }
+function reset() { clearRun(); game=newGame(); $("player-card").classList.remove("defeated");$("enemy-card").classList.remove("defeated");$("pause").textContent="暂停";startChoice();render(performance.now()); }
 $("pause").onclick=()=>{if(!game.hero||game.finished||game.choice)return;game.paused=!game.paused;$("pause").textContent=game.paused?"继续":"暂停";$("flow-text").textContent=game.paused?"已暂停 · 双方行动冻结":"实时进行中";};
 $("restart").onclick=reset;
 $("language").onclick=()=>{profile.locale=profile.locale === "en" ? "zh" : "en";writeProfile();applyLocale();};

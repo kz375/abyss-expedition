@@ -29,22 +29,22 @@ const HEROES = {
 
 // All 21 current codex creatures are represented in the real-time beta pool.
 const ROSTER = [
-  ["洞窟蝙蝠","EARLY",60,12,"Savage Bite","bite"],["深渊猎犬","EARLY",74,14,"Savage Bite","bite"],["迷失矿工","EARLY",80,12,"Pickaxe Crush","sunder"],["泥沼史莱姆","EARLY",73,11,"Mire Spit","poison"],["墓穴鼠","EARLY",66,15,"Mire Spit","poison"],
-  ["暗影刺客","MID",100,21,"Shadow Combo","double"],["诅咒人偶","MID",108,18,"Cursed Hex","weak"],["白骨学者","MID",96,19,"Soul Bolt","burn"],["嗜血水蛭","MID",110,22,"Blood Drain","drain"],["镜像幽灵","MID",92,23,"Mirror Pulse","curse"],
-  ["虚空潜行者","LATE",150,27,"Void Lash","curse"],["白骨收割者","LATE",162,25,"Reaper Sweep","sweep"],["恐惧怨灵","LATE",146,26,"Wraith Howl","weak"],["疫病携带者","LATE",155,24,"Toxic Burst","poison"],["钢铁魔像","LATE",178,24,"Iron Slam","sunder"],
-  ["深渊恶魔","DEEP",200,33,"Abyssal Rend","burn"],["末日先驱","DEEP",212,31,"Doom Chant","curse"],["深渊巨蛇","DEEP",195,34,"Serpent Coil","poison"],["饥饿巨像","DEEP",238,32,"Colossus Crash","sweep"],
-  ["圣遗物守卫","BOSS",420,40,"Guardian's Wrath","weak"],["深渊领主","BOSS",470,43,"Abyssal Nova","nova"]
+  ["洞窟蝙蝠","EARLY",245,13,"Savage Bite","bite"],["深渊猎犬","EARLY",265,15,"Savage Bite","bite"],["迷失矿工","EARLY",280,13,"Pickaxe Crush","sunder"],["泥沼史莱姆","EARLY",255,12,"Mire Spit","poison"],["墓穴鼠","EARLY",250,16,"Mire Spit","poison"],
+  ["暗影刺客","MID",320,22,"Shadow Combo","double"],["诅咒人偶","MID",335,19,"Cursed Hex","weak"],["白骨学者","MID",310,20,"Soul Bolt","burn"],["嗜血水蛭","MID",345,23,"Blood Drain","drain"],["镜像幽灵","MID",305,24,"Mirror Pulse","curse"],
+  ["虚空潜行者","LATE",430,28,"Void Lash","curse"],["白骨收割者","LATE",455,26,"Reaper Sweep","sweep"],["恐惧怨灵","LATE",420,27,"Wraith Howl","weak"],["疫病携带者","LATE",440,25,"Toxic Burst","poison"],["钢铁魔像","LATE",480,25,"Iron Slam","sunder"],
+  ["深渊恶魔","DEEP",570,32,"Abyssal Rend","burn"],["末日先驱","DEEP",600,30,"Doom Chant","curse"],["深渊巨蛇","DEEP",555,33,"Serpent Coil","poison"],["饥饿巨像","DEEP",640,31,"Colossus Crash","sweep"],
+  ["圣遗物守卫","BOSS",860,40,"Guardian's Wrath","weak"],["深渊领主","BOSS",940,43,"Abyssal Nova","nova"]
 ].map(([name,zone,hp,attack,special,kind]) => ({name,zone,hp,attack,special,kind}));
 
 let game;
 function newGame() {
   return {hero:null,floor:0,plan:[],hp:0,max:0,shield:0,enemy:null,enemyHp:0,enemyMax:0,enemyShield:0,
     paused:true,finished:false,choice:false,last:performance.now(),nextEnemy:0,enemyCount:0,cd:[],gold:0,relics:[],
-    power:1, burn:0, poison:0, playerPoison:0, weak:0, curse:0, sunder:0, stunned:0, paladinPulse:0, eventUsed:false};
+    power:1, cooldownMultiplier:1, burn:0, poison:0, playerPoison:0, weak:0, curse:0, sunder:0, stunned:0, paladinPulse:0, eventUsed:false};
 }
 function makePlan() {
   const byZone = zone => ROSTER.filter(monster => monster.zone === zone);
-  return [choice(byZone("EARLY")),choice(byZone("EARLY")),elite(choice(byZone("MID"))),choice(byZone("MID")),choice(byZone("MID")),elite(choice(byZone("LATE"))),choice(byZone("LATE")),choice(ROSTER.filter(monster => monster.zone === "BOSS"))];
+  return [choice(byZone("EARLY")),choice(byZone("EARLY")),elite(choice(byZone("MID"))),choice(byZone("MID")),elite(choice(byZone("LATE"))),choice(byZone("LATE")),elite(choice(byZone("DEEP"))),choice(ROSTER.filter(monster => monster.zone === "BOSS"))];
 }
 function elite(monster) { return {...monster, name:`精英 ${monster.name}`, elite:true}; }
 function log(text) { $("journal").textContent=`[${new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}] ${text}`; }
@@ -72,6 +72,7 @@ function beginFloor() {
   if (game.hero === HEROES.necromancer) game.curse=8;
 }
 function physical(amount) { return Math.max(1, amount * game.power * (game.weak > 0 ? .8 : 1)); }
+function skillCooldown(cooldown) { return cooldown * game.cooldownMultiplier * (game.hero === HEROES.mage ? .85 : 1); }
 function enemyDamage(amount) { return Math.max(1, amount * (game.sunder > 0 ? 1.25 : 1)); }
 function damageEnemy(amount, visual=true) {
   amount *= game.curse > 0 ? 1.25 : 1;
@@ -91,8 +92,8 @@ function float(target, amount, type) {
 }
 function cast(index, now) {
   if (!game.hero || game.paused || game.finished || game.choice || now < game.cd[index]) return;
-  const skill=game.hero.skills[index], [name,,cooldown,type,value]=skill; game.cd[index]=now+cooldown;
-  if (type === "damage") { damageEnemy(physical(game.hero.attack*value)); log(`你施放「${name}」。`); if (game.hero===HEROES.ranger && index===0 && Math.random()<.15) damageEnemy(physical(game.hero.attack/3)); }
+  const skill=game.hero.skills[index], [name,,cooldown,type,value]=skill; game.cd[index]=now+skillCooldown(cooldown);
+  if (type === "damage") { damageEnemy(physical(game.hero.attack*value)); log(`你施放「${name}」。`); if (game.hero===HEROES.ranger && index===0 && Math.random()<.15) damageEnemy(physical(game.hero.attack*value)); }
   if (type === "sunder") { damageEnemy(physical(game.hero.attack*value)); game.stunned=Math.max(game.stunned,1.3); log(`「${name}」击碎敌方防御并造成眩晕。`); }
   if (type === "burn") { damageEnemy(physical(game.hero.attack*value)); game.burn=5; log(`「${name}」施加灼烧。`); }
   if (type === "multi") { damageEnemy(physical(game.hero.attack*value)); damageEnemy(physical(game.hero.attack*value)); log(`「${name}」连续命中两次。`); }
@@ -132,7 +133,7 @@ function checkEnd() {
 }
 const RELICS=[
   ["战栗之刃","所有伤害 +12%",()=>game.power*=1.12],["活力结晶","生命上限 +26，并恢复 26",()=>{game.max+=26;heal(26)}],["月影护符","获得 55 护盾",()=>game.shield=clamp(game.shield+55,game.max)],
-  ["迅捷刻印","所有技能冷却 -10%",()=>game.cd=game.cd.map(end=>performance.now()+(end-performance.now())*.9)],["炽焰核心","灼烧伤害提高",()=>game.power*=1.06],["掠夺者印记","获得 35 金币",()=>game.gold+=35]
+  ["迅捷刻印","所有技能冷却 -10%",()=>{const now=performance.now();game.cooldownMultiplier*=.9;game.cd=game.cd.map(end=>now+(end-now)*.9)}],["炽焰核心","灼烧伤害提高",()=>game.power*=1.06],["掠夺者印记","获得 35 金币",()=>game.gold+=35]
 ];
 function rewardChoice() {
   const picks=[...RELICS].sort(()=>Math.random()-.5).slice(0,3);

@@ -15,7 +15,7 @@ class Test {
         if(compiler.run(null,null,null,compile.toArray(String[]::new))!=0) throw new IllegalStateException("Test compilation failed");
         String executable=args.length>0?args[0]:Path.of(System.getProperty("java.home"),"bin",
                 System.getProperty("os.name").startsWith("Windows")?"java.exe":"java").toString();
-        for(String test:List.of("DesktopTests","RegressionTests","CombatLanguageTests","WorldLanguageTests")) {
+        for(String test:List.of("DesktopTests","RegressionTests","ReviewRegressionTests","CombatLanguageTests","WorldLanguageTests")) {
             int code=new ProcessBuilder(executable,"-Dfile.encoding=UTF-8","-Djava.awt.headless=true",
                     "-cp",classes.toString(),test).inheritIO().start().waitFor();
             if(code!=0) throw new IllegalStateException(test + " failed: " + code);

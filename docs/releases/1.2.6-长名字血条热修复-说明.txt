@@ -1,0 +1,12 @@
+本包只修复长名字精英怪的旧血条文字没有被覆盖的问题。
+
+内容只有：web/public/app.js
+
+使用方法：
+1. 解压 ZIP。
+2. 进入其中的 web/public 文件夹。
+3. 上传 app.js 到 GitHub 仓库现有的 web/public 文件夹，替换旧 app.js。
+4. 点击 Commit changes。
+5. 在 Render 点击 Manual Deploy，再点 Deploy latest commit。
+
+不要上传 ZIP 本身，也不需要再次上传 src、styles.css 或 shield-bars.css。

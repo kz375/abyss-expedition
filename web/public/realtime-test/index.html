@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="深渊远征实时战斗完整测试版">
   <title>深渊流战 · 完整测试版</title>
-  <link rel="stylesheet" href="/realtime-test/style.css">
-  <script src="/realtime-test/campaign.js" defer></script>
+  <link rel="stylesheet" href="/realtime-test/style.css?v=1.4.0">
+  <script src="/realtime-test/campaign.js?v=1.4.0" defer></script>
+  <script src="/realtime-test/content.js?v=1.4.0" defer></script>
+  <script src="/realtime-test/runtime.js?v=1.4.0" defer></script>
+  <script src="/realtime-test/interface.js?v=1.4.0" defer></script>
 </head>
 <body>
   <main class="page">
@@ -23,7 +26,7 @@
       <div class="overlay" id="overlay"></div>
     </section>
     <section class="below"><div class="journal" id="journal">[系统] 选择职业以开启完整实时远征测试。</div><div class="run-stats"><span id="gold">金币 0</span><span id="relics">遗物 0</span></div><button id="pause">暂停</button><button id="restart" class="danger">重新开始</button></section>
-    <p class="fineprint">Beta 内容只在浏览器内存中运行。关闭或刷新页面即结束本次测试；正式网页与原存档保持原样。</p>
+    <p class="fineprint" id="save-status"></p>
   </main>
 </body>
 </html>

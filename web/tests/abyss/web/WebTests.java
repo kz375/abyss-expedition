@@ -53,6 +53,18 @@ public final class WebTests {
                 Path.of("web/public"), directory, 4, false, "")) {
             server.start(); origin = URI.create("http://127.0.0.1:" + server.port()); client = browser();
             check(call("/", null).body().contains("id=\"board\""), "web board delivered");
+            String betaPage = call("/realtime-test/", null).body();
+            var betaScripts = java.util.regex.Pattern.compile("<script\\s+src=\"([^\"]+)\"").matcher(betaPage);
+            int betaScriptCount = 0;
+            while (betaScripts.find()) {
+                String script = betaScripts.group(1);
+                var asset = call(script, null);
+                check(asset.statusCode() == 200, "beta script delivered: " + script);
+                check(asset.headers().firstValue("Content-Type").orElse("").contains("javascript"), "beta script MIME type: " + script);
+                check(!asset.body().isBlank(), "beta script is not empty: " + script);
+                betaScriptCount++;
+            }
+            check(betaScriptCount == 4, "all four beta modules referenced");
             check(call("/src/gameBody.java", null).statusCode() == 404, "source not exposed");
             check(call("/../saves/abyss-expedition.save", null).statusCode() == 404, "no path traversal");
             check(call("/api/state", null).statusCode() == 401, "state requires player identity");

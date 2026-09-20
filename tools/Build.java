@@ -16,7 +16,9 @@ class Build {
             paths.filter(p->p.toString().endsWith(".java")).sorted().forEach(p->options.add(p.toString()));
         }
         if(compiler.run(null,null,null,options.toArray(String[]::new))!=0) throw new IllegalStateException("Compilation failed");
-        Path dist=root.resolve("dist"); Files.createDirectories(dist);
+        Path dist=root.resolve("dist");
+        Path desktop=dist.resolve("desktop");
+        Files.createDirectories(desktop);
         Manifest manifest=new Manifest();
         manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION,"1.0");
         manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS,"abyss.desktop.DesktopLauncher");
@@ -27,14 +29,14 @@ class Build {
                 Files.copy(file,jar); jar.closeEntry();
             }
         }
-        Files.move(staged,dist.resolve("AbyssExpedition.jar"),StandardCopyOption.REPLACE_EXISTING);
+        Files.move(staged,desktop.resolve("AbyssExpedition.jar"),StandardCopyOption.REPLACE_EXISTING);
         for(String name:List.of("play.command","play.sh","play.cmd")) {
-            Path target=dist.resolve(name);
+            Path target=desktop.resolve(name);
             Files.copy(root.resolve("launchers").resolve(name),target,StandardCopyOption.REPLACE_EXISTING);
             if(!name.endsWith(".cmd") && !target.toFile().setExecutable(true,false))
                 System.out.println("Run with sh if not executable: " + target);
         }
-        Files.copy(root.resolve("DESKTOP.md"),dist.resolve("README.md"),StandardCopyOption.REPLACE_EXISTING);
-        System.out.println("Built " + dist.resolve("AbyssExpedition.jar"));
+        Files.copy(root.resolve("docs/technical/DESKTOP.md"),desktop.resolve("README.md"),StandardCopyOption.REPLACE_EXISTING);
+        System.out.println("Built " + desktop.resolve("AbyssExpedition.jar"));
     }
 }

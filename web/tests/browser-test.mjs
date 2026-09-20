@@ -159,12 +159,23 @@ try {
   await waitFor('document.querySelectorAll("[data-hero]").length === 5');
   await evaluate('document.querySelector("[data-hero=warrior]").click()');
   await waitFor('document.querySelectorAll("#skills .skill").length === 4');
+  assert.equal(await evaluate('document.getElementById("overlay").hidden'), true, 'real-time beta removes the hero selection overlay after choosing a hero');
   const betaEnemyHp = await evaluate('document.getElementById("enemy-hp-text").textContent');
-  await evaluate('document.querySelector("#skills .skill").click()');
+  await evaluate('document.querySelector("#skills .skill:nth-child(2)").click()');
   await waitFor(`document.getElementById("enemy-hp-text").textContent !== ${JSON.stringify(betaEnemyHp)}`);
-  assert.equal(await evaluate('document.querySelector("#skills .skill").disabled'), true, 'real-time beta applies an ability cooldown');
+  assert.equal(await evaluate('document.querySelector("#skills .skill:nth-child(2)").disabled'), true, 'real-time beta applies an ability cooldown');
   await evaluate('document.getElementById("pause").click()');
   assert.equal(await evaluate('document.getElementById("pause").textContent'), '继续', 'real-time beta can pause both sides');
+  await evaluate('document.getElementById("language").click()');
+  assert.equal(await evaluate('document.documentElement.lang'), 'en', 'real-time beta language toggle changes the active locale');
+  assert.equal(await evaluate('document.getElementById("title").textContent.includes("Abyss Flow")'), true, 'real-time beta translates its primary heading');
+  await evaluate('document.getElementById("codex").click()');
+  assert.equal(await evaluate('document.querySelectorAll(".archive-row").length'), 21, 'real-time beta codex lists all 21 creatures');
+  await evaluate('document.querySelector("#archive-close").click()');
+  await evaluate('document.getElementById("achievements").click()');
+  assert.equal(await evaluate('document.querySelectorAll(".archive-row").length'), 16, 'real-time beta achievement archive lists all milestones');
+  await evaluate('document.querySelector("#archive-close").click()');
+  assert.equal(await evaluate('EVENT_CATALOG.length'), 20, 'real-time beta has the expanded event pool');
   assert.deepEqual(errors, [], 'no browser exceptions');
   console.log(`PASS: Chrome main menu, Chinese, hidden Creator, combat, refresh, mobile layout, puzzle rendering and controls. Screenshots: ${profile}`);
 } finally {

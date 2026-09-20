@@ -48,7 +48,7 @@ let game;
 function newGame() {
   return {hero:null,floor:0,plan:[],hp:0,max:0,shield:0,enemy:null,enemyHp:0,enemyMax:0,enemyShield:0,
     paused:true,finished:false,choice:false,last:performance.now(),nextEnemy:0,enemyCount:0,cd:[],gold:0,relics:[],
-    power:1, cooldownMultiplier:1, burn:0, poison:0, playerPoison:0, weak:0, curse:0, sunder:0, stunned:0, paladinPulse:0, eventUsed:false,archiveOpen:false,archivePaused:false,summons:[],bossPhase:1,stats:{damage:0,taken:0,healed:0,casts:0}};
+    power:1, cooldownMultiplier:1, burn:0, poison:0, playerPoison:0, weak:0, curse:0, sunder:0, stunned:0, paladinPulse:0, eventUsed:false,archiveOpen:false,archivePaused:false,summons:[],bossPhase:1,telegraph:false,stats:{damage:0,taken:0,healed:0,casts:0}};
 }
 function makePlan() {
   const byZone = zone => ROSTER.filter(monster => monster.zone === zone);
@@ -74,7 +74,7 @@ function beginFloor() {
   const base=game.plan[game.floor]; game.enemy={...base};
   const floorScale=1+(game.floor*.13)+(game.enemy.elite?.26:0);
   game.enemyMax=Math.round(base.hp*floorScale); game.enemyHp=game.enemyMax; game.enemyShield=0; game.enemyCount=0; game.summons=[]; game.bossPhase=1;
-  game.burn=0; game.poison=0; game.stunned=0; game.nextEnemy=performance.now()+1300;
+  game.burn=0; game.poison=0; game.stunned=0; game.telegraph=false; game.nextEnemy=performance.now()+1300;
   if(game.resetCooldowns) game.cd=[];
   $("enemy-card").classList.remove("defeated"); $("enemy-name").textContent=monsterName(game.enemy);
   if (game.hero === HEROES.warrior) game.shield=clamp(game.shield+70,game.max);
@@ -126,6 +126,8 @@ function enemyAction(now) {
   if (now < game.nextEnemy || game.finished || game.choice) return;
   if (game.stunned>0) { game.nextEnemy=now+700; return; }
   const enemy=game.enemy; game.enemyCount++; const special=game.enemyCount%3===0;
+  if(special && !game.telegraph){game.telegraph=true;game.enemyCount--;game.nextEnemy=now+1100;log(tx(`危险预警：${monsterName(enemy)} 正在蓄力「${enemy.special}」。立即防御、净化或打断！`,`Danger: ${monsterName(enemy)} is charging ${enemy.special}. Defend, cleanse, or interrupt now!`));return;}
+  game.telegraph=false;
   let multiplier=special?1.3:1, hits=1;
   if (special && enemy.kind === "double") { multiplier=.82; hits=2; }
   if (special && enemy.kind === "shield") { game.enemyShield=clamp(game.enemyShield+35,game.enemyMax); log(`${enemy.name} 使用「${enemy.special}」，获得 35 护盾。`); game.nextEnemy=now+900; return; }
@@ -142,9 +144,10 @@ function applyEnemyEffect(kind) {
   if (kind === "sunder" || kind === "sweep") game.sunder=Math.max(game.sunder,4);
   if (kind === "nova") game.enemyShield=clamp(game.enemyShield+28,game.enemyMax);
 }
+function runStats(){return `<div class="run-summary"><span>${tx("造成伤害","Damage")} <b>${Math.round(game.stats.damage)}</b></span><span>${tx("承受伤害","Taken")} <b>${Math.round(game.stats.taken)}</b></span><span>${tx("治疗","Healing")} <b>${Math.round(game.stats.healed)}</b></span><span>${tx("技能次数","Casts")} <b>${game.stats.casts}</b></span></div>`;}
 function checkEnd() {
   if (game.enemyHp<=0 && !game.choice && !game.finished) { game.enemyHp=0; game.choice=true; game.paused=true; $("enemy-card").classList.add("defeated"); recordKill(game.enemy); game.gold+=18+game.floor*7+(game.enemy.elite?18:0); log(`${monsterName(game.enemy)} ${tx("被击败。获得金币，选择远征奖励。","was defeated. Gain gold and choose a relic.")}`); rewardChoice(); }
-  if (game.hp<=0 && !game.finished) { game.hp=0; game.finished=true; game.paused=true; $("player-card").classList.add("defeated"); log("你被深渊击退。本次 Beta 远征结束。"); show(`<div class="modal"><h2>远征结束</h2><p>这不会影响正式游戏、成就或存档。你可以立即再试一次不同职业与遗物组合。</p><button class="card" id="again"><strong>重新开始测试</strong><small>重新选择职业与八层路线。</small></button><a class="back" href="/">← 返回正式远征</a></div>`); $("again").onclick=reset; }
+  if (game.hp<=0 && !game.finished) { game.hp=0; game.finished=true; game.paused=true; $("player-card").classList.add("defeated"); log("你被深渊击退。本次 Beta 远征结束。"); show(`<div class="modal"><h2>${tx("远征结束","Expedition Ended")}</h2><p>${tx("这不会影响正式游戏、成就或存档。","This never affects the main game, achievements, or saves.")}</p>${runStats()}<button class="card" id="again"><strong>${tx("重新开始测试","Restart Test")}</strong><small>${tx("重新选择职业与八层路线。","Choose a class and eight-floor route again.")}</small></button><a class="back" href="/">← ${tx("返回正式远征","Return to Main Expedition")}</a></div>`); $("again").onclick=reset; }
 }
 const ACHIEVEMENTS=[
   ["first_blood","初入深渊","First Blood","击败任意一只怪物","Defeat any monster"],
@@ -180,7 +183,7 @@ function rewardChoice() {
 }
 function takeRelic(relic) {
   relic[2](); game.relics.push(relic[0]); hideOverlay();
-  if (game.floor===7) { game.finished=true; log("深渊领主倒下。八层实时远征测试完成！"); show(`<div class="modal"><h2>深渊远征完成</h2><p>你完成了完整八层实时测试。这个版本已覆盖职业、21 怪物池、精英、双 Boss、异常、遗物与连续推关基础循环。</p><button class="card" id="again"><strong>再次远征</strong><small>重置测试数据，尝试新的敌人路线。</small></button><a class="back" href="/">← 返回正式远征</a></div>`); $("again").onclick=reset; return; }
+  if (game.floor===7) { game.finished=true; log("深渊领主倒下。八层实时远征测试完成！"); show(`<div class="modal"><h2>${tx("深渊远征完成","Abyss Expedition Complete")}</h2><p>${tx("你完成了完整八层实时测试。","You completed the full eight-floor real-time test.")}</p>${runStats()}<button class="card" id="again"><strong>${tx("再次远征","Expedition Again")}</strong><small>${tx("重置测试数据，尝试新的敌人路线。","Reset the test and try a new route.")}</small></button><a class="back" href="/">← ${tx("返回正式远征","Return to Main Expedition")}</a></div>`); $("again").onclick=reset; return; }
   eventChoice();
 }
 const EVENTS=[

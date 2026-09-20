@@ -133,8 +133,11 @@ function checkEnd() {
 }
 const RELICS=[
   ["战栗之刃","所有伤害 +12%",()=>game.power*=1.12],["活力结晶","生命上限 +26，并恢复 26",()=>{game.max+=26;heal(26)}],["月影护符","获得 55 护盾",()=>game.shield=clamp(game.shield+55,game.max)],
-  ["迅捷刻印","所有技能冷却 -10%",()=>{const now=performance.now();game.cooldownMultiplier*=.9;game.cd=game.cd.map(end=>now+(end-now)*.9)}],["炽焰核心","灼烧伤害提高",()=>game.power*=1.06],["掠夺者印记","获得 35 金币",()=>game.gold+=35]
+  ["迅捷刻印","所有技能冷却 -10%",()=>shortenCooldowns(.9)],["炽焰核心","灼烧伤害提高",()=>game.power*=1.06],["掠夺者印记","获得 35 金币",()=>game.gold+=35]
 ];
+function shortenCooldowns(factor) {
+  const now=performance.now(); game.cooldownMultiplier*=factor; game.cd=game.cd.map(end=>now+(end-now)*factor);
+}
 function rewardChoice() {
   const picks=[...RELICS].sort(()=>Math.random()-.5).slice(0,3);
   show(`<div class="modal"><h2>第 ${game.floor+1} 层完成</h2><p>每次胜利选择一件本次远征的遗物。随后会触发一次简短事件并推进下一层。</p><div class="cards">${picks.map(([name,desc],i)=>`<button class="card" data-relic="${i}"><span class="tag">RELIC</span><strong>${name}</strong><small>${desc}</small></button>`).join("")}</div></div>`);
@@ -145,14 +148,24 @@ function takeRelic(relic) {
   if (game.floor===7) { game.finished=true; log("深渊领主倒下。八层实时远征测试完成！"); show(`<div class="modal"><h2>深渊远征完成</h2><p>你完成了完整八层实时测试。这个版本已覆盖职业、21 怪物池、精英、双 Boss、异常、遗物与连续推关基础循环。</p><button class="card" id="again"><strong>再次远征</strong><small>重置测试数据，尝试新的敌人路线。</small></button><a class="back" href="/">← 返回正式远征</a></div>`); $("again").onclick=reset; return; }
   eventChoice();
 }
+const EVENTS=[
+  ["篝火","休息：恢复 30% 最大生命",()=>heal(game.max*.3)],
+  ["预言家","预见下一层：显示即将遭遇的怪物",()=>log(`预言家看见下一层：${game.plan[game.floor+1].name}。`)],
+  ["赌徒","掷骰：获得 15–55 金币",()=>{const gold=15+Math.floor(Math.random()*41);game.gold+=gold;log(`赌徒给了你 ${gold} 金币。`)}],
+  ["熔炉","锻造武器：所有伤害 +6%",()=>game.power*=1.06],
+  ["神龛","获得 65 护盾",()=>game.shield=clamp(game.shield+65,game.max)],
+  ["低语之井","净化异常并恢复 18% 最大生命",()=>{game.playerPoison=game.weak=game.sunder=0;heal(game.max*.18)}],
+  ["古老图书馆","所有技能冷却额外缩短 5%",()=>shortenCooldowns(.95)],
+  ["流浪商队","补给：获得 28 金币并恢复 12% 最大生命",()=>{game.gold+=28;heal(game.max*.12)}]
+];
 function eventChoice() {
-  const events=[
-    ["篝火","休息：恢复 30% 最大生命",()=>heal(game.max*.3)],
-    ["预言家","预见下一层：显示即将遭遇的怪物",()=>log(`预言家看见下一层：${game.plan[game.floor+1].name}。`)],
-    ["赌徒","掷骰：获得 15–55 金币",()=>{const gold=15+Math.floor(Math.random()*41);game.gold+=gold;log(`赌徒给了你 ${gold} 金币。`)}]
-  ];
-  show(`<div class="modal"><h2>层间事件</h2><p>测试版中的事件会暂停战斗；选择后进入下一层。</p><div class="cards">${events.map(([name,desc],i)=>`<button class="card" data-event="${i}"><span class="tag">EVENT</span><strong>${name}</strong><small>${desc}</small></button>`).join("")}</div></div>`);
-  document.querySelectorAll("[data-event]").forEach(button=>button.onclick=()=>{const event=events[Number(button.dataset.event)]; event[2](); game.floor++; game.choice=false; game.paused=false; hideOverlay(); beginFloor(); log(`${event[0]}结束。进入第 ${game.floor+1} 层。`);});
+  const events=[...EVENTS].sort(()=>Math.random()-.5).slice(0,4); game.eventUsed=false;
+  show(`<div class="modal"><h2>层间事件</h2><p>随机出现四个事件，只能选择其中一个；其余事件会立即关闭。</p><div class="cards">${events.map(([name,desc],i)=>`<button class="card" data-event="${i}"><span class="tag">EVENT</span><strong>${name}</strong><small>${desc}</small></button>`).join("")}</div></div>`);
+  document.querySelectorAll("[data-event]").forEach(button=>button.onclick=()=>{
+    if (game.eventUsed) return; game.eventUsed=true;
+    document.querySelectorAll("[data-event]").forEach(card=>card.disabled=true);
+    const event=events[Number(button.dataset.event)]; event[2](); game.floor++; game.choice=false; game.paused=false; hideOverlay(); beginFloor(); log(`${event[0]}结束。进入第 ${game.floor+1} 层。`);
+  });
 }
 function renderStatus(container, list) { container.replaceChildren(); list.filter(([text])=>text).forEach(([text,bad])=>{const item=document.createElement("span");item.className=`status${bad?" bad":""}`;item.textContent=text;container.append(item);}); }
 function renderSkills(now) {

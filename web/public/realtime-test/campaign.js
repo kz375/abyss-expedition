@@ -48,7 +48,7 @@ let game;
 function newGame() {
   return {hero:null,floor:0,plan:[],hp:0,max:0,shield:0,enemy:null,enemyHp:0,enemyMax:0,enemyShield:0,
     paused:true,finished:false,choice:false,last:performance.now(),nextEnemy:0,enemyCount:0,cd:[],gold:0,relics:[],
-    power:1, cooldownMultiplier:1, burn:0, poison:0, playerPoison:0, weak:0, curse:0, sunder:0, stunned:0, paladinPulse:0, eventUsed:false,archiveOpen:false,archivePaused:false};
+    power:1, cooldownMultiplier:1, burn:0, poison:0, playerPoison:0, weak:0, curse:0, sunder:0, stunned:0, paladinPulse:0, eventUsed:false,archiveOpen:false,archivePaused:false,summons:[],bossPhase:1,stats:{damage:0,taken:0,healed:0,casts:0}};
 }
 function makePlan() {
   const byZone = zone => ROSTER.filter(monster => monster.zone === zone);
@@ -73,25 +73,31 @@ function startRun(id) {
 function beginFloor() {
   const base=game.plan[game.floor]; game.enemy={...base};
   const floorScale=1+(game.floor*.13)+(game.enemy.elite?.26:0);
-  game.enemyMax=Math.round(base.hp*floorScale); game.enemyHp=game.enemyMax; game.enemyShield=0; game.enemyCount=0;
+  game.enemyMax=Math.round(base.hp*floorScale); game.enemyHp=game.enemyMax; game.enemyShield=0; game.enemyCount=0; game.summons=[]; game.bossPhase=1;
   game.burn=0; game.poison=0; game.stunned=0; game.nextEnemy=performance.now()+1300;
+  if(game.resetCooldowns) game.cd=[];
   $("enemy-card").classList.remove("defeated"); $("enemy-name").textContent=monsterName(game.enemy);
   if (game.hero === HEROES.warrior) game.shield=clamp(game.shield+70,game.max);
   if (game.hero === HEROES.necromancer) game.curse=8;
 }
-function physical(amount) { return Math.max(1, amount * game.power * (game.weak > 0 ? .8 : 1)); }
+function physical(amount) { return Math.max(1, amount * game.power * (game.hp/game.max<.35 ? 1+(game.lowHealthPower||0) : 1) * (game.weak > 0 ? .8 : 1)); }
 function skillCooldown(cooldown) { return cooldown * game.cooldownMultiplier * (game.hero === HEROES.mage ? .85 : 1); }
 function enemyDamage(amount) { return Math.max(1, amount * (game.sunder > 0 ? 1.25 : 1)); }
 function damageEnemy(amount, visual=true) {
   amount *= game.curse > 0 ? 1.25 : 1;
+  if (game.summons.length) { const summon=game.summons[0]; summon.hp-=amount; game.stats.damage+=amount; if(summon.hp<=0){game.summons.shift();game.enemy.attack*=.97;game.enemyMax=Math.max(1,Math.round(game.enemyMax*.97));game.enemyHp=Math.min(game.enemyHp,game.enemyMax);log(tx("召唤物被击败，Boss 永久削弱 3%。","Summon defeated: Boss permanently weakened by 3%."));} if(visual)float("enemy",amount,"damage"); return; }
   const absorbed=Math.min(game.enemyShield,amount); game.enemyShield-=absorbed; game.enemyHp-=amount-absorbed;
+  game.stats.damage+=amount-absorbed;
+  if(game.enemy.zone==="BOSS"){const ratio=game.enemyHp/game.enemyMax;const phase=ratio<=.33?3:ratio<=.66?2:1;if(phase>game.bossPhase){game.bossPhase=phase;game.enemy.attack*=1.15;spawnSummon();log(tx(`Boss 进入第 ${phase} 阶段，属性提高 15%。`,`Boss enters phase ${phase}: attributes rise 15%.`));}}
   if (visual) float("enemy",amount,"damage");
 }
 function damageHero(amount, visual=true) {
   const absorbed=Math.min(game.shield,amount); game.shield-=absorbed; game.hp-=amount-absorbed;
+  game.stats.taken+=amount-absorbed; if(amount-absorbed>0&&game.thorns) damageEnemy((amount-absorbed)*game.thorns,false);
   if (visual) float("player",amount,"damage");
 }
-function heal(amount) { const before=game.hp; game.hp=clamp(game.hp+amount,game.max); float("player",game.hp-before,"heal"); }
+function heal(amount) { const before=game.hp; game.hp=clamp(game.hp+amount*(game.healPower||1),game.max); game.stats.healed+=game.hp-before; float("player",game.hp-before,"heal"); }
+function spawnSummon(){if(game.summons.length>=2)return;const base=choice(ROSTER.filter(monster=>monster.zone!=="BOSS"));const max=Math.round(base.hp*.5*(1+game.floor*.1));game.summons.push({name:base.name,hp:max,max});}
 function float(target, amount, type) {
   const card=$(target+"-card"), value=document.createElement("span");
   card.classList.remove("hit"); void card.offsetWidth; card.classList.add("hit");
@@ -100,7 +106,7 @@ function float(target, amount, type) {
 }
 function cast(index, now) {
   if (!game.hero || game.paused || game.finished || game.choice || now < game.cd[index]) return;
-  const skill=game.hero.skills[index], [name,,cooldown,type,value]=skill; game.cd[index]=now+skillCooldown(cooldown);
+  const skill=game.hero.skills[index], [name,,cooldown,type,value]=skill; game.cd[index]=now+skillCooldown(cooldown); game.stats.casts++;
   if (type === "damage") { damageEnemy(physical(game.hero.attack*value)); log(`你施放「${name}」。`); if (game.hero===HEROES.ranger && index===0 && Math.random()<.15) damageEnemy(physical(game.hero.attack*value)); }
   if (type === "sunder") { damageEnemy(physical(game.hero.attack*value)); game.stunned=Math.max(game.stunned,1.3); log(`「${name}」击碎敌方防御并造成眩晕。`); }
   if (type === "burn") { damageEnemy(physical(game.hero.attack*value)); game.burn=5; log(`「${name}」施加灼烧。`); }
@@ -123,7 +129,8 @@ function enemyAction(now) {
   let multiplier=special?1.3:1, hits=1;
   if (special && enemy.kind === "double") { multiplier=.82; hits=2; }
   if (special && enemy.kind === "shield") { game.enemyShield=clamp(game.enemyShield+35,game.enemyMax); log(`${enemy.name} 使用「${enemy.special}」，获得 35 护盾。`); game.nextEnemy=now+900; return; }
-  if (special && enemy.kind === "drain") { const before=game.hp; damageHero(enemyDamage(enemy.attack*multiplier)); const dealt=before-game.hp; game.enemyHp=clamp(game.enemyHp+dealt*.5,game.enemyMax); log(`${enemy.name} 使用「${enemy.special}」，并吸取生命。`); }
+  if (special && enemy.zone === "BOSS") { spawnSummon(); damageHero(enemyDamage(enemy.attack*multiplier)); log(tx(`${monsterName(enemy)} 召唤护卫并发动 ${enemy.special}。`,`${monsterName(enemy)} summons a guardian and uses ${enemy.special}.`)); }
+  else if (special && enemy.kind === "drain") { const before=game.hp; damageHero(enemyDamage(enemy.attack*multiplier)); const dealt=before-game.hp; game.enemyHp=clamp(game.enemyHp+dealt*.5,game.enemyMax); log(`${enemy.name} 使用「${enemy.special}」，并吸取生命。`); }
   else { for(let hit=0;hit<hits;hit++) damageHero(enemyDamage(enemy.attack*multiplier)); log(`${enemy.name}${special?`使用「${enemy.special}」`:"发动攻击"}。`); }
   if (special) applyEnemyEffect(enemy.kind); game.nextEnemy=now+(special?2200:Math.max(1050,1600-game.floor*35)); checkEnd();
 }
@@ -160,7 +167,8 @@ function openArchive(kind) {
 }
 const RELICS=[
   ["战栗之刃","所有伤害 +12%",()=>game.power*=1.12],["活力结晶","生命上限 +26，并恢复 26",()=>{game.max+=26;heal(26)}],["月影护符","获得 55 护盾",()=>game.shield=clamp(game.shield+55,game.max)],
-  ["迅捷刻印","所有技能冷却 -10%",()=>shortenCooldowns(.9)],["炽焰核心","灼烧伤害提高",()=>game.power*=1.06],["掠夺者印记","获得 35 金币",()=>game.gold+=35]
+  ["迅捷刻印","所有技能冷却 -10%",()=>shortenCooldowns(.9)],["炽焰核心","灼烧伤害提高",()=>game.power*=1.06],["掠夺者印记","获得 35 金币",()=>game.gold+=35],
+  ["荆棘冠冕","每次受击反弹 12% 伤害",()=>game.thorns=(game.thorns||0)+.12],["不屈徽章","低于 35% 生命时所有伤害 +20%",()=>game.lowHealthPower=(game.lowHealthPower||0)+.2],["时砂","每场战斗开始时所有技能立即就绪",()=>game.resetCooldowns=true],["愈合符文","治疗效果 +35%",()=>game.healPower=(game.healPower||1)*1.35]
 ];
 function shortenCooldowns(factor) {
   const now=performance.now(); game.cooldownMultiplier*=factor; game.cd=game.cd.map(end=>now+(end-now)*factor);
@@ -215,6 +223,7 @@ function render(now) {
   $("enemy-hp").style.transform=`scaleX(${game.enemyMax?clamp(game.enemyHp/game.enemyMax,1):0})`; $("enemy-shield").style.transform=`scaleX(${game.enemyMax?clamp(game.enemyShield/game.enemyMax,1):0})`;
   $("hero-hp-text").textContent=game.max?`${Math.ceil(game.hp)} / ${game.max}`:"—"; $("hero-shield-text").textContent=game.shield?`护盾 ${Math.ceil(game.shield)}`:"无护盾";
   $("enemy-hp-text").textContent=game.enemyMax?`${Math.ceil(game.enemyHp)} / ${game.enemyMax}`:"—"; $("enemy-shield-text").textContent=game.enemyShield?`护盾 ${Math.ceil(game.enemyShield)}`:"无护盾";
+  $("summons").replaceChildren(...game.summons.map(summon=>{const row=document.createElement("div");row.className="summon-row";row.innerHTML=`<span>${tx("召唤护卫","Summoned Guardian")}</span><b>${Math.max(0,Math.ceil(summon.hp))}/${summon.max}</b><i><em style="transform:scaleX(${clamp(summon.hp/summon.max,1)})"></em></i>`;return row;}));
   $("hero-name").textContent=game.hero?tx(game.hero.name,game.hero.enName):tx("选择一名英雄","Choose a hero"); $("hero-role").textContent=game.hero?.key||"PLAYER"; $("hero-passive").textContent=game.hero?tx(game.hero.passive,game.hero.enPassive):tx("职业被动将在这里显示","Your class passive appears here");
   $("enemy-name").textContent=enemy?monsterName(enemy):tx("深渊正在等待","The abyss awaits"); $("enemy-role").textContent=enemy?`${enemy.zone}${enemy.elite?" · ELITE":""}`:"HOSTILE";
   $("floor-label").textContent=game.hero?`第 ${Math.min(game.floor+1,8)} / 8 层 · ${enemy?.name||"准备中"}`:"选择职业后开始";
@@ -222,7 +231,7 @@ function render(now) {
   $("gold").textContent=`金币 ${game.gold}`; $("relics").textContent=`遗物 ${game.relics.length}`;
   renderStatus($("hero-status"),[[game.shield?`🛡 护盾 ${Math.ceil(game.shield)}`:"",false],[game.playerPoison?`☠ 中毒 ${game.playerPoison.toFixed(1)}s`:"",true],[game.weak?`↓ 虚弱 ${game.weak.toFixed(1)}s`:"",true],[game.sunder?`⌁ 破甲 ${game.sunder.toFixed(1)}s`:"",true]]);
   renderStatus($("enemy-status"),[[game.enemyShield?`🛡 护盾 ${Math.ceil(game.enemyShield)}`:"",false],[game.burn?`🔥 灼烧 ${game.burn.toFixed(1)}s`:"",true],[game.poison?`☠ 中毒 ${game.poison.toFixed(1)}s`:"",true],[game.curse?`✦ 诅咒 ${game.curse.toFixed(1)}s`:"",true],[game.stunned?`✧ 眩晕 ${game.stunned.toFixed(1)}s`:"",true]]);
-  $("intent").textContent=enemy ? (game.stunned>0?"敌人被眩晕，无法行动。":`意图：${game.enemyCount%3===2?enemy.special:"普通攻击"}`) : "敌人尚未苏醒。";
+  $("intent").textContent=enemy ? (game.summons.length?tx("召唤物存在：必须先击败护卫才能伤害 Boss。","Guardians active: defeat them before damaging the Boss."):(game.stunned>0?tx("敌人被眩晕，无法行动。","Enemy is stunned."):`${tx("意图","Intent")}：${game.enemyCount%3===2?enemy.special:tx("普通攻击","Basic attack")}`)) : tx("敌人尚未苏醒。","No enemy has awakened.");
   renderSkills(now);
 }
 function applyLocale() {

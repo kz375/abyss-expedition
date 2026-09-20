@@ -12,6 +12,7 @@ const clearRun = () => { try { localStorage.removeItem(BETA_RUN_KEY); } catch {}
 const tx = (zh, en) => profile.locale === "en" ? en : zh;
 const MONSTER_EN = {"洞窟蝙蝠":"Cave Bat","深渊猎犬":"Abyss Hound","迷失矿工":"Lost Miner","泥沼史莱姆":"Bog Slime","墓穴鼠":"Crypt Rat","暗影刺客":"Shadow Assassin","诅咒人偶":"Cursed Doll","白骨学者":"Bone Scholar","嗜血水蛭":"Blood Leech","镜像幽灵":"Mirror Wraith","虚空潜行者":"Void Stalker","白骨收割者":"Bone Reaper","恐惧怨灵":"Dread Wraith","疫病携带者":"Plaguebearer","钢铁魔像":"Iron Golem","深渊恶魔":"Abyss Demon","末日先驱":"Doom Harbinger","深渊巨蛇":"Abyss Serpent","饥饿巨像":"Hungry Colossus","圣遗物守卫":"Relic Guardian","深渊领主":"Abyss Lord"};
 const EVENT_EN = {"篝火":["Campfire","Rest: recover 30% maximum health"],"预言家":["Oracle","See the next floor's enemy"],"赌徒":["Gambler","Roll for 15–55 gold"],"熔炉":["Forge","Forge a weapon: all damage +6%"],"神龛":["Shrine","Gain 65 ward"],"低语之井":["Whispering Well","Cleanse debuffs and recover 18% maximum health"],"古老图书馆":["Ancient Library","All skill cooldowns -5%"],"流浪商队":["Wandering Caravan","Gain 28 gold and recover 12% maximum health"],"宝箱":["Chest","Open it: gain 42 gold"],"医师":["Healer","Recover 24% maximum health"],"清泉":["Spring","Recover 16% maximum health and gain 28 ward"],"冒险者":["Adventurer","Gain 20 gold and 30 ward"],"收藏家":["Curator","Receive a random unowned relic"],"裂隙":["Rift","All damage +12%"],"祭坛":["Altar","Lose 8% current health; all damage +10%"],"神像":["Idol","Gain 75 ward"]};
+const MODULE_TEXT={bite:["狂暴撕咬：短时间提高攻击","Frenzied bite: temporary attack boost"],poison:["剧毒：施加持续伤害","Venom: applies damage over time"],sunder:["粉碎：破甲并削弱护盾","Crush: sunders armor and ward"],double:["连击：双重攻击并施加虚弱","Combo: two hits and weakness"],weak:["诅咒：施加虚弱","Hex: applies weakness"],burn:["烈焰：施加灼烧","Flame: applies burn"],drain:["汲取：吸血并中毒","Drain: heals and poisons"],curse:["侵蚀：破甲","Corruption: applies sunder"],sweep:["横扫：破甲并击碎护盾","Sweep: sunders and shatters ward"],nova:["新星：护盾与破甲","Nova: ward and sunder"]};
 const monsterName = monster => monster?.elite ? `${tx("精英 ","Elite ")}${MONSTER_EN[monster.baseName || monster.name.replace("精英 ","")] || monster.baseName || monster.name}` : (MONSTER_EN[monster?.name] || monster?.name || "");
 
 // Beta conversion of the six existing hero archetypes. These are deliberately isolated
@@ -50,7 +51,7 @@ let game;
 function newGame() {
   return {hero:null,floor:0,plan:[],hp:0,max:0,shield:0,enemy:null,enemyHp:0,enemyMax:0,enemyShield:0,
     paused:true,finished:false,choice:false,last:performance.now(),nextEnemy:0,enemyCount:0,cd:[],gold:0,relics:[],
-    power:1, cooldownMultiplier:1, burn:0, poison:0, playerPoison:0, weak:0, curse:0, sunder:0, stunned:0, paladinPulse:0, eventUsed:false,archiveOpen:false,archivePaused:false,summons:[],bossPhase:1,telegraph:false,stats:{damage:0,taken:0,healed:0,casts:0}};
+    power:1, cooldownMultiplier:1, burn:0, poison:0, playerPoison:0, weak:0, curse:0, sunder:0, stunned:0, paladinPulse:0, enemyEnrage:0, eventUsed:false,archiveOpen:false,archivePaused:false,summons:[],bossPhase:1,telegraph:false,stats:{damage:0,taken:0,healed:0,casts:0}};
 }
 function saveRun(now=performance.now()) {
   if(!game?.hero || game.finished || game.choice || game.archiveOpen) return;
@@ -87,7 +88,7 @@ function beginFloor() {
   const base=game.plan[game.floor]; game.enemy={...base};
   const floorScale=1+(game.floor*.13)+(game.enemy.elite?.26:0);
   game.enemyMax=Math.round(base.hp*floorScale); game.enemyHp=game.enemyMax; game.enemyShield=0; game.enemyCount=0; game.summons=[]; game.bossPhase=1;
-  game.burn=0; game.poison=0; game.stunned=0; game.telegraph=false; game.nextEnemy=performance.now()+1300;
+  game.burn=0; game.poison=0; game.stunned=0; game.enemyEnrage=0; game.telegraph=false; game.nextEnemy=performance.now()+1300;
   if(game.resetCooldowns) game.cd=[];
   $("enemy-card").classList.remove("defeated"); $("enemy-name").textContent=monsterName(game.enemy);
   if (game.hero === HEROES.warrior) game.shield=clamp(game.shield+70,game.max);
@@ -142,7 +143,7 @@ function enemyAction(now) {
   const enemy=game.enemy; game.enemyCount++; const special=game.enemyCount%3===0;
   if(special && !game.telegraph){game.telegraph=true;game.enemyCount--;game.nextEnemy=now+1100;log(tx(`危险预警：${monsterName(enemy)} 正在蓄力「${enemy.special}」。立即防御、净化或打断！`,`Danger: ${monsterName(enemy)} is charging ${enemy.special}. Defend, cleanse, or interrupt now!`));return;}
   game.telegraph=false;
-  let multiplier=special?1.3:1, hits=1;
+  let multiplier=(special?1.3:1)*(game.enemyEnrage>0?1.25:1), hits=1;
   if (special && enemy.kind === "double") { multiplier=.82; hits=2; }
   if (special && enemy.kind === "shield") { game.enemyShield=clamp(game.enemyShield+35,game.enemyMax); log(`${enemy.name} 使用「${enemy.special}」，获得 35 护盾。`); game.nextEnemy=now+900; return; }
   if (special && enemy.zone === "BOSS") { spawnSummon(); damageHero(enemyDamage(enemy.attack*multiplier)); log(tx(`${monsterName(enemy)} 召唤护卫并发动 ${enemy.special}。`,`${monsterName(enemy)} summons a guardian and uses ${enemy.special}.`)); }
@@ -151,11 +152,14 @@ function enemyAction(now) {
   if (special) applyEnemyEffect(enemy.kind); summonAction(); game.nextEnemy=now+(special?2200:Math.max(1050,1600-game.floor*35)); checkEnd();
 }
 function applyEnemyEffect(kind) {
+  if (kind === "bite") game.enemyEnrage=Math.max(game.enemyEnrage,6);
   if (kind === "poison") game.playerPoison=Math.max(game.playerPoison,5);
   if (kind === "burn") game.playerPoison=Math.max(game.playerPoison,4);
   if (kind === "weak") game.weak=Math.max(game.weak,5);
   if (kind === "curse" || kind === "nova") game.sunder=Math.max(game.sunder,5);
-  if (kind === "sunder" || kind === "sweep") game.sunder=Math.max(game.sunder,4);
+  if (kind === "sunder") game.sunder=Math.max(game.sunder,4);
+  if (kind === "sweep") { game.sunder=Math.max(game.sunder,4); game.shield=Math.max(0,game.shield-18); }
+  if (kind === "double") game.weak=Math.max(game.weak,3);
   if (kind === "nova") game.enemyShield=clamp(game.enemyShield+28,game.enemyMax);
 }
 function runStats(){return `<div class="run-summary"><span>${tx("造成伤害","Damage")} <b>${Math.round(game.stats.damage)}</b></span><span>${tx("承受伤害","Taken")} <b>${Math.round(game.stats.taken)}</b></span><span>${tx("治疗","Healing")} <b>${Math.round(game.stats.healed)}</b></span><span>${tx("技能次数","Casts")} <b>${game.stats.casts}</b></span></div>`;}
@@ -179,7 +183,7 @@ function recordKill(monster) {
 }
 function openArchive(kind) {
   if(!game) return; game.archivePaused=game.paused; game.archiveOpen=true; game.paused=true;
-  if(kind==="codex") { const rows=ROSTER.map(monster=>{const count=profile.kills[monster.name]||0, known=count>0; return `<div class="archive-row ${known?"known":"unknown"}"><strong>${known?monsterName(monster):"???"}</strong><small>${known?`${tx("击败","Defeated")} ${count}`:tx("尚未击败","Not yet defeated")}</small></div>`;}).join(""); show(`<div class="modal archive"><h2>${tx("怪物图鉴","Monster Codex")}</h2><p>${tx("已记录 21 种深渊生物的击败次数。","Track defeats across all 21 abyss creatures.")}</p><div class="archive-list">${rows}</div><button class="card archive-close">${tx("返回","Return")}</button></div>`); }
+  if(kind==="codex") { const rows=ROSTER.map(monster=>{const count=profile.kills[monster.name]||0, known=count>0,module=MODULE_TEXT[monster.kind]; return `<div class="archive-row ${known?"known":"unknown"}"><strong>${known?monsterName(monster):"???"}</strong><small>${known?`${tx("击败","Defeated")} ${count} · ${tx(module?.[0]||"未知",module?.[1]||"Unknown")}`:tx("尚未击败","Not yet defeated")}</small></div>`;}).join(""); show(`<div class="modal archive"><h2>${tx("怪物图鉴","Monster Codex")}</h2><p>${tx("已记录 21 种深渊生物的击败次数与机制。","Track defeats and combat modules for all 21 abyss creatures.")}</p><div class="archive-list">${rows}</div><button class="card archive-close">${tx("返回","Return")}</button></div>`); }
   else { const rows=ACHIEVEMENTS.map(([id,zh,en,zhDesc,enDesc])=>`<div class="archive-row ${profile.achievements[id]?"known":"unknown"}"><strong>${profile.achievements[id]?tx(zh,en):"???"}</strong><small>${profile.achievements[id]?tx(zhDesc,enDesc):tx("尚未解锁","Locked")}</small></div>`).join(""); show(`<div class="modal archive"><h2>${tx("成就","Achievements")}</h2><p>${tx("实时 Beta 的成就保存在当前浏览器。","Beta achievements are saved in this browser.")}</p><div class="archive-list">${rows}</div><button class="card archive-close">${tx("返回","Return")}</button></div>`); }
   document.querySelector(".archive-close").onclick=()=>{hideOverlay();game.archiveOpen=false;game.paused=game.archivePaused;};
 }
@@ -264,7 +268,7 @@ function tick(now) {
   const delta=Math.min(80,now-game.last)/1000; game.last=now;
   if (!game.paused && !game.finished && !game.choice) {
     game.shield=Math.max(0,game.shield-delta*1.6); game.enemyShield=Math.max(0,game.enemyShield-delta*1.2);
-    for (const key of ["burn","poison","playerPoison","weak","curse","sunder","stunned"]) game[key]=Math.max(0,game[key]-delta);
+    for (const key of ["burn","poison","playerPoison","weak","curse","sunder","stunned","enemyEnrage"]) game[key]=Math.max(0,game[key]-delta);
     if (game.burn>0) damageEnemy(delta*5*game.power,false); if (game.poison>0) damageEnemy(delta*4,false); if (game.playerPoison>0) damageHero(delta*4,false);
     if (game.hero===HEROES.paladin && now>=game.paladinPulse) { game.shield=clamp(game.shield+10,game.max);game.paladinPulse=now+4000; }
     enemyAction(now); checkEnd();

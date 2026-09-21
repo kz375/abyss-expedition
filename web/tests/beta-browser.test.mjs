@@ -21,8 +21,10 @@ try{
   const wait=async expression=>{for(let i=0;i<100;i++){if(await evaluate(expression))return;await delay(60)}throw Error('Timed out: '+expression+' '+JSON.stringify(errors))};
   const click=async selector=>{await evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:"center"})`);await delay(350);const p=await evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)}),r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return {x,y,reachable:e.contains(document.elementFromPoint(x,y))}})()`);assert.ok(p.reachable,'click target is visible and not covered: '+selector);await command('Input.dispatchMouseEvent',{type:'mousePressed',x:p.x,y:p.y,button:'left',clickCount:1});await delay(100);await command('Input.dispatchMouseEvent',{type:'mouseReleased',x:p.x,y:p.y,button:'left',clickCount:1});};
   await command('Runtime.enable');await command('Page.enable');await command('Emulation.setDeviceMetricsOverride',{width:1280,height:960,deviceScaleFactor:1,mobile:false});await command('Page.navigate',{url:origin+'/realtime-test/'});await wait('typeof game!=="undefined" && game.phase==="menu"');
-  check(await evaluate('globalThis.ABYSS_BETA_BUILD==="1.4.2"'),'all scripts use Beta build 1.4.2');
+  check(await evaluate('globalThis.ABYSS_BETA_BUILD==="1.5.0"'),'all scripts use Beta build 1.5.0');
   check(await evaluate('document.querySelectorAll("[data-hero]").length===5'),'five visible classes, Creator hidden');
+  check(await evaluate('new Set(Object.values(HEROES).map(h=>JSON.stringify(h.skills.map(s=>s[3])))).size===6'),'six classes expose distinct skill kits');
+  check(await evaluate('Object.values(HEROES).flatMap(h=>h.skills).every(s=>!["heal","cleanse","drain"].includes(s[3]))'),'no class retains an active healing skill');
   await command('Emulation.setDeviceMetricsOverride',{width:390,height:667,deviceScaleFactor:1,mobile:true});await delay(800);
   await writeFile(join(temp,'character-selection.png'),Buffer.from((await command('Page.captureScreenshot',{format:'png'})).data,'base64'));
   check(await evaluate('(()=>{const r=$("overlay").getBoundingClientRect();return Math.abs(r.top)<1&&Math.abs(r.bottom-innerHeight)<1})()'),'character selection overlay covers the viewport '+await evaluate('JSON.stringify({overlay:$("overlay").getBoundingClientRect().toJSON(),height:innerHeight})'));
@@ -44,6 +46,7 @@ try{
     await evaluate('$("restart").click();clearRun();renderScene()');
   }
   await click('[data-hero="warrior"]');await wait('game.phase==="battle"');check(await evaluate('$("overlay").hidden'),'class selection closes and battle starts');
+  check(await evaluate('/药瓶|Healing Bottle/.test($("potion").textContent)'),'healing bottle replaces active healing skills');
   const before=await evaluate('game.stats.casts');await click('#skills button');check(await evaluate('game.stats.casts')>before,'physical pointer click works across animation frames');
   await evaluate('$("pause").click()');const clock=await evaluate('game.clock');await delay(150);check(await evaluate('game.clock')===clock,'pause freezes simulation clock');
   await evaluate('game.enemy.hp=0;checkEnd()');const picks=await evaluate('JSON.stringify(game.rewardOffers)');await command('Page.reload');await wait('typeof game!=="undefined"&&game.phase==="menu"');await click('#resume-run');check(await evaluate('game.phase==="reward"'),'reload restores reward stage '+await evaluate('JSON.stringify({phase:game.phase,error:saveError,valid:validRun(JSON.parse(localStorage.getItem(BETA_RUN_KEY)).run)})'));check(await evaluate('JSON.stringify(game.rewardOffers)')===picks,'reward choices do not reroll');

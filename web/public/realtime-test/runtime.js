@@ -82,16 +82,22 @@ function advanceBoss(m){const phase=m.hp/m.max<=.33?3:m.hp/m.max<=.66?2:1;while(
 function skillCooldown(index){const ms=hero().skills[index][2]*effects().cooldown;return index===1&&game.heroId==="paladin"?Math.max(2800,ms):ms;}
 function cast(index){if(game.phase!=="battle"||game.paused||archiveKind||!Number.isInteger(index)||index<0||index>3||game.cd[index]>game.clock)return false;
   const [, , ,type,value]=hero().skills[index],e=effects();game.cd[index]=game.clock+skillCooldown(index);game.stats.casts++;
-  const hit=()=>damageEnemy(e.attack*value*e.power*(game.hp/game.max<.35?1+e.low:1)*(game.statuses.weak>0?.8:1)*(random()<e.crit?1.5:1));
+  const hit=(multiplier=1)=>damageEnemy(e.attack*value*multiplier*e.power*(game.hp/game.max<.35?1+e.low:1)*(game.statuses.weak>0?.8:1)*(random()<e.crit?1.5:1));
   const m=target();let dealt=0;
-  if(!["shield","heal","cleanse"].includes(type))dealt=hit();
+  if(!["shield","rewind","purify","rewrite"].includes(type))dealt=hit(type==="finisher"&&m.hp/m.max<.35?2:1);
   if(type==="damage"&&game.heroId==="ranger"&&random()<.15)hit();
   if(type==="multi")hit();if(type==="rend")for(let n=0;n<4;n++)hit();
+  if(type==="arcane"&&m.burn>0)damageEnemy(e.attack*.75*e.power);
+  if(type==="cleave"&&m.hp>0)m.curse=Math.max(m.curse,1.5);
+  if(type==="smite")addWard(7);
+  if(type==="soulward")addWard(dealt*.45);
   if(["sunder","judgment"].includes(type)&&m.hp>0){m.stunned=type==="judgment"?1:1.3;m.telegraph=null;m.next=Math.max(m.next,game.clock+1800);}
-  if(type==="judgment")heal(18);if(type==="shield")addWard(value);if(type==="heal"||type==="cleanse")heal(value);
-  if(type==="cleanse")game.statuses={poison:0,burn:0,weak:0,sunder:0};
-  if(type==="burn")m.burn=5;if(type==="poison"||type==="drain"||index===0&&e.poison)m.poison=6;
-  if(type==="drain")heal(dealt*.5);if(type==="curse")m.curse=8;
+  if(type==="shield")addWard(value);
+  if(type==="purify"){game.statuses={poison:0,burn:0,weak:0,sunder:0};addWard(value);}
+  if(type==="rewind")for(let i=0;i<3;i++)game.cd[i]=game.clock;
+  if(type==="rewrite"){m.shield=0;m.counter=0;m.rage=0;m.telegraph=null;for(let i=0;i<3;i++)game.cd[i]=game.clock;}
+  if(type==="burn")m.burn=5;if(type==="soulfire")m.burn=Math.max(m.burn,3.5);if(type==="poison"||index===0&&e.poison)m.poison=6;
+  if(type==="curse")m.curse=8;
   // Ultra Nightmare: each player basic attack calls one random species, 5% elite.
   if(index===0&&game.difficulty==="ultra"&&game.enemy.zone==="BOSS"&&game.enemy.hp>0)spawnSummon();
   checkEnd();saveRun();return true;
@@ -174,9 +180,9 @@ function eventOptions(){const f=game.floor+1,g=game.gold;const leave={text:["离
     camp:[opt("休息：恢复 35% 生命","Rest: heal 35%",done(()=>heal(game.max*.35))),opt("训练：失去 12 生命，攻击 +2","Train: pay 12 health; attack +2",done(()=>{if(spendHealth(12))stat(2)}),game.hp>12),opt("调查余烬","Investigate embers",done(()=>{const roll=random();if(roll<.45){heal(22);addWard(15)}else if(roll<.8){if(spendHealth(10))stat(3)}else{game.potions++;game.baseDefense++}}))],
     shrine:[opt("献祭 15 生命：攻击 +3","Offer 15 health: attack +3",done(()=>{if(spendHealth(15))stat(3)}),game.hp>15),opt("祈祷：恢复 20 生命","Pray: heal 20",done(()=>heal(20)))],
     chest:[opt("开箱：70% 金币，30% 精英伏击","Open: 70% gold, 30% elite ambush",done(()=>{if(random()<.7)gainGold(25+f*8);else eventBattle()}))],
-    healer:[opt("12 金币：药水 +1","12 gold: +1 potion",done(()=>{if(spendGold(12))game.potions++}),g>=12),opt("冒险祝福：防御或损失生命换金币","Risk blessing: defense or lose health for gold",done(()=>{if(random()<.5)game.baseDefense+=2;else{damageHero(18,false);gainGold(35)}}))],
+    healer:[opt("12 金币：药瓶 +1","12 gold: +1 healing bottle",done(()=>{if(spendGold(12))game.potions++}),g>=12),opt("冒险祝福：防御或损失生命换金币","Risk blessing: defense or lose health for gold",done(()=>{if(random()<.5)game.baseDefense+=2;else{damageHero(18,false);gainGold(35)}}))],
     spring:[opt("饮用：55% 增强生命，否则受到 16 伤害","Drink: 55% vitality, otherwise take 16 damage",done(()=>{if(random()<.55){game.baseMax+=5;reconcile();heal(40)}else damageHero(16,false)}))],
-    adventurer:[opt("救人：60% 金币与药水，否则精英伏击","Rescue: 60% gold and potion, else elite ambush",done(()=>{if(random()<.6){gainGold(30+f*6);game.potions++}else eventBattle()}))],
+    adventurer:[opt("救人：60% 金币与药瓶，否则精英伏击","Rescue: 60% gold and bottle, else elite ambush",done(()=>{if(random()<.6){gainGold(30+f*6);game.potions++}else eventBattle()}))],
     gambler:[15,40,70].map(stake=>opt(`下注 ${stake} 金币`,`Bet ${stake} gold`,()=>{if(g<stake)return;const a=1+Math.floor(random()*6),b=1+Math.floor(random()*6);if(a>b)gainGold(stake);if(a<b)spendGold(stake);eventResult([`你 ${a} 点，对手 ${b} 点：${a>b?"获胜":a<b?"失败":"平局"}`,`You rolled ${a}, opponent ${b}: ${a>b?"win":a<b?"loss":"tie"}`]);},g>=stake)),
     library:[opt("研读：攻击 +1","Study: attack +1",done(()=>stat(1))),opt("冥想：防御 +1","Meditate: defense +1",done(()=>game.baseDefense++))],
     well:[opt("投入 25 金币：随机祝福","Offer 25 gold: random blessing",done(()=>{if(!spendGold(25))return;const r=random();if(r<.45)randomRelic();else if(r<.7)stat(2);else if(r<.85)game.baseDefense+=2;else{game.baseMax+=20;reconcile();heal(20)}}),g>=25)],
@@ -186,14 +192,14 @@ function eventOptions(){const f=game.floor+1,g=game.gold;const leave={text:["离
     rift:[opt("进入裂隙：挑战精英","Enter: challenge an elite",eventBattle)],
     forge:[opt("失去 12 生命：攻击 +4","Lose 12 health: attack +4",done(()=>{if(spendHealth(12))stat(4)}),game.hp>12),opt("失去 12 生命：防御 +4","Lose 12 health: defense +4",done(()=>{if(spendHealth(12))game.baseDefense+=4}),game.hp>12)],
     altar:[opt("30 金币：生命上限 +14，恢复 20","30 gold: max health +14; heal 20",done(()=>{if(spendGold(30)){game.baseMax+=14;reconcile();heal(20)}}),g>=30),opt(`获得 ${30+f*3} 护盾`,`Gain ${30+f*3} ward`,done(()=>addWard(30+f*3)))],
-    caravan:[opt(`${20+f*3} 金币：药水与护盾`,`${20+f*3} gold: potion and ward`,done(()=>{if(spendGold(20+f*3)){game.potions++;addWard(18+f*3)}}),g>=20+f*3)],
+    caravan:[opt(`${20+f*3} 金币：药瓶与护盾`,`${20+f*3} gold: bottle and ward`,done(()=>{if(spendGold(20+f*3)){game.potions++;addWard(18+f*3)}}),g>=20+f*3)],
     idol:[opt(`献祭 10 生命：${45+f*5} 基础金币`,`Offer 10 health: ${45+f*5} base gold`,done(()=>{if(spendHealth(10))gainGold(45+f*5)}),game.hp>10)],
     stalker:[opt("追踪神秘身影：双核试炼","Follow the shadow: Trial of Twin Cores",startTrial,!game.trialUsed)],
     trial:[opt("进入双核试炼：40 步，破坏两个核心","Enter Twin Cores: 40 moves, destroy two cores",startTrial,!game.trialUsed)]
   };return [...(options[game.eventId]||[]),leave];
 }
 function selectEventOption(i){if(game.phase!=="event")return;const option=eventOptions()[i];if(!option||option.enabled===false)return;option.run();commit();}
-function shopDescription(id){const stat=game.difficulty==="ultra"?6:game.difficulty==="nightmare"?4:2;return {potion:["药水 +1","Potion +1"],weapon:[`攻击 +${stat}`,`Attack +${stat}`],armor:[`防御 +${stat}`,`Defense +${stat}`],ward:["护盾 +25","Ward +25"],tonic:["生命上限 +12，恢复 20","Max health +12; heal 20"],smoke:["药水 +1，护盾 +12","Potion +1; ward +12"]}[id];}
+function shopDescription(id){const stat=game.difficulty==="ultra"?6:game.difficulty==="nightmare"?4:2;return {potion:["药瓶 +1","Healing bottle +1"],weapon:[`攻击 +${stat}`,`Attack +${stat}`],armor:[`防御 +${stat}`,`Defense +${stat}`],ward:["护盾 +25","Ward +25"],tonic:["生命上限 +12，恢复 20","Max health +12; heal 20"],smoke:["药瓶 +1，护盾 +12","Bottle +1; ward +12"]}[id];}
 function buy(id){if(game.phase!=="shop"||!game.shopStock.includes(id)||game.bought.includes(id))return;const item=SHOP.find(s=>s.id===id);if(!spendGold(item.price))return;const stat=game.difficulty==="ultra"?6:game.difficulty==="nightmare"?4:2;
   if(id==="potion"||id==="smoke")game.potions++;if(id==="weapon")game.baseAttack+=stat;if(id==="armor")game.baseDefense+=stat;if(id==="ward")addWard(25);if(id==="smoke")addWard(12);if(id==="tonic"){game.baseMax+=12;reconcile();heal(20)}game.bought.push(id);commit();}
 function usePotion(){if(game.phase!=="battle"||game.paused||archiveKind||game.potions<1||game.hp>=game.max)return;game.potions--;heal(game.max*.3*effects().potion);commit();}

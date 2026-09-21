@@ -7,12 +7,12 @@ const DIFFICULTIES = {
   ultra: {name:["超级噩梦","Ultra Nightmare"], hp:4, attack:2.4, hero:3.7, gold:2}
 };
 const SKILL_NAMES = [
-  ["斩击","Slash"],["破甲斩","Armor Break"],["铁壁","Iron Wall"],["战地包扎","Field Dressing"],
-  ["奥术箭","Arcane Bolt"],["奥术爆发","Arcane Burst"],["秘法屏障","Arcane Barrier"],["星火修复","Spark Mend"],
+  ["横扫","Cleave"],["破甲斩","Armor Break"],["铁壁","Iron Wall"],["处决重斩","Execution Blow"],
+  ["奥术箭","Arcane Bolt"],["奥术爆发","Arcane Burst"],["秘法屏障","Arcane Barrier"],["时间回响","Temporal Echo"],
   ["速射","Quick Shot"],["双重射击","Double Shot"],["毒牙箭","Venom Arrow"],["烟幕","Smoke Screen"],
-  ["圣光挥击","Holy Strike"],["神圣审判","Judgment"],["守护祷言","Prayer"],["净化","Cleanse"],
+  ["圣光挥击","Holy Strike"],["神圣审判","Judgment"],["守护祷言","Prayer"],["圣光净化","Radiant Purge"],
   ["灵魂火","Soul Fire"],["灵魂汲取","Soul Drain"],["骸骨护甲","Bone Armor"],["枯萎","Wither"],
-  ["现实切割","Reality Cut"],["现实撕裂","Reality Rend"],["造物屏障","Creation Ward"],["重构","Reconstruct"]
+  ["现实切割","Reality Cut"],["现实撕裂","Reality Rend"],["造物屏障","Creation Ward"],["规则重写","Rewrite Rules"]
 ];
 const RELICS = [
   {id:"blade",name:["战栗之刃","Tremor Blade"],desc:["伤害 +12%","Damage +12%"],power:1.12},
@@ -74,7 +74,7 @@ const EVENT_CATALOG=[
   ["idol","饥饿神像","Starved Idol"],["stalker","神秘追踪者","Mysterious Stalker"],["trial","双核试炼","Trial of Twin Cores"]
 ];
 const SHOP=[
-  {id:"potion",name:["药水","Potion"],price:18}, {id:"weapon",name:["磨刀石","Whetstone"],price:32},
+  {id:"potion",name:["药瓶","Healing Bottle"],price:18}, {id:"weapon",name:["磨刀石","Whetstone"],price:32},
   {id:"armor",name:["锁子甲","Chainmail"],price:35}, {id:"ward",name:["屏障","Barrier"],price:24},
   {id:"tonic",name:["活力药剂","Vitality Tonic"],price:38}, {id:"smoke",name:["烟幕弹","Smoke Bomb"],price:28}
 ];

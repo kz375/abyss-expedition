@@ -43,7 +43,7 @@ function renderScene(){if(!game)return;$("archive-layer").hidden=!archiveKind;ap
     modal(game.phase==="victory"?["远征胜利","Expedition complete"]:["远征结束","Expedition ended"],["感谢你游玩深渊远征","Thank you for playing Abyss Expedition"],`${runSummary()}<button class="card compact" id="again">${tx("返回职业选择","Choose a new class")}</button>`);$("again").onclick=()=>{game=emptyGame();commit();};
   }
 }
-function skillDescription(skill,index){const type=skill[3],v=skill[4],cd=(skillCooldown(index)/1000).toFixed(2);const description={damage:[`${v*100}% 攻击`,`${v*100}% attack`],sunder:[`${v*100}% 攻击，打断`,`${v*100}% attack, interrupt`],burn:[`${v*100}% 攻击，灼烧`,`${v*100}% attack, burn`],multi:[`两次 ${v*100}% 攻击`,`2 × ${v*100}% attack`],poison:[`${v*100}% 攻击，中毒`,`${v*100}% attack, poison`],shield:[`${v} 护盾`,`${v} ward`],heal:[`${v} 治疗`,`${v} healing`],cleanse:[`${v} 治疗与净化`,`${v} healing + cleanse`],judgment:[`${v*100}% 攻击，治疗，打断`,`${v*100}% attack, heal, interrupt`],drain:[`${v*100}% 攻击，吸血`,`${v*100}% attack, life steal`],curse:[`${v*100}% 攻击，诅咒`,`${v*100}% attack, curse`],rend:["五次 100% 攻击","5 × 100% attack"]};return `${label(description[type])} · ${cd}${tx("秒","s")}`;}
+function skillDescription(skill,index){const type=skill[3],v=skill[4],cd=(skillCooldown(index)/1000).toFixed(2);const description={damage:[`${v*100}% 攻击`,`${v*100}% attack`],cleave:[`${v*100}% 攻击，短暂破甲`,`${v*100}% attack, brief sunder`],finisher:[`${v*100}% 攻击，低生命目标翻倍`,`${v*100}% attack, double vs low health`],arcane:[`${v*100}% 攻击，引爆灼烧`,`${v*100}% attack, detonates burn`],rewind:["刷新前三个技能","Reset the first three skills"],sunder:[`${v*100}% 攻击，打断`,`${v*100}% attack, interrupt`],burn:[`${v*100}% 攻击，灼烧`,`${v*100}% attack, burn`],multi:[`两次 ${v*100}% 攻击`,`2 × ${v*100}% attack`],poison:[`${v*100}% 攻击，中毒`,`${v*100}% attack, poison`],shield:[`${v} 护盾`,`${v} ward`],smite:[`${v*100}% 攻击，获得 7 护盾`,`${v*100}% attack, gain 7 ward`],judgment:[`${v*100}% 攻击，打断`,`${v*100}% attack, interrupt`],purify:[`清除异常，${v} 护盾`,`Cleanse debuffs, ${v} ward`],soulfire:[`${v*100}% 攻击，灼烧`,`${v*100}% attack, burn`],soulward:[`${v*100}% 攻击，伤害转护盾`,`${v*100}% attack, damage becomes ward`],curse:[`${v*100}% 攻击，诅咒`,`${v*100}% attack, curse`],rend:["五次 100% 攻击","5 × 100% attack"],rewrite:["清除敌方强化，刷新前三技能","Remove enemy buffs; reset first three skills"]};return `${label(description[type])} · ${cd}${tx("秒","s")}`;}
 function renderSkills(){const signature=game.heroId+profile.locale;if(signature!==skillSignature){skillSignature=signature;$("skills").replaceChildren();if(game.heroId)hero().skills.forEach((skill,index)=>{const b=document.createElement("button");b.className="skill";b.innerHTML=`<span class="key">${index+1}</span><strong>${esc(nameOfSkill(skill))}</strong><small></small><span class="cool"></span>`;b.onclick=()=>cast(index);$("skills").append(b);});}
   if(!game.heroId)return;[...$("skills").children].forEach((b,index)=>{const left=Math.max(0,game.cd[index]-game.clock);b.disabled=game.phase!=="battle"||game.paused||!!archiveKind||left>0;b.classList.toggle("ready",left===0);b.querySelector(".cool").style.transform=`scaleX(${clamp(left/skillCooldown(index),1)})`;b.querySelector("small").textContent=skillDescription(hero().skills[index],index);});
 }
@@ -61,10 +61,10 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId;
   $("intent").textContent=m?(m.telegraph?`${label(ACTION_NAMES[m.telegraph])} · ${Math.max(0,(m.next-game.clock)/1000).toFixed(1)}${tx("秒后释放：现在防御或打断","s: defend or interrupt now")}`:game.summons.length?tx("护卫在场：先击败护卫才能伤害首领","Guardians active: defeat them before the boss"):tx("下个机制：","Next mechanism: ")+label(ACTION_NAMES[monsterMove(m)])):"";
   $("gold").textContent=tx("金币 ","Gold ")+(game.gold||0);$("relics").textContent=tx("遗物 ","Relics ")+(game.relics?.length||0);
   $("pause").textContent=game.paused?tx("继续","Resume"):tx("暂停","Pause");$("pause").disabled=game.phase!=="battle"||!!archiveKind;
-  $("potion").textContent=`${tx("药水","Potion")} (${game.potions||0})`;$("potion").disabled=game.phase!=="battle"||game.paused||!game.potions||!!archiveKind;
+  $("potion").textContent=`${tx("药瓶","Healing Bottle")} (${game.potions||0})`;$("potion").disabled=game.phase!=="battle"||game.paused||!game.potions||!!archiveKind;
   $("export-save").disabled=!active||game.finished;
   $("journal").textContent=active?`${tx("种子","Seed")}: ${game.seed} · ${tx("已击败","Defeated")}: ${game.stats.kills} · ${tx("护卫上限 2","Guardian cap: 2")}`:tx("选择职业或导入存档开始","Choose a class or import a save");
-  $("save-status").textContent=saveError||(active&&!game.finished?tx("自动保存中 · 可导出存档跨设备恢复 · 种子不包含进度","Autosaving · Export for cross-device recovery · Seeds do not contain progress"):tx("正式版存档保持不变 · 实时测试版 1.4.2","Main-game saves stay untouched · Real-time Beta 1.4.2"));
+  $("save-status").textContent=saveError||(active&&!game.finished?tx("自动保存中 · 可导出存档跨设备恢复 · 种子不包含进度","Autosaving · Export for cross-device recovery · Seeds do not contain progress"):tx("正式版存档保持不变 · 实时测试版 1.5.0","Main-game saves stay untouched · Real-time Beta 1.5.0"));
   const status=(element,entries)=>{const key=JSON.stringify(entries.map(([n,v])=>[n,Math.ceil(v)]));if(element.dataset.key===key)return;element.dataset.key=key;element.innerHTML=entries.filter(([,v])=>v>0).map(([n,v])=>`<span class="status">${esc(n)} ${Math.ceil(v)}s</span>`).join("");};
   status($("hero-status"),active?Object.entries(game.statuses).map(([k,v])=>[label(ACTION_NAMES[k]||[k,k]),v]):[]);
   status($("enemy-status"),m?[[tx("眩晕","Stun"),m.stunned],[tx("灼烧","Burn"),m.burn],[tx("中毒","Poison"),m.poison],[tx("反击","Counter"),m.counter],[tx("狂暴","Frenzy"),m.rage]]:[]);
@@ -75,7 +75,7 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId;
 }
 function applyLocale(){document.documentElement.lang=profile.locale==="en"?"en":"zh-CN";document.title=tx("深渊远征 · 实时测试版","Abyss Expedition · Real-time Beta");
   $("language").textContent=profile.locale==="en"?"简体中文":"English";$("codex").textContent=tx("图鉴","Codex");$("achievements").textContent=tx("成就","Achievements");
-  $("title").textContent=tx("深渊流战 · 八层远征","Abyss Flow · Eight-Floor Expedition");$("eyebrow").textContent=tx("深渊远征 · 实时测试版 1.4.2","ABYSS EXPEDITION · REAL-TIME BETA 1.4.2");
+  $("title").textContent=tx("深渊流战 · 八层远征","Abyss Flow · Eight-Floor Expedition");$("eyebrow").textContent=tx("深渊远征 · 实时测试版 1.5.0","ABYSS EXPEDITION · REAL-TIME BETA 1.5.0");
   $("sub").textContent=tx("自主释放技能，敌人独立行动；数字键或点击技能按钮","Cast freely while enemies act independently. Click skills or use keys 1–4");
   $("notice").textContent=tx("独立测试版：职业、怪物、遗物、四选一事件、商店、双核试炼与存档备份。实时数值仍需实战调优","Standalone Beta: classes, monsters, relics, one-of-four events, shops, Twin Cores and save backups. Real-time balance remains under playtesting");
   $("restart").textContent=tx("返回选角色","Character selection");$("export-save").textContent=tx("导出存档","Export save");$("import-save").textContent=tx("导入存档","Import save");
@@ -99,7 +99,7 @@ function renderTrial(){const t=game.trial;
   bind("[data-dir]",b=>trialMove(...b.dataset.dir.split(",").map(Number)));$("trial-quit").onclick=()=>{if(confirm(tx("放弃将扣当前生命、金币和一件遗物，确定吗？","Forfeit loses current health, gold and one relic. Continue?"))){settleTrial(false);commit();}};
 }
 function init(){
-  if(globalThis.ABYSS_BETA_BUILD!=="1.4.2")throw new Error("Real-time Beta files are from different releases; deploy the complete 1.4.2 asset set");
+  if(globalThis.ABYSS_BETA_BUILD!=="1.5.0")throw new Error("Real-time Beta files are from different releases; deploy the complete 1.5.0 asset set");
   // A transformed/animated arena establishes its own fixed-position containing block.
   // Mount dialogs directly on body so all controls remain reachable on short screens.
   document.body.append($("overlay"));

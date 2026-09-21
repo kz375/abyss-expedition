@@ -1,6 +1,6 @@
 "use strict";
 
-globalThis.ABYSS_BETA_BUILD = "1.4.2";
+globalThis.ABYSS_BETA_BUILD = "1.5.0";
 
 const $ = id => document.getElementById(id);
 const clamp = (value, max) => Math.max(0, Math.min(max, value));
@@ -18,22 +18,22 @@ const MONSTER_EN = {"洞窟蝙蝠":"Cave Bat","深渊猎犬":"Abyss Hound","迷�
 // from the Java save/combat values while real-time pacing is tested.
 const HEROES = {
   warrior: {name:"战士", enName:"Warrior", key:"WARRIOR · IRON WILL", hp:220, attack:32, passive:"铁意：每场战斗开始时获得 70 护盾", enPassive:"Iron Will: gain 70 ward at each battle start", skills:[
-    ["斩击","100% 攻击 · 0.65 秒",650,"damage",1], ["破甲斩","240% 攻击 · 3 秒",3000,"sunder",2.4], ["铁壁","获得 48 护盾 · 6 秒",6000,"shield",48], ["战地包扎","恢复 30 生命 · 8 秒",8000,"heal",30]
+    ["横扫","110% 攻击并短暂破甲 · 0.72 秒",720,"cleave",1.1], ["破甲斩","240% 攻击并打断 · 3 秒",3000,"sunder",2.4], ["铁壁","获得 58 护盾 · 6 秒",6000,"shield",58], ["处决重斩","180% 攻击；低于 35% 时翻倍 · 5.2 秒",5200,"finisher",1.8]
   ]},
   mage: {name:"法师", enName:"Mage", key:"MAGE · MANA FLOW", hp:188, attack:35, passive:"法力流：技能冷却缩短 15%", enPassive:"Mana Flow: skills recharge 15% faster", skills:[
-    ["奥术箭","100% 攻击 · 0.58 秒",580,"damage",1], ["奥术爆发","270% 攻击 + 灼烧 · 2.55 秒",2550,"burn",2.7], ["秘法屏障","获得 37 护盾 · 5 秒",5000,"shield",37], ["星火修复","恢复 25 生命 · 6.8 秒",6800,"heal",25]
+    ["奥术箭","95% 攻击；对灼烧目标额外爆发 · 0.58 秒",580,"arcane",.95], ["奥术爆发","250% 攻击并灼烧 · 2.7 秒",2700,"burn",2.5], ["秘法屏障","获得 34 护盾 · 5 秒",5000,"shield",34], ["时间回响","刷新前三个技能 · 11 秒",11000,"rewind",0]
   ]},
   ranger: {name:"游侠", enName:"Ranger", key:"RANGER · HUNTER'S FOCUS", hp:214, attack:36, passive:"猎人专注：普通攻击有 15% 几率触发一次额外射击", enPassive:"Hunter's Focus: 15% chance for an extra basic shot", skills:[
     ["速射","100% 攻击 · 0.48 秒",480,"damage",1], ["双重射击","两箭各 140% 攻击 · 3 秒",3000,"multi",1.4], ["毒牙箭","110% 攻击 + 中毒 · 3 秒",3000,"poison",1.1], ["烟幕","获得 35 护盾 · 5 秒",5000,"shield",35]
   ]},
   paladin: {name:"圣骑士", enName:"Paladin", key:"PALADIN · DIVINE AEGIS", hp:226, attack:31, passive:"神圣壁垒：每 4 秒获得 10 护盾", enPassive:"Divine Aegis: gain 10 ward every 4 seconds", skills:[
-    ["圣光挥击","100% 攻击 · 0.68 秒",680,"damage",1], ["神圣审判","215% 攻击、治疗并眩晕 · 3.6 秒",3600,"judgment",2.15], ["守护祷言","获得 50 护盾 · 6 秒",6000,"shield",50], ["净化","恢复 28 并清除异常 · 7 秒",7000,"cleanse",28]
+    ["圣光挥击","95% 攻击并获得 7 护盾 · 0.72 秒",720,"smite",.95], ["神圣审判","220% 攻击并打断 · 3.8 秒",3800,"judgment",2.2], ["守护祷言","获得 55 护盾 · 6 秒",6000,"shield",55], ["圣光净化","清除异常并获得 32 护盾 · 7 秒",7000,"purify",32]
   ]},
   necromancer: {name:"死灵法师", enName:"Necromancer", key:"NECROMANCER · CURSE", hp:200, attack:32, passive:"诅咒：敌人开场 8 秒内承受伤害 +25%", enPassive:"Curse: enemy takes 25% more damage for 8 seconds", skills:[
-    ["灵魂火","100% 攻击 · 0.63 秒",630,"damage",1], ["灵魂汲取","200% 攻击、吸取一半生命并中毒 · 3.4 秒",3400,"drain",2], ["骸骨护甲","获得 42 护盾 · 5.5 秒",5500,"shield",42], ["枯萎","造成 80% 攻击并施加诅咒 · 5 秒",5000,"curse",.8]
+    ["灵魂火","90% 攻击并灼烧 · 0.68 秒",680,"soulfire",.9], ["灵魂汲取","190% 攻击；伤害转为灵魂护盾 · 3.5 秒",3500,"soulward",1.9], ["骸骨护甲","获得 46 护盾 · 5.5 秒",5500,"shield",46], ["枯萎","80% 攻击并施加诅咒 · 5 秒",5000,"curse",.8]
   ]},
   creator: {name:"造物主", enName:"Creator", key:"CREATOR · EXECUTION", hp:180, attack:31, passive:"执行：敌人低于 10% 最大生命时直接抹除", enPassive:"Execution: erase enemies below 10% maximum health", hidden:true, skills:[
-    ["现实切割","100% 攻击 · 0.58 秒",580,"damage",1], ["现实撕裂","五次 100% 攻击 · 4 秒",4000,"rend",1], ["造物屏障","获得 44 护盾 · 5 秒",5000,"shield",44], ["重构","恢复 32 生命 · 7 秒",7000,"heal",32]
+    ["现实切割","100% 攻击 · 0.58 秒",580,"damage",1], ["现实撕裂","五次 100% 攻击 · 4 秒",4000,"rend",1], ["造物屏障","获得 44 护盾 · 5 秒",5000,"shield",44], ["规则重写","清除敌方强化并刷新前三个技能 · 9 秒",9000,"rewrite",0]
   ]}
 };
 

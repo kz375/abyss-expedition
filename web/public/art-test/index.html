@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="深渊远征美术与战斗特效实验室">
   <title>深渊美术实验室 · Art FX Beta</title>
-  <link rel="stylesheet" href="/art-test/style.css?v=0.2.0">
-  <script src="/art-test/lab.js?v=0.2.0" defer></script>
+  <link rel="stylesheet" href="/art-test/style.css?v=0.3.0">
+  <script src="/art-test/lab.js?v=0.3.0" defer></script>
 </head>
 <body>
   <main>
-    <header><div><p>ABYSS EXPEDITION · ART FX LAB 0.2</p><h1>美术与战斗特效实验室</h1><span>独立沙盒，不读取或修改任何游戏存档</span></div><nav><button id="language">EN</button><a href="/realtime-test/">返回 UI Beta</a></nav></header>
+    <header><div><p>ABYSS EXPEDITION · ART FX LAB 0.3</p><h1>美术与战斗特效实验室</h1><span>独立沙盒，不读取或修改任何游戏存档</span></div><nav><button id="language">EN</button><a href="/realtime-test/">返回 UI Beta</a></nav></header>
     <section class="controls" aria-label="实验室控制台">
       <label>测试角色<select id="unit"></select></label>
       <label>场景<select id="scene"><option value="crypt">地下墓穴</option><option value="rift">深渊裂隙</option><option value="forge">遗忘熔炉</option></select></label>
@@ -18,6 +18,7 @@
       <label class="upload">载入透明 PNG<input id="art-file" type="file" accept="image/png,image/webp"></label>
     </section>
     <section class="stage scene-crypt" id="stage" aria-label="战斗特效预览区">
+      <i class="frame-corner tl"></i><i class="frame-corner tr"></i><i class="frame-corner bl"></i><i class="frame-corner br"></i><div class="combat-vignette"></div>
       <div class="stage-label"><span id="scene-name">地下墓穴 · CRYPT</span><b>LIVE PREVIEW</b></div>
       <div class="combatant hero"><div class="ground"></div><div class="art fallback hero-shape"><img id="hero-art" alt="英雄测试素材"></div><h2>远征者</h2><div class="health"><i></i></div></div>
       <div class="versus">VS</div>
@@ -26,6 +27,7 @@
     </section>
     <section class="fx-controls"><h2>特效触发器</h2><div><button data-fx="slash">斩击</button><button data-fx="impact">重击</button><button data-fx="burn">灼烧</button><button data-fx="poison">中毒</button><button data-fx="shield">护盾</button><button data-fx="nova">深渊新星</button><button data-fx="critical">暴击数字</button><button data-fx="lightning">雷击</button><button data-fx="freeze">冰冻</button><button data-fx="heal">治疗</button><button data-fx="execute">处决</button><button id="sequence">播放组合</button></div></section>
     <section class="notes"><h2>素材测试标准</h2><div><p><b>推荐尺寸</b><span>透明背景 PNG/WebP，至少 1024×1024，主体四周保留约 8% 空间。</span></p><p><b>朝向与视点</b><span>普通怪朝左，Boss 朝左前方；脚底基准线保持一致。</span></p><p><b>即时替换</b><span>选择角色后载入本地图片即可预览；图片只存在当前页面，不会上传。</span></p></div></section>
+    <footer class="inspiration">视觉研究：itch.io Soulslike UI、OpenGameArt CC0 Weapon Slash / 2D Spell Effects、ぴぽや动效设计语言。项目内效果均为重新绘制。</footer>
   </main>
 </body>
 </html>

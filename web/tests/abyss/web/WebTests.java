@@ -54,7 +54,7 @@ public final class WebTests {
             server.start(); origin = URI.create("http://127.0.0.1:" + server.port()); client = browser();
             check(call("/", null).body().contains("id=\"board\""), "web board delivered");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("1.9.2-art-fx-v2"), "beta page uses one cache-busted release");
+            check(betaPage.contains("1.9.3-premium-fx"), "beta page uses one cache-busted release");
             var betaScripts = java.util.regex.Pattern.compile("<script\\s+src=\"([^\"]+)\"").matcher(betaPage);
             int betaScriptCount = 0;
             while (betaScripts.find()) {
@@ -68,8 +68,8 @@ public final class WebTests {
             check(betaScriptCount == 4, "all four beta modules referenced");
             String artPage = call("/art-test/", null).body();
             check(artPage.contains("ART FX LAB"), "art and combat FX lab delivered");
-            check(call("/art-test/style.css?v=0.2.0", null).headers().firstValue("Content-Type").orElse("").contains("text/css"), "art lab stylesheet MIME type");
-            check(call("/art-test/lab.js?v=0.2.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "art lab script MIME type");
+            check(call("/art-test/style.css?v=0.3.0", null).headers().firstValue("Content-Type").orElse("").contains("text/css"), "art lab stylesheet MIME type");
+            check(call("/art-test/lab.js?v=0.3.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "art lab script MIME type");
             check(call("/src/gameBody.java", null).statusCode() == 404, "source not exposed");
             check(call("/../saves/abyss-expedition.save", null).statusCode() == 404, "no path traversal");
             check(call("/api/state", null).statusCode() == 401, "state requires player identity");

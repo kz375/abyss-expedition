@@ -77,7 +77,7 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId;
   $("potion").textContent=`${tx("药瓶","Healing Bottle")} (${game.potions||0})`;$("potion").disabled=game.phase!=="battle"||game.paused||!game.potions||!!archiveKind;
   $("export-save").disabled=!active||game.finished;
   $("journal").textContent=active?`${tx("种子","Seed")}: ${game.seed} · ${tx("已击败","Defeated")}: ${game.stats.kills} · ${tx("护卫上限 2","Guardian cap: 2")}`:tx("选择职业或导入存档开始","Choose a class or import a save");
-  $("save-status").textContent=saveError||(active&&!game.finished?tx("自动保存中 · 可导出存档跨设备恢复 · 种子不包含进度","Autosaving · Export for cross-device recovery · Seeds do not contain progress"):tx("正式版存档保持不变 · UI Beta 1.9.2","Main-game saves stay untouched · UI Beta 1.9.2"));
+  $("save-status").textContent=saveError||(active&&!game.finished?tx("自动保存中 · 可导出存档跨设备恢复 · 种子不包含进度","Autosaving · Export for cross-device recovery · Seeds do not contain progress"):tx("正式版存档保持不变 · UI Beta 1.9.3","Main-game saves stay untouched · UI Beta 1.9.3"));
   const status=(element,entries)=>{const key=JSON.stringify(entries.map(([n,v])=>[n,Math.ceil(v)]));if(element.dataset.key===key)return;element.dataset.key=key;element.innerHTML=entries.filter(([,v])=>v>0).map(([n,v])=>`<span class="status">${esc(n)} ${Math.ceil(v)}s</span>`).join("");};
   status($("hero-status"),active?Object.entries(game.statuses).map(([k,v])=>[label(ACTION_NAMES[k]||[k,k]),v]):[]);
   status($("enemy-status"),m?[[tx("眩晕","Stun"),m.stunned],[tx("灼烧","Burn"),m.burn],[tx("中毒","Poison"),m.poison],[tx("反击","Counter"),m.counter],[tx("狂暴","Frenzy"),m.rage]]:[]);
@@ -88,7 +88,7 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId;
 }
 function applyLocale(){document.documentElement.lang=profile.locale==="en"?"en":"zh-CN";document.title=tx("深渊远征 · 实时测试版","Abyss Expedition · Real-time Beta");
   $("language").textContent=profile.locale==="en"?"简体中文":"English";$("art-lab").textContent=tx("美术实验室","Art FX Lab");$("warehouse").textContent=tx("仓库","Warehouse");$("codex").textContent=tx("图鉴","Codex");$("achievements").textContent=tx("成就","Achievements");
-  $("title").textContent=tx("深渊流战 · 八层远征","Abyss Flow · Eight-Floor Expedition");$("eyebrow").textContent=tx("深渊远征 · UI 测试版 1.9.2","ABYSS EXPEDITION · UI BETA 1.9.2");
+  $("title").textContent=tx("深渊流战 · 八层远征","Abyss Flow · Eight-Floor Expedition");$("eyebrow").textContent=tx("深渊远征 · UI 测试版 1.9.3","ABYSS EXPEDITION · UI BETA 1.9.3");
   $("sub").textContent=tx("自主释放技能，敌人独立行动；数字键或点击技能按钮","Cast freely while enemies act independently. Click skills or use keys 1–4");
   $("notice").textContent=tx("独立测试版：职业、怪物、遗物、四选一事件、商店、双核试炼与存档备份。实时数值仍需实战调优","Standalone Beta: classes, monsters, relics, one-of-four events, shops, Twin Cores and save backups. Real-time balance remains under playtesting");
   $("restart").textContent=tx("返回选角色","Character selection");$("export-save").textContent=tx("导出存档","Export save");$("import-save").textContent=tx("导入存档","Import save");
@@ -123,7 +123,7 @@ function renderTrial(){const t=game.trial,previous=trialViewState,changed=(type,
   bind("[data-dir]",b=>trialMove(...b.dataset.dir.split(",").map(Number)));$("trial-quit").onclick=()=>{if(confirm(tx("放弃将扣当前生命、金币和一件遗物，确定吗？","Forfeit loses current health, gold and one relic. Continue?"))){settleTrial(false);commit();}};
 }
 function init(){
-  if(globalThis.ABYSS_BETA_BUILD!=="1.9.2")throw new Error("Real-time Beta files are from different releases; deploy the complete 1.9.2 asset set");
+  if(globalThis.ABYSS_BETA_BUILD!=="1.9.3")throw new Error("Real-time Beta files are from different releases; deploy the complete 1.9.3 asset set");
   // A transformed/animated arena establishes its own fixed-position containing block.
   // Mount dialogs directly on body so all controls remain reachable on short screens.
   document.body.append($("overlay"));

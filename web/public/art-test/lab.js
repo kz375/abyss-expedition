@@ -9,19 +9,20 @@ function particle(className,text=""){const node=document.createElement("span");n
 function burst(className,count,setup){for(let i=0;i<count;i++){const p=particle(className);p.style.setProperty("--i",i);p.style.setProperty("--a",`${i*360/count}deg`);p.style.setProperty("--x",`${43+(i*17)%28}%`);p.style.animationDelay=`${(i%5)*.025}s`;setup?.(p,i);}}
 function shake(strength="heavy"){const stage=$("stage");stage.classList.remove("shake","shake-light");void stage.offsetWidth;stage.classList.add(strength==="light"?"shake-light":"shake");timers.push(setTimeout(()=>stage.classList.remove("shake","shake-light"),520));}
 function hitEnemy(duration=520){$("enemy").classList.add("hit");timers.push(setTimeout(()=>$("enemy").classList.remove("hit"),duration));}
+function accent(type,label){particle(`fx-title ${type}`,tx(label[0],label[1]));particle("speed-lines");particle("chromatic-pulse");}
 function trigger(type){
   $("stage").dataset.fx=type;clearTimeout(trigger.reset);trigger.reset=setTimeout(()=>delete $("stage").dataset.fx,1200);
-  if(type==="slash"){particle("slash slash-a");particle("slash slash-b");particle("slash-flash");burst("slash-spark",14);hitEnemy();shake("light");}
-  if(type==="impact"){particle("impact-core");particle("impact-ring ring-one");particle("impact-ring ring-two");particle("ground-wave");burst("debris",18);hitEnemy(650);shake();}
-  if(type==="burn"){particle("fire-aura");burst("ember",22);burst("smoke",7);status("灼烧","BURN");}
+  if(type==="slash"){accent("physical",["裂空斩","RIFT SLASH"]);particle("slash slash-a");particle("slash slash-b");particle("slash slash-c");particle("slash-flash");burst("slash-spark",20);burst("slash-shard",8);hitEnemy();shake("light");}
+  if(type==="impact"){accent("physical",["破城重击","SIEGE IMPACT"]);particle("impact-core");particle("impact-ring ring-one");particle("impact-ring ring-two");particle("impact-ring ring-three");particle("ground-wave");particle("ground-crack");burst("debris",26);hitEnemy(650);shake();}
+  if(type==="burn"){accent("fire",["炼狱灼烧","INFERNO"]);particle("fire-aura");particle("fire-core");burst("ember",28);burst("smoke",10);status("灼烧","BURN");}
   if(type==="poison"){particle("poison-pool");burst("poison",16);burst("poison-mist",6);status("中毒","POISON");}
   if(type==="shield"){particle("shield-dome");particle("shield-ring");burst("shield-rune",8);status("屏障","WARD");}
-  if(type==="nova"){particle("nova");particle("nova-core");burst("nova-spark",24);burst("void-fragment",12);shake();}
-  if(type==="critical"){particle("critical-flash");particle("damage-number critical-number","−1,284");burst("blood-spark",13);hitEnemy();shake("light");}
+  if(type==="nova"){accent("void",["深渊新星","ABYSSAL NOVA"]);particle("nova");particle("nova-core");particle("rune-wheel");burst("nova-spark",30);burst("void-fragment",18);shake();}
+  if(type==="critical"){particle("critical-flash");particle("critical-stamp",tx("暴击","CRITICAL"));particle("damage-number critical-number","−1,284");burst("blood-spark",18);hitEnemy();shake("light");}
   if(type==="lightning"){particle("lightning-bolt");particle("lightning-bolt fork");particle("lightning-ground");burst("electric-spark",18);hitEnemy();shake();status("感电","SHOCK");}
   if(type==="freeze"){particle("frost-burst");burst("ice-shard",16);particle("frost-ring");status("冻结","FROZEN");}
   if(type==="heal"){particle("heal-column");burst("heal-mote",18);particle("heal-number","+386");}
-  if(type==="execute"){particle("execute-line");particle("execute-mark","×");timers.push(setTimeout(()=>{particle("execute-burst");particle("damage-number execute-number","−9,999");hitEnemy(700);shake();},260));}
+  if(type==="execute"){accent("blood",["终焉处决","FINAL EXECUTION"]);particle("execute-line");particle("execute-mark","×");timers.push(setTimeout(()=>{particle("execute-burst");particle("damage-number execute-number","−9,999");burst("blood-spark",24);hitEnemy(700);shake();},260));}
 }
 function status(zh,en){const tag=document.createElement("span");tag.textContent=tx(zh,en);$("status-stack").append(tag);timers.push(setTimeout(()=>tag.remove(),2500));}
 function sequence(){clearFx();[["shield",0],["slash",600],["impact",1120],["lightning",1750],["critical",2250],["burn",2750],["nova",3450],["execute",4200]].forEach(([fx,delay])=>timers.push(setTimeout(()=>trigger(fx),delay)));}

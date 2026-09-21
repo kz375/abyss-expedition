@@ -52,9 +52,10 @@ public final class WebTests {
         try (WebServer server = new WebServer(new InetSocketAddress("127.0.0.1", 0),
                 Path.of("web/public"), directory, 4, false, "")) {
             server.start(); origin = URI.create("http://127.0.0.1:" + server.port()); client = browser();
-            check(call("/", null).body().contains("id=\"board\""), "web board delivered");
+            check(call("/", null).body().contains("ABYSS EXPEDITION · 2.0"), "unified 2.0 homepage delivered");
+            check(call("/legacy/", null).body().contains("id=\"board\""), "legacy server-save game remains available");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("1.9.3-premium-fx"), "beta page uses one cache-busted release");
+            check(betaPage.contains("2.0.0-unified"), "unified page uses one cache-busted release");
             var betaScripts = java.util.regex.Pattern.compile("<script\\s+src=\"([^\"]+)\"").matcher(betaPage);
             int betaScriptCount = 0;
             while (betaScripts.find()) {

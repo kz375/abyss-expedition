@@ -76,7 +76,7 @@ public final class WebServer implements AutoCloseable {
             if (path.equals("/healthz") && method.equals("GET")) { send(exchange, 200, "application/json", "{\"ok\":true}"); return; }
             if (!path.startsWith("/api/")) {
                 if (!method.equals("GET")) { error(exchange, 405, "Method not allowed"); return; }
-                String file = path.equals("/") ? "index.html" : path.equals("/realtime-test/") ? "realtime-test/index.html" : path.equals("/art-test/") ? "art-test/index.html" : path.substring(1);
+                String file = path.equals("/") || path.equals("/realtime-test/") ? "realtime-test/index.html" : path.equals("/legacy/") ? "index.html" : path.equals("/art-test/") ? "art-test/index.html" : path.substring(1);
                 if (!ASSETS.contains(file)) { error(exchange, 404, "Not found"); return; }
                 String type = file.endsWith(".js") ? "text/javascript" : file.endsWith(".css") ? "text/css" : file.endsWith(".svg") ? "image/svg+xml" : file.endsWith(".png") ? "image/png" : "text/html";
                 send(exchange, 200, type, Files.readAllBytes(assets.resolve(file))); return;

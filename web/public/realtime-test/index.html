@@ -3,22 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="深渊远征 UI 测试版 1.9.3 · 高级战斗特效实验室">
-  <title>深渊流战 · UI Beta 1.9.3</title>
-  <link rel="stylesheet" href="/realtime-test/style.css?v=1.9.3-premium-fx">
-  <script src="/realtime-test/campaign.js?v=1.9.3-premium-fx" defer></script>
-  <script src="/realtime-test/content.js?v=1.9.3-premium-fx" defer></script>
-  <script src="/realtime-test/runtime.js?v=1.9.3-premium-fx" defer></script>
-  <script src="/realtime-test/interface.js?v=1.9.3-premium-fx" defer></script>
+  <meta name="description" content="深渊远征 2.0 · 八层实时暗黑远征">
+  <title>深渊远征 · 正式版 2.0</title>
+  <link rel="stylesheet" href="/realtime-test/style.css?v=2.0.0-unified">
+  <script src="/realtime-test/campaign.js?v=2.0.0-unified" defer></script>
+  <script src="/realtime-test/content.js?v=2.0.0-unified" defer></script>
+  <script src="/realtime-test/runtime.js?v=2.0.0-unified" defer></script>
+  <script src="/realtime-test/interface.js?v=2.0.0-unified" defer></script>
 </head>
 <body>
   <main class="page">
-    <div class="beta-head"><p class="eyebrow" id="eyebrow">ABYSS EXPEDITION · UI BETA 1.9.3</p><div class="beta-tools"><a id="art-lab" href="/art-test/">美术实验室</a><button id="language" type="button">EN</button><button id="warehouse" type="button">仓库</button><button id="codex" type="button">图鉴</button><button id="achievements" type="button">成就</button></div></div>
+    <div class="beta-head"><p class="eyebrow" id="eyebrow">ABYSS EXPEDITION · 2.0</p><div class="beta-tools"><a id="legacy-game" href="/legacy/">旧版存档</a><a id="art-lab" href="/art-test/">美术实验室</a><button id="language" type="button">EN</button><button id="warehouse" type="button">仓库</button><button id="codex" type="button">图鉴</button><button id="achievements" type="button">成就</button></div></div>
     <h1 id="title">深渊流战 · 八层远征测试</h1>
-    <p class="sub" id="sub">完整独立测试版：所有战斗均为实时冷却制。它不读取、不修改正式远征存档。</p>
-    <p class="notice" id="notice">测试目标：职业手感、怪物意图、技能冷却、异常状态、遗物/事件抉择与八层推关节奏。</p>
+    <p class="sub" id="sub">穿过八层深渊，找回七年前被世界遗忘的远征军。</p>
+    <p class="notice" id="notice">实时战斗 · 永久仓库 · 分支事件 · 双核试炼 · 中英双语</p>
     <section class="arena" aria-label="实时战斗地牢">
       <div class="arena-head"><span id="floor-label">选择职业后开始</span><span id="flow"><i></i><span id="flow-text">战斗冻结</span></span></div>
+      <aside class="story-banner" id="story-banner" hidden><div><small id="story-kicker">ABYSS CHRONICLE</small><strong id="story-title"></strong><p id="story-body"></p></div><button id="story-close" type="button" aria-label="收起剧情">×</button></aside>
       <div class="fighter player" id="player-card"><p class="role" id="hero-role">PLAYER</p><h2 id="hero-name">选择一名英雄</h2><span class="portrait" aria-hidden="true"></span><div class="meter"><b>生命</b><strong id="hero-hp-text">—</strong><div class="bar hp"><span id="hero-hp"></span></div><div class="bar shield"><span id="hero-shield"></span></div><em id="hero-shield-text">无护盾</em></div><div class="statuses" id="hero-status"></div><p class="passive" id="hero-passive">职业被动将在这里显示</p></div>
       <div class="impact" id="impact" aria-hidden="true">✦</div>
       <div class="fighter enemy" id="enemy-card"><p class="role" id="enemy-role">HOSTILE</p><h2 id="enemy-name">深渊正在等待</h2><span class="portrait" aria-hidden="true"></span><div class="meter"><b>生命</b><strong id="enemy-hp-text">—</strong><div class="bar hp"><span id="enemy-hp"></span></div><div class="bar shield"><span id="enemy-shield"></span></div><em id="enemy-shield-text">无护盾</em></div><div class="statuses" id="enemy-status"></div><div class="summons" id="summons" aria-live="polite"></div><p class="intent" id="intent">敌人尚未苏醒。</p></div>

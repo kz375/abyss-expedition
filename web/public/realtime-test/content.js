@@ -117,6 +117,24 @@ const EVENT_CATALOG=[
   ["forge","遗忘熔炉","Forgotten Forge"],["altar","回声祭坛","Echoing Altar"],["caravan","月光商队","Moonlit Caravan"],
   ["idol","饥饿神像","Starved Idol"],["stalker","神秘追踪者","Mysterious Stalker"],["trial","双核试炼","Trial of Twin Cores"]
 ];
+const STORY_CHAPTERS=[
+  {title:["序章 · 被遗忘的名字","PROLOGUE · THE FORGOTTEN NAME"],body:["七年前，深渊吞没了北境远征军，也从所有史书里抹去了他们的名字。今晚，刻着你名字的黑色信函出现在门前：想知道他们为何消失，就独自走到第八层。","Seven years ago the abyss swallowed the northern expedition—and erased every name from history. Tonight, a black letter bearing your name appeared at the door: descend alone to the eighth floor if you want the truth."]},
+  {title:["第一幕 · 墙后的呼吸","ACT I · BREATH BEHIND THE WALL"],body:["石墙内传来整齐的呼吸声。失踪者没有死去；某种东西让他们在墙后继续做着同一个梦。你在裂缝中找到一枚远征军徽记。","Measured breathing echoes inside the stone. The lost did not die; something keeps them dreaming behind the walls. In a crack, you find the expedition's crest."]},
+  {title:["第二幕 · 无火的营地","ACT II · THE FIRELESS CAMP"],body:["营地仍保持撤退前的模样，唯独篝火从未燃烧过。桌上的日志写着：深渊不是地下城，而是一段正在寻找宿主的记忆。","The camp remains exactly as it was before the retreat, except its fire was never lit. A journal reads: the abyss is not a dungeon, but a memory searching for a host."]},
+  {title:["第三幕 · 回声借用了你的声音","ACT III · THE ECHO WEARS YOUR VOICE"],body:["从这一层开始，回声会提前说出你的选择。它知道你的招式、恐惧，甚至知道你还未经历的失败。信函上的墨迹正在变成你的笔迹。","From this floor onward, the echo speaks your choices before you make them. It knows your skills, your fear, even failures you have not lived. The letter's ink is becoming your handwriting."]},
+  {title:["第四幕 · 双核契约","ACT IV · COVENANT OF THE TWIN CORES"],body:["两枚核心维持着深渊的循环：一枚保存死者，一枚重写来者。击碎它们能打开前路，也会让被遗忘者真正迎来死亡。","Twin cores sustain the abyssal cycle: one preserves the dead, the other rewrites those who enter. Breaking them opens the path—and grants the forgotten their first true death."]},
+  {title:["第五幕 · 最后一名记录者","ACT V · THE LAST CHRONICLER"],body:["你遇见远征军最后的记录者。他只剩影子，却认得你：七年前，是未来的你把队伍引到了这里。深渊正在把因果折成一个封闭的圆。","You meet the expedition's last chronicler, now only a shadow. He recognizes you: seven years ago, your future self led them here. The abyss is folding cause and effect into a closed circle."]},
+  {title:["第六幕 · 王座之前","ACT VI · BEFORE THE THRONE"],body:["所有岔路最终汇向同一座王座。你终于明白，所谓领主不是统治深渊的人，而是每一轮选择留下的总和。王座正在等待新的名字。","Every path converges on a single throne. The Lord is not one who rules the abyss, but the sum of every choice left behind. The throne is waiting for a new name."]},
+  {title:["终幕 · 第八层","FINALE · THE EIGHTH FLOOR"],body:["门后没有宝藏，只有七年前尚未发生的清晨。击败守门者，你可以斩断循环；接受它，你将成为下一封黑色信函的书写者。","Beyond the door lies no treasure, only a morning from seven years ago that has not happened yet. Defeat the keeper to sever the cycle—or become the author of the next black letter."]}
+];
+const STORY_ENDINGS={
+  warrior:["你把剑插进王座，所有被抹去的名字重新浮现在铁刃上。黎明到来时，世人终于记起了那支远征军。","You drive your sword into the throne. Every erased name returns along the blade. At dawn, the world remembers the lost expedition."],
+  mage:["你没有摧毁循环，而是改写了它的第一行。从此，深渊仍会做梦，却再也不能借走任何人的名字。","You do not destroy the cycle; you rewrite its first line. The abyss still dreams, but it can never steal another name."],
+  ranger:["你带着最后一封信离开，并烧毁了通往深渊的地图。多年后，仍有人在无月之夜听见第八层传来的弓弦声。","You leave with the final letter and burn every map to the abyss. Years later, bowstrings can still be heard from the eighth floor on moonless nights."],
+  paladin:["圣光没有净化深渊，而是照亮了被困其中的人。你守在门前，直到最后一个灵魂走回清晨。","The light does not cleanse the abyss; it reveals those trapped within. You guard the gate until the final soul walks back into morning."],
+  necromancer:["死者拒绝再次被遗忘。他们跟随你穿过大门，而深渊第一次发现：记忆也可以反过来吞噬主人。","The dead refuse to be forgotten again. They follow you through the gate, and the abyss learns that memory can devour its master."],
+  creator:["你把圆环拆成无数条可能的道路。每一条都通往不同的黎明，而没有任何一个你再需要写下那封信。","You break the circle into countless possible roads. Each reaches a different dawn, and no version of you ever needs to write the letter again."]
+};
 const EVENT_PRESENTATION={
   camp:{icon:"♨",tone:"safe",desc:["余烬尚暖，盔甲上的霜正缓缓融化。你只有片刻喘息。","The embers still breathe, thawing the frost from your armor. You have only a moment to rest."]},
   shop:{icon:"⚖",tone:"trade",desc:["灯笼下，商人把货物一件件推到你面前——价格已经写好。","Under a hooded lantern, the merchant lays out the wares. Every price is final."]},

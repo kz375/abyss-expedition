@@ -56,7 +56,7 @@ function newRun(id,seed,mode){
     gold:35,potions:1,relics:[],statuses:{poison:0,burn:0,weak:0,sunder:0},enemy:null,summons:[],nextEntity:0,
     floorStart:0,trialUsed:false,trial:null,returnFromBattle:false,rewardOffers:[],eventOffers:[],eventId:null,eventUsed:false,
     rewardReturn:"events",result:["",""],shopStock:[],bought:[],killCounts:{},revives:0,phoenixUsed:false,
-    loadout:accountLoadout(),extractedItems:[],
+    loadout:accountLoadout(),extractedItems:[],storySeen:[],
     stats:{damage:0,taken:0,healed:0,casts:0,kills:0,floors:[],phases:[],startedAt:Date.now()}};
   game.rng=hashSeed(game.seed);
   reconcile();game.hp=game.max;game.potions+=effects().startPotions;
@@ -301,7 +301,7 @@ function validRun(s){
 }
 function saveEnvelope(){return {format:"abyss-beta",version:2,run:game,profile};}
 function saveRun(){if(!game?.heroId||game.finished)return;syncProfile();try{localStorage.setItem(BETA_RUN_KEY,JSON.stringify(saveEnvelope()));writeProfile();saveError="";}catch{saveError=tx("保存失败：请立即导出备份（浏览器存储不可用或已满）","Save failed: export a backup now (storage unavailable or full)");} }
-function migrateRunGear(run){if(!run||typeof run!=="object")return run;if(run.loadout&&typeof run.loadout==="object")for(const slot of ACCOUNT_SLOTS){const value=run.loadout[slot];if(typeof value==="string"){const item=legacyGear(value);run.loadout[slot]=item?.slot===slot?item:null;}}if(run.extractedItem!==undefined){run.extractedItems=[];delete run.extractedItem;}run.extractedItems??=[];return run;}
+function migrateRunGear(run){if(!run||typeof run!=="object")return run;if(run.loadout&&typeof run.loadout==="object")for(const slot of ACCOUNT_SLOTS){const value=run.loadout[slot];if(typeof value==="string"){const item=legacyGear(value);run.loadout[slot]=item?.slot===slot?item:null;}}if(run.extractedItem!==undefined){run.extractedItems=[];delete run.extractedItem;}run.extractedItems??=[];run.storySeen=Array.isArray(run.storySeen)?[...new Set(run.storySeen.filter(n=>Number.isInteger(n)&&n>=0&&n<8))]:[];return run;}
 function loadRun(text){const data=JSON.parse(text);if(data.format!=="abyss-beta"||data.version!==2)throw new Error("Incompatible or invalid Beta save");migrateRunGear(data.run);if(!validRun(data.run))throw new Error("Incompatible or invalid Beta save");return clone(data.run);}
 function restoreRun(text){try{const source=text||localStorage.getItem(BETA_RUN_KEY),parsed=JSON.parse(source),restored=loadRun(source),p=parsed.profile;
     profile.claims||={};profile.warehouse||=[];profile.equipped||={weapon:null,armor:null,charm:null};

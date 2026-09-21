@@ -1,6 +1,6 @@
 "use strict";
 
-globalThis.ABYSS_BETA_BUILD = "1.6.0";
+globalThis.ABYSS_BETA_BUILD = "1.7.0";
 
 const $ = id => document.getElementById(id);
 const clamp = (value, max) => Math.max(0, Math.min(max, value));

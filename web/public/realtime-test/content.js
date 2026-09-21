@@ -40,20 +40,50 @@ const RELICS = [
   {id:"serpent",name:["蛇之戒","Serpent Ring"],desc:["普攻附加 3 秒中毒","Basic attacks apply 3 seconds of poison"],poison:true}
 ];
 const RELIC_BY_ID=Object.fromEntries(RELICS.map(r=>[r.id,r]));
-// Account equipment persists outside expeditions. Each new run snapshots these
-// three slots so warehouse changes cannot alter an active battle.
-const ACCOUNT_ITEMS=[
-  {id:"iron_blade",slot:"weapon",name:["远征铁刃","Expedition Ironblade"],desc:["攻击 +4","Attack +4"],attack:4},
-  {id:"ember_staff",slot:"weapon",name:["余烬法杖","Ember Staff"],desc:["灼烧伤害 +25%","Burn damage +25%"],burn:1.25},
-  {id:"hunter_bow",slot:"weapon",name:["猎渊长弓","Abyss Hunter Bow"],desc:["暴击率 +8%","Critical chance +8%"],crit:.08},
-  {id:"bastion_plate",slot:"armor",name:["堡垒胸甲","Bastion Plate"],desc:["生命上限 +18，防御 +2","Max health +18; defense +2"],max:18,defense:2},
-  {id:"bone_mail",slot:"armor",name:["白骨锁甲","Bone Mail"],desc:["每场战斗获得 24 护盾","Gain 24 ward each battle"],ward:24},
-  {id:"mist_cloak",slot:"armor",name:["雾行斗篷","Mistwalker Cloak"],desc:["技能冷却 -6%","Skill cooldown -6%"],cooldown:.94},
-  {id:"blood_charm",slot:"charm",name:["血契护符","Blood-Pact Charm"],desc:["实际伤害的 5% 转为生命","Heal 5% of actual damage"],leech:.05},
-  {id:"lucky_coin",slot:"charm",name:["归途金币","Homebound Coin"],desc:["金币收益 +15%","Gold gain +15%"],goldBonus:.15},
-  {id:"hourglass",slot:"charm",name:["裂隙沙漏","Rift Hourglass"],desc:["技能冷却 -5%","Skill cooldown -5%"],cooldown:.95}
+// Account loot is generated once at extraction. Difficulty controls quantity,
+// quality, affix count and roll strength; stored rolls never reroll on reload.
+const GEAR_BASES=[
+  {id:"iron_blade",slot:"weapon",name:["远征铁刃","Expedition Ironblade"],main:"attack",value:4},
+  {id:"ember_staff",slot:"weapon",name:["余烬法杖","Ember Staff"],main:"burnBonus",value:.18},
+  {id:"hunter_bow",slot:"weapon",name:["猎渊长弓","Abyss Hunter Bow"],main:"crit",value:.055},
+  {id:"bastion_plate",slot:"armor",name:["堡垒胸甲","Bastion Plate"],main:"max",value:18},
+  {id:"bone_mail",slot:"armor",name:["白骨锁甲","Bone Mail"],main:"ward",value:22},
+  {id:"mist_cloak",slot:"armor",name:["雾行斗篷","Mistwalker Cloak"],main:"defense",value:2},
+  {id:"blood_charm",slot:"charm",name:["血契护符","Blood-Pact Charm"],main:"leech",value:.04},
+  {id:"lucky_coin",slot:"charm",name:["归途金币","Homebound Coin"],main:"goldBonus",value:.12},
+  {id:"hourglass",slot:"charm",name:["裂隙沙漏","Rift Hourglass"],main:"cooldownReduction",value:.045}
 ];
-const ACCOUNT_ITEM_BY_ID=Object.fromEntries(ACCOUNT_ITEMS.map(item=>[item.id,item]));
+const GEAR_BASE_BY_ID=Object.fromEntries(GEAR_BASES.map(item=>[item.id,item]));
+const GEAR_QUALITIES={common:["普通","Common"],fine:["精良","Fine"],rare:["稀有","Rare"],epic:["史诗","Epic"],legendary:["传说","Legendary"],legacy:["传承","Legacy"]};
+const LOOT_RULES={
+  explorer:{count:[1,1],scale:[.7,.9],affixes:[1,1],qualities:[["common",75],["fine",25]]},
+  adventurer:{count:[1,2],scale:[.9,1.1],affixes:[1,2],qualities:[["common",25],["fine",50],["rare",25]]},
+  nightmare:{count:[2,2],scale:[1.1,1.4],affixes:[2,3],qualities:[["fine",25],["rare",50],["epic",25]]},
+  ultra:{count:[3,3],scale:[1.4,1.8],affixes:[3,4],qualities:[["rare",30],["epic",50],["legendary",20]]}
+};
+const GEAR_AFFIXES={
+  weapon:[
+    {id:"attack",name:["锋锐","Keen"],stat:"attack",range:[2,5],integer:true},
+    {id:"crit",name:["精准","Precise"],stat:"crit",range:[.02,.05]},
+    {id:"burn",name:["焚烧","Scorching"],stat:"burnBonus",range:[.08,.18]},
+    {id:"boss",name:["弑首","Bossbane"],stat:"bossPower",range:[.06,.15]},
+    {id:"execute",name:["处决","Executioner"],stat:"low",range:[.06,.14]}
+  ],
+  armor:[
+    {id:"max",name:["强健","Stalwart"],stat:"max",range:[8,18],integer:true},
+    {id:"defense",name:["坚固","Fortified"],stat:"defense",range:[1,3],integer:true},
+    {id:"ward",name:["守护","Warded"],stat:"ward",range:[10,24],integer:true},
+    {id:"reduction",name:["不屈","Resolute"],stat:"damageReduction",range:[.03,.08]},
+    {id:"bottle",name:["炼金","Alchemical"],stat:"potionBonus",range:[.1,.3]}
+  ],
+  charm:[
+    {id:"cooldown",name:["迅捷","Swift"],stat:"cooldownReduction",range:[.025,.065]},
+    {id:"leech",name:["饮血","Blooddrinking"],stat:"leech",range:[.02,.055]},
+    {id:"gold",name:["寻宝","Treasure-Seeking"],stat:"goldBonus",range:[.08,.2]},
+    {id:"bottle",name:["补给","Provisioned"],stat:"startPotions",range:[1,1],integer:true},
+    {id:"elite",name:["猎魔","Elite Hunter"],stat:"elitePower",range:[.06,.15]}
+  ]
+};
 // Each species has its own rotation, tempo and counterplay, also used by summons.
 const MONSTER_MODULES = [
   {moves:["bite","double"],speed:1.15,weakness:["蓄力时眩晕","Stun during wind-up"]},

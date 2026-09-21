@@ -11,7 +11,28 @@ function emptyGame(){return {phase:"menu",revision:0,paused:true,clock:0,heroId:
 function hero(){return HEROES[game.heroId];}
 function difficulty(){return DIFFICULTIES[game.difficulty];}
 const ACCOUNT_SLOTS=["weapon","armor","charm"];
-function accountLoadout(){return Object.fromEntries(ACCOUNT_SLOTS.map(slot=>{const id=profile.equipped?.[slot];return [slot,id&&Object.hasOwn(ACCOUNT_ITEM_BY_ID,id)&&ACCOUNT_ITEM_BY_ID[id].slot===slot&&profile.warehouse?.includes(id)?id:null];}));}
+const integerGearStats=new Set(["attack","max","defense","ward","startPotions"]);
+function affixDef(slot,id){return GEAR_AFFIXES[slot]?.find(a=>a.id===id);}
+function gearEffects(item){const out={};if(!item||!validGear(item))return out;const base=GEAR_BASE_BY_ID[item.baseId];out[base.main]=(out[base.main]||0)+base.value*item.scale;for(const roll of item.affixes){const def=affixDef(item.slot,roll.id);out[def.stat]=(out[def.stat]||0)+roll.value;}for(const key of Object.keys(out))if(integerGearStats.has(key))out[key]=Math.round(out[key]);return out;}
+function validGear(item){
+  if(!item||typeof item!=="object"||Array.isArray(item)||typeof item.id!=="string"||!/^[0-9a-f-]{36}$/i.test(item.id))return false;
+  if(!Object.hasOwn(GEAR_BASE_BY_ID,item.baseId)||!Object.hasOwn(GEAR_QUALITIES,item.quality)||!ACCOUNT_SLOTS.includes(item.slot))return false;
+  const base=GEAR_BASE_BY_ID[item.baseId],rule=Object.hasOwn(LOOT_RULES,item.sourceDifficulty)?LOOT_RULES[item.sourceDifficulty]:null;if(base.slot!==item.slot||!Array.isArray(item.affixes)||new Set(item.affixes.map(a=>a?.id)).size!==item.affixes.length)return false;
+  if(item.quality==="legacy")return item.sourceDifficulty==="adventurer"&&item.scale===1&&item.affixes.length===0;
+  if(!rule||!rule.qualities.some(([quality])=>quality===item.quality)||typeof item.scale!=="number"||!Number.isFinite(item.scale)||item.scale<rule.scale[0]||item.scale>rule.scale[1]||item.affixes.length<rule.affixes[0]||item.affixes.length>rule.affixes[1])return false;
+  return item.affixes.every(roll=>{const def=affixDef(item.slot,roll?.id);if(!def)return false;const rawMin=def.range[0]*item.scale,rawMax=def.range[1]*item.scale,min=def.integer?Math.max(1,Math.round(rawMin)):rawMin,max=def.integer?Math.max(min,Math.round(rawMax)):rawMax;return typeof roll.value==="number"&&Number.isFinite(roll.value)&&roll.value>=min-1e-9&&roll.value<=max+1e-9&&(!def.integer||Number.isInteger(roll.value));});
+}
+function legacyGear(baseId){const base=GEAR_BASE_BY_ID[baseId];return base?{id:runId(),baseId,slot:base.slot,quality:"legacy",sourceDifficulty:"adventurer",scale:1,affixes:[]}:null;}
+function migrateProfileGear(target){
+  const old=Array.isArray(target.warehouse)?target.warehouse:[],converted=[],byBase={};
+  for(const value of old){const item=typeof value==="string"?legacyGear(value):value;if(validGear(item)&&!converted.some(g=>g.id===item.id)){converted.push(clone(item));(byBase[item.baseId]??=item.id);}}
+  const equipped=target.equipped&&typeof target.equipped==="object"&&!Array.isArray(target.equipped)?target.equipped:{};target.warehouse=converted;target.equipped={};
+  for(const slot of ACCOUNT_SLOTS){let id=equipped[slot];if(typeof id==="string"&&GEAR_BASE_BY_ID[id])id=byBase[id];const item=converted.find(g=>g.id===id);target.equipped[slot]=item?.slot===slot?id:null;}
+  const claims=target.claims&&typeof target.claims==="object"&&!Array.isArray(target.claims)?target.claims:{};target.claims=Object.fromEntries(Object.entries(claims).filter(([id])=>/^[0-9a-f-]{36}$/i.test(id)).map(([id,value])=>[id,Array.isArray(value)&&value.every(x=>typeof x==="string")?value:"complete"]));return target;
+}
+function accountLoadout(){return Object.fromEntries(ACCOUNT_SLOTS.map(slot=>{const id=profile.equipped?.[slot],item=profile.warehouse?.find(g=>g.id===id);return [slot,item?.slot===slot?clone(item):null];}));}
+function weightedQuality(rule){let roll=random()*rule.qualities.reduce((n,[,weight])=>n+weight,0);for(const [quality,weight] of rule.qualities){roll-=weight;if(roll<0)return quality;}return rule.qualities.at(-1)[0];}
+function generateGear(mode=game.difficulty){const rule=LOOT_RULES[mode],base=choice(GEAR_BASES),scale=rule.scale[0]+random()*(rule.scale[1]-rule.scale[0]),count=rule.affixes[0]+Math.floor(random()*(rule.affixes[1]-rule.affixes[0]+1));return {id:runId(),baseId:base.id,slot:base.slot,quality:weightedQuality(rule),sourceDifficulty:mode,scale,affixes:draw(GEAR_AFFIXES[base.slot],count).map(def=>{const low=def.range[0]*scale,high=def.range[1]*scale;if(def.integer){const min=Math.max(1,Math.round(low)),max=Math.max(min,Math.round(high));return {id:def.id,value:min+Math.floor(random()*(max-min+1))};}return {id:def.id,value:low+random()*(high-low)};})};}
 function runId(){
   if(typeof globalThis.crypto?.randomUUID==="function")return crypto.randomUUID();
   const bytes=new Uint8Array(16);
@@ -35,16 +56,17 @@ function newRun(id,seed,mode){
     gold:35,potions:1,relics:[],statuses:{poison:0,burn:0,weak:0,sunder:0},enemy:null,summons:[],nextEntity:0,
     floorStart:0,trialUsed:false,trial:null,returnFromBattle:false,rewardOffers:[],eventOffers:[],eventId:null,eventUsed:false,
     rewardReturn:"events",result:["",""],shopStock:[],bought:[],killCounts:{},revives:0,phoenixUsed:false,
-    loadout:accountLoadout(),extractedItem:null,
+    loadout:accountLoadout(),extractedItems:[],
     stats:{damage:0,taken:0,healed:0,casts:0,kills:0,floors:[],phases:[],startedAt:Date.now()}};
   game.rng=hashSeed(game.seed);
-  reconcile();game.hp=game.max;
+  reconcile();game.hp=game.max;game.potions+=effects().startPotions;
   game.plan=["EARLY","EARLY","MID","MID","LATE","LATE","DEEP","BOSS"].map((zone,i)=>({index:ROSTER.indexOf(choice(ROSTER.filter(m=>m.zone===zone))),elite:[2,4,6].includes(i)}));
   beginBattle(game.plan[0]);commit();
 }
-function effects(){const e={attack:game.baseAttack||0,defense:game.baseDefense||0,max:game.baseMax||0,power:1,cooldown:1,ward:0,thorns:0,low:0,healing:1,burn:1,leech:0,crit:0,potion:1,goldBonus:0,reset:false,phoenix:false,poison:false};
-  for(const item of [...Object.values(game.loadout||{}).map(id=>ACCOUNT_ITEM_BY_ID[id]),...(game.relics||[]).map(id=>RELIC_BY_ID[id])]){if(!item)continue;for(const key of ["attack","defense","max","ward","thorns","low","leech","crit","goldBonus"])e[key]+=item[key]||0;for(const key of ["power","cooldown","healing","burn","potion"])e[key]*=item[key]||1;for(const key of ["reset","phoenix","poison"])e[key]||=!!item[key];}
-  e.cooldown=Math.max(.6,e.cooldown*(game.heroId==="mage"?.85:1));return e;
+function effects(){const e={attack:game.baseAttack||0,defense:game.baseDefense||0,max:game.baseMax||0,power:1,cooldown:1,ward:0,thorns:0,low:0,healing:1,burn:1,leech:0,crit:0,potion:1,goldBonus:0,bossPower:0,elitePower:0,damageReduction:0,startPotions:0,reset:false,phoenix:false,poison:false};
+  for(const item of Object.values(game.loadout||{})){const stats=gearEffects(item);for(const key of ["attack","defense","max","ward","low","leech","crit","goldBonus","bossPower","elitePower","damageReduction","startPotions"])e[key]+=stats[key]||0;e.cooldown*=1-(stats.cooldownReduction||0);e.burn*=1+(stats.burnBonus||0);e.potion*=1+(stats.potionBonus||0);}
+  for(const item of (game.relics||[]).map(id=>RELIC_BY_ID[id])){if(!item)continue;for(const key of ["attack","defense","max","ward","thorns","low","leech","crit","goldBonus"])e[key]+=item[key]||0;for(const key of ["power","cooldown","healing","burn","potion"])e[key]*=item[key]||1;for(const key of ["reset","phoenix","poison"])e[key]||=!!item[key];}
+  e.cooldown=Math.max(.6,e.cooldown*(game.heroId==="mage"?.85:1));e.crit=Math.min(.5,e.crit);e.leech=Math.min(.2,e.leech);e.damageReduction=Math.min(.3,e.damageReduction);return e;
 }
 function reconcile(){game.max=Math.max(game.initialHp,effects().max);game.hp=clamp(game.hp,game.max);game.shield=clamp(game.shield,game.max);}
 function gainGold(value){const gain=Math.floor(value*difficulty().gold*(1+effects().goldBonus));game.gold+=gain;return gain;}
@@ -65,7 +87,7 @@ function beginBattle(plan,ambush=false){
 }
 function spawnSummon(){if(game.summons.length>=2)return;const index=Math.floor(random()*ROSTER.length);game.summons.push(makeEnemy(index,random()<.05,true));}
 function target(){return game.summons[0]||game.enemy;}
-function damageHero(amount,reflect=true,continuous=false){if(game.hp<=0)return 0;const incoming=(continuous?Math.max(0,amount):Math.max(1,amount-effects().defense))*(game.statuses.sunder>0?1.25:1),absorbed=Math.min(game.shield,incoming);game.shield-=absorbed;
+function damageHero(amount,reflect=true,continuous=false){if(game.hp<=0)return 0;const e=effects(),incoming=(continuous?Math.max(0,amount):Math.max(1,amount-e.defense))*(game.statuses.sunder>0?1.25:1)*(1-e.damageReduction),absorbed=Math.min(game.shield,incoming);game.shield-=absorbed;
   const dealt=Math.min(game.hp,incoming-absorbed);game.hp-=dealt;game.stats.taken+=dealt;if(dealt>.5)feedback("player",dealt,"damage");
   if(reflect&&dealt&&effects().thorns)damageEnemy(dealt*effects().thorns,false,false);
   if(game.hp<=0&&effects().phoenix&&!game.phoenixUsed){game.phoenixUsed=true;game.revives++;game.hp=game.max*.4;game.stats.healed+=game.hp;}
@@ -86,7 +108,7 @@ function advanceBoss(m){const phase=m.hp/m.max<=.33?3:m.hp/m.max<=.66?2:1;while(
 function skillCooldown(index){const ms=hero().skills[index][2]*effects().cooldown;return index===1&&game.heroId==="paladin"?Math.max(2800,ms):ms;}
 function cast(index){if(game.phase!=="battle"||game.paused||archiveKind||!Number.isInteger(index)||index<0||index>3||game.cd[index]>game.clock)return false;
   const [, , ,type,value]=hero().skills[index],e=effects();game.cd[index]=game.clock+skillCooldown(index);game.stats.casts++;
-  const hit=(multiplier=1)=>damageEnemy(e.attack*value*multiplier*e.power*(game.hp/game.max<.35?1+e.low:1)*(game.statuses.weak>0?.8:1)*(random()<e.crit?1.5:1));
+  const hit=(multiplier=1)=>{const foe=target(),hunt=1+(foe?.zone==="BOSS"?e.bossPower:0)+(foe?.elite?e.elitePower:0);return damageEnemy(e.attack*value*multiplier*e.power*hunt*(game.hp/game.max<.35?1+e.low:1)*(game.statuses.weak>0?.8:1)*(random()<e.crit?1.5:1));};
   const m=target();let dealt=0;
   if(!["shield","rewind","purify","rewrite"].includes(type))dealt=hit(type==="finisher"&&m.hp/m.max<.35?2:1);
   if(type==="damage"&&game.heroId==="ranger"&&random()<.15)hit();
@@ -164,8 +186,8 @@ function checkEnd(){if(game.phase!=="battle")return;
     game.rewardReturn=game.returnFromBattle?"advance":game.floor===7?"victory":"events";openReward();commit();
   }
 }
-function extractAccountItem(){profile.claims||={};profile.warehouse||=[];if(Object.hasOwn(profile.claims,game.id)){const claimed=profile.claims[game.id];game.extractedItem=Object.hasOwn(ACCOUNT_ITEM_BY_ID,claimed)?claimed:null;return game.extractedItem;}const pool=ACCOUNT_ITEMS.filter(item=>!profile.warehouse.includes(item.id)),item=pool.length?choice(pool):null;profile.claims[game.id]=item?.id||"complete";if(item)profile.warehouse.push(item.id);game.extractedItem=item?.id||null;return game.extractedItem;}
-function finish(win){game.phase=win?"victory":"defeat";game.finished=true;game.paused=true;if(win)extractAccountItem();syncProfile();writeProfile();clearRun();commit();}
+function extractAccountItems(){profile.claims||={};profile.warehouse||=[];if(Object.hasOwn(profile.claims,game.id)){const ids=profile.claims[game.id];game.extractedItems=Array.isArray(ids)?ids.map(id=>profile.warehouse.find(g=>g.id===id)).filter(Boolean).map(clone):[];return game.extractedItems;}const rule=LOOT_RULES[game.difficulty],count=rule.count[0]+Math.floor(random()*(rule.count[1]-rule.count[0]+1)),items=Array.from({length:count},()=>generateGear());profile.warehouse.push(...items);profile.claims[game.id]=items.map(item=>item.id);game.extractedItems=clone(items);return game.extractedItems;}
+function finish(win){game.phase=win?"victory":"defeat";game.finished=true;game.paused=true;if(win)extractAccountItems();syncProfile();writeProfile();clearRun();commit();}
 function openReward(all=false){game.phase="reward";game.paused=true;game.rewardOffers=draw(RELICS.filter(r=>!game.relics.includes(r.id)).map(r=>r.id),all?RELICS.length:3);}
 function selectRelic(id){if(game.phase!=="reward"||!game.rewardOffers.includes(id))return;grantRelic(id);game.rewardOffers=[];afterReward();commit();}
 function afterReward(){if(game.rewardReturn==="victory")return finish(true);if(game.rewardReturn==="advance")return advanceFloor();if(game.rewardReturn==="trial"){heal(game.max);return eventResult(["核心破碎，生命已恢复，遗物已领取","Cores shattered. Health restored and relic claimed"]);}openEvents();}
@@ -256,8 +278,8 @@ function validRun(s){
   if(!["battle","reward","events","event","shop","result","trial"].includes(s.phase)||s.finished||!finite(s.hp,.000001,1e7)||!finite(s.max,1,1e7)||s.hp>s.max||!finite(s.clock,0,1e12)||!Number.isInteger(s.floor)||s.floor<0||s.floor>7)return false;
   if(!Array.isArray(s.plan)||s.plan.length!==8||s.plan.some(p=>!Number.isInteger(p.index)||!ROSTER[p.index]))return false;
   if(!Array.isArray(s.relics)||new Set(s.relics).size!==s.relics.length||s.relics.some(id=>!RELIC_BY_ID[id])||!Array.isArray(s.cd)||s.cd.length!==4||s.cd.some(n=>!finite(n,0,1e12)))return false;
-  if(s.loadout!=null&&(!s.loadout||ACCOUNT_SLOTS.some(slot=>s.loadout[slot]!=null&&(!Object.hasOwn(ACCOUNT_ITEM_BY_ID,s.loadout[slot])||ACCOUNT_ITEM_BY_ID[s.loadout[slot]].slot!==slot))))return false;
-  if(s.extractedItem!=null&&!Object.hasOwn(ACCOUNT_ITEM_BY_ID,s.extractedItem))return false;
+  if(s.loadout!=null&&(!s.loadout||ACCOUNT_SLOTS.some(slot=>s.loadout[slot]!=null&&(!validGear(s.loadout[slot])||s.loadout[slot].slot!==slot))))return false;
+  if(s.extractedItems!=null&&(!Array.isArray(s.extractedItems)||s.extractedItems.some(item=>!validGear(item))))return false;
   if(!s.stats||!Array.isArray(s.stats.floors)||!Array.isArray(s.stats.phases)||!s.killCounts||typeof s.killCounts!=="object")return false;
   if(["paused","finished","trialUsed","returnFromBattle","eventUsed","phoenixUsed"].some(k=>typeof s[k]!=="boolean"))return false;
   if(s.stats.floors.some(f=>!f||!Number.isInteger(f.floor)||!finite(f.floor,1,8)||!finite(f.ms,0,1e12))||s.stats.phases.some(p=>!p||!Number.isInteger(p.floor)||!finite(p.floor,1,8)||!Number.isInteger(p.phase)||!finite(p.phase,2,3)||!finite(p.time,0,1e12)))return false;
@@ -279,20 +301,21 @@ function validRun(s){
 }
 function saveEnvelope(){return {format:"abyss-beta",version:2,run:game,profile};}
 function saveRun(){if(!game?.heroId||game.finished)return;syncProfile();try{localStorage.setItem(BETA_RUN_KEY,JSON.stringify(saveEnvelope()));writeProfile();saveError="";}catch{saveError=tx("保存失败：请立即导出备份（浏览器存储不可用或已满）","Save failed: export a backup now (storage unavailable or full)");} }
-function loadRun(text){const data=JSON.parse(text);if(data.format!=="abyss-beta"||data.version!==2||!validRun(data.run))throw new Error("Incompatible or invalid Beta save");return clone(data.run);}
-function restoreRun(text){try{const source=text||localStorage.getItem(BETA_RUN_KEY),restored=loadRun(source),p=JSON.parse(source).profile;
+function migrateRunGear(run){if(!run||typeof run!=="object")return run;if(run.loadout&&typeof run.loadout==="object")for(const slot of ACCOUNT_SLOTS){const value=run.loadout[slot];if(typeof value==="string"){const item=legacyGear(value);run.loadout[slot]=item?.slot===slot?item:null;}}if(run.extractedItem!==undefined){run.extractedItems=[];delete run.extractedItem;}run.extractedItems??=[];return run;}
+function loadRun(text){const data=JSON.parse(text);if(data.format!=="abyss-beta"||data.version!==2)throw new Error("Incompatible or invalid Beta save");migrateRunGear(data.run);if(!validRun(data.run))throw new Error("Incompatible or invalid Beta save");return clone(data.run);}
+function restoreRun(text){try{const source=text||localStorage.getItem(BETA_RUN_KEY),parsed=JSON.parse(source),restored=loadRun(source),p=parsed.profile;
     profile.claims||={};profile.warehouse||=[];profile.equipped||={weapon:null,armor:null,charm:null};
     if(p&&typeof p==="object"){
       for(const m of ROSTER){const n=p.kills?.[m.name];if(Number.isInteger(n)&&n>=0&&n<=1e7)profile.kills[m.name]=Math.max(profile.kills[m.name]||0,n);}
       if(p.achievements&&typeof p.achievements==="object")for(const [id,value] of Object.entries(p.achievements))if(/^[a-z0-9_]{1,40}$/.test(id)&&value===true)profile.achievements[id]=true;
       profile.relics=[...new Set([...(Array.isArray(profile.relics)?profile.relics:[]),...(Array.isArray(p.relics)?p.relics.filter(id=>Object.hasOwn(RELIC_BY_ID,id)):[])])];
-      const importedWarehouse=Array.isArray(p.warehouse)?p.warehouse.filter(id=>Object.hasOwn(ACCOUNT_ITEM_BY_ID,id)):[];profile.warehouse=[...new Set([...(profile.warehouse||[]),...importedWarehouse])];
-      if(p.claims&&typeof p.claims==="object")for(const [run,item] of Object.entries(p.claims))if(/^[0-9a-f-]{36}$/i.test(run)&&(item==="complete"||Object.hasOwn(ACCOUNT_ITEM_BY_ID,item)))profile.claims[run]=item;
+      const imported=migrateProfileGear(clone(p)),known=new Set(profile.warehouse.map(item=>item.id));for(const item of imported.warehouse)if(!known.has(item.id)){profile.warehouse.push(item);known.add(item.id);}
+      for(const [run,items] of Object.entries(imported.claims))profile.claims[run]=items;
       if(typeof p.accountId==="string"&&/^[0-9a-f-]{36}$/i.test(p.accountId))profile.accountId=p.accountId;
-      if(p.equipped&&typeof p.equipped==="object")for(const slot of ACCOUNT_SLOTS){const id=p.equipped[slot];if(id&&profile.warehouse.includes(id)&&ACCOUNT_ITEM_BY_ID[id]?.slot===slot)profile.equipped[slot]=id;}
+      for(const slot of ACCOUNT_SLOTS){const id=imported.equipped[slot],item=profile.warehouse.find(g=>g.id===id);if(item?.slot===slot)profile.equipped[slot]=id;}
     }
     profile.progress||={};const prior=profile.progress[restored.id]?.kills||{};profile.progress[restored.id]={kills:{...prior,...Object.fromEntries(Object.entries(restored.killCounts).map(([k,v])=>[k,Math.max(v,prior[k]||0)]))}};
-    game=restored;game.loadout||={weapon:null,armor:null,charm:null};game.extractedItem??=null;game.paused=true;archiveKind=null;commit();return true;
+    game=restored;game.loadout||={weapon:null,armor:null,charm:null};game.extractedItems??=[];game.paused=true;archiveKind=null;commit();return true;
   }catch{saveError=tx("存档损坏或格式不兼容；旧版本请保留备份，不能安全猜测奖励阶段","Invalid or incompatible save; keep old backups. Reward state cannot be safely guessed");renderScene();return false;}}
 function commit(){game.revision++;if(game.heroId&&!game.finished)saveRun();renderScene();}
 function exportRun(){if(!game.heroId||game.finished)return;saveRun();const blob=new Blob([JSON.stringify(saveEnvelope(),null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`abyss-beta-${game.seed.replace(/[^a-zA-Z0-9_-]/g,"_")}-floor-${game.floor+1}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}

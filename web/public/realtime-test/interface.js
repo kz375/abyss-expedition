@@ -1,6 +1,6 @@
 "use strict";
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let skillSignature="",creatorUnlocked=false,warehouseFilter="all",warehouseSort="quality";
+let skillSignature="",creatorUnlocked=false,warehouseFilter="all",warehouseSort="quality",trialViewState=null;
 const nameOfSkill=s=>label(SKILL_NAMES.find(pair=>pair[0]===s[0])||[s[0],s[0]]);
 const gearStatNames={attack:["攻击","Attack"],burnBonus:["灼烧伤害","Burn damage"],crit:["暴击率","Critical chance"],max:["生命上限","Max health"],ward:["开场护盾","Starting ward"],defense:["防御","Defense"],leech:["吸血","Life steal"],goldBonus:["金币获取","Gold gain"],cooldownReduction:["冷却缩减","Cooldown reduction"],bossPower:["首领伤害","Boss damage"],low:["低生命伤害","Low-health damage"],damageReduction:["伤害减免","Damage reduction"],potionBonus:["药瓶效果","Bottle healing"],startPotions:["开场药瓶","Starting bottles"],elitePower:["精英伤害","Elite damage"]};
 function gearTitle(item){const base=GEAR_BASE_BY_ID[item.baseId];return `${label(GEAR_QUALITIES[item.quality])} · ${label(base.name)}`;}
@@ -32,20 +32,22 @@ function menu(){
   $("unlock-creator")?.addEventListener("click",()=>{if($("creator-code").value.trim().toLowerCase()==="kz"){creatorUnlocked=true;const seed=$("seed").value,d=$("difficulty").value;menu();$("seed").value=seed;$("difficulty").value=d;}});
 }
 function eventTitle(id){const e=EVENT_CATALOG.find(e=>e[0]===id);return e?[e[1],e[2]]:["事件","Event"];}
-function renderScene(){if(!game)return;$("archive-layer").hidden=!archiveKind;applyLocale();render();
+function eventPresentation(id){return EVENT_PRESENTATION[id]||{icon:"?",tone:"arcane",desc:["深渊向你提出一个选择。","The abyss offers you a choice."]};}
+function eventCards(ids){return ids.map(id=>{const p=eventPresentation(id);return `<button class="card event-card tone-${p.tone}" data-event="${id}"><span class="event-icon" aria-hidden="true">${p.icon}</span><strong>${esc(label(eventTitle(id)))}</strong><small>${esc(label(p.desc))}</small><em>${tx("进入事件","ENTER EVENT")} →</em></button>`}).join("");}
+function renderScene(){if(!game)return;if(game.phase!=="trial")trialViewState=null;$("archive-layer").hidden=!archiveKind;applyLocale();render();
   if(game.phase==="menu"){menu();return;}
   if(game.phase==="battle"){$("overlay").hidden=true;return;}
   if(game.phase==="reward"){
     modal(["选择一件遗物","Choose one relic"],["奖励选项和当前阶段已经保存，刷新不会重新抽取","Offers and this reward stage are saved. Reloading does not reroll them"],`<div class="cards">${buttons(game.rewardOffers.map(id=>({id,name:RELIC_BY_ID[id].name,desc:RELIC_BY_ID[id].desc})),"data-relic")}</div>${!game.rewardOffers.length?`<button class="card" id="reward-continue">${tx("全部收集完成，继续","Collection complete — continue")}</button>`:""}`);
     bind("[data-relic]",b=>selectRelic(b.dataset.relic));$("reward-continue")?.addEventListener("click",()=>{if(game.phase!=="reward")return;afterReward();commit();});
   }else if(game.phase==="events"){
-    modal(["四个随机事件，选择一个","Four random events — choose one"],["选择后其余三个关闭；事件内的选择均使用按钮","The other three close after selection. All event choices use buttons"],`<div class="cards">${buttons(game.eventOffers.map(id=>({id,name:eventTitle(id)})),"data-event")}</div>`);bind("[data-event]",b=>chooseEvent(b.dataset.event));
+    modal(["前路出现四道回响","Four echoes answer ahead"],["选择一条道路；踏入之后，其余回响将永远熄灭","Choose one path. Once entered, the other echoes will fade forever"],`<div class="event-route"><span>${tx(`第 ${game.floor+1} 层已清理`,`Floor ${game.floor+1} cleared`)}</span><i></i><b>${tx("下一段旅程","NEXT PASSAGE")}</b></div><div class="cards event-grid">${eventCards(game.eventOffers)}</div>`);$("overlay").querySelector(".modal").classList.add("event-modal");bind("[data-event]",b=>chooseEvent(b.dataset.event));
   }else if(game.phase==="event"){
-    modal(eventTitle(game.eventId),["做出选择；可以离开，本层不能再选其他事件","Choose or leave. You cannot visit another event on this floor"],`<div class="cards">${buttons(eventOptions().map(o=>({name:o.text,disabled:o.enabled===false})),"data-option")}</div>`);bind("[data-option]",b=>selectEventOption(Number(b.dataset.option)));
+    const p=eventPresentation(game.eventId),options=eventOptions();modal(eventTitle(game.eventId),p.desc,`<div class="event-scene tone-${p.tone}"><span aria-hidden="true">${p.icon}</span><div><b>${tx("抉择时刻","A MOMENT OF CHOICE")}</b><small>${tx("代价会立即结算，无法撤回","Consequences resolve immediately and cannot be undone")}</small></div></div><div class="cards event-options">${options.map((o,i)=>`<button class="card" data-option="${i}" ${o.enabled===false?"disabled":""}><span class="choice-number">${String(i+1).padStart(2,"0")}</span><strong>${esc(label(o.text))}</strong><small>${o.enabled===false?tx("条件不足","Requirements not met"):tx("确认后立即生效","Resolve immediately")}</small></button>`).join("")}</div>`);$("overlay").querySelector(".modal").classList.add("event-modal",`event-${p.tone}`);bind("[data-option]",b=>selectEventOption(Number(b.dataset.option)));
   }else if(game.phase==="shop"){
     modal(["商店","Merchant"],[`金币 ${game.gold} · 每件商品限购一次`,`Gold ${game.gold} · Each item can be bought once`],`<div class="cards">${buttons(game.shopStock.map(id=>{const s=SHOP.find(s=>s.id===id);return {id,name:s.name,desc:[`${s.price} 金币 · ${shopDescription(id)[0]}`,`${s.price} gold · ${shopDescription(id)[1]}`],disabled:game.bought.includes(id)||game.gold<s.price}}),"data-buy")}</div><button class="card compact" id="shop-leave">${tx("离开商店","Leave shop")}</button>`);bind("[data-buy]",b=>buy(b.dataset.buy));$("shop-leave").onclick=()=>{if(game.phase!=="shop")return;eventResult(["补给完成","Supplies secured"]);commit();};
   }else if(game.phase==="result"){
-    modal(["事件结果","Event result"],game.result,`<button class="card compact" id="next-floor">${tx("进入下一层","Enter next floor")}</button>`);$("next-floor").onclick=()=>{if(game.phase!=="result")return;advanceFloor();commit();};
+    const p=eventPresentation(game.eventId);modal(["命运已经落定","The choice is sealed"],game.result,`<div class="event-result tone-${p.tone}"><span>${p.icon}</span><b>${tx("深渊记住了你的选择","THE ABYSS REMEMBERS")}</b></div><button class="card compact" id="next-floor">${tx("收起回响，进入下一层","Leave the echo and enter the next floor")} →</button>`);$("overlay").querySelector(".modal").classList.add("event-modal");$("next-floor").onclick=()=>{if(game.phase!=="result")return;advanceFloor();commit();};
   }else if(game.phase==="trial")renderTrial();
   else if(game.finished){
     const extracted=game.extractedItems||[],loot=extracted.length?`<div class="victory-loot">${extracted.map(item=>`<div class="loot-card quality-${item.quality}"><span>${esc(label(GEAR_QUALITIES[item.quality]))}</span><strong>${esc(label(GEAR_BASE_BY_ID[item.baseId].name))}</strong><small>${esc(gearDescription(item))}</small></div>`).join("")}</div>`:"";
@@ -75,7 +77,7 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId;
   $("potion").textContent=`${tx("药瓶","Healing Bottle")} (${game.potions||0})`;$("potion").disabled=game.phase!=="battle"||game.paused||!game.potions||!!archiveKind;
   $("export-save").disabled=!active||game.finished;
   $("journal").textContent=active?`${tx("种子","Seed")}: ${game.seed} · ${tx("已击败","Defeated")}: ${game.stats.kills} · ${tx("护卫上限 2","Guardian cap: 2")}`:tx("选择职业或导入存档开始","Choose a class or import a save");
-  $("save-status").textContent=saveError||(active&&!game.finished?tx("自动保存中 · 可导出存档跨设备恢复 · 种子不包含进度","Autosaving · Export for cross-device recovery · Seeds do not contain progress"):tx("正式版存档保持不变 · UI Beta 1.8.0","Main-game saves stay untouched · UI Beta 1.8.0"));
+  $("save-status").textContent=saveError||(active&&!game.finished?tx("自动保存中 · 可导出存档跨设备恢复 · 种子不包含进度","Autosaving · Export for cross-device recovery · Seeds do not contain progress"):tx("正式版存档保持不变 · UI Beta 1.9.1","Main-game saves stay untouched · UI Beta 1.9.1"));
   const status=(element,entries)=>{const key=JSON.stringify(entries.map(([n,v])=>[n,Math.ceil(v)]));if(element.dataset.key===key)return;element.dataset.key=key;element.innerHTML=entries.filter(([,v])=>v>0).map(([n,v])=>`<span class="status">${esc(n)} ${Math.ceil(v)}s</span>`).join("");};
   status($("hero-status"),active?Object.entries(game.statuses).map(([k,v])=>[label(ACTION_NAMES[k]||[k,k]),v]):[]);
   status($("enemy-status"),m?[[tx("眩晕","Stun"),m.stunned],[tx("灼烧","Burn"),m.burn],[tx("中毒","Poison"),m.poison],[tx("反击","Counter"),m.counter],[tx("狂暴","Frenzy"),m.rage]]:[]);
@@ -85,8 +87,8 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId;
   renderSkills();
 }
 function applyLocale(){document.documentElement.lang=profile.locale==="en"?"en":"zh-CN";document.title=tx("深渊远征 · 实时测试版","Abyss Expedition · Real-time Beta");
-  $("language").textContent=profile.locale==="en"?"简体中文":"English";$("warehouse").textContent=tx("仓库","Warehouse");$("codex").textContent=tx("图鉴","Codex");$("achievements").textContent=tx("成就","Achievements");
-  $("title").textContent=tx("深渊流战 · 八层远征","Abyss Flow · Eight-Floor Expedition");$("eyebrow").textContent=tx("深渊远征 · UI 测试版 1.8.0","ABYSS EXPEDITION · UI BETA 1.8.0");
+  $("language").textContent=profile.locale==="en"?"简体中文":"English";$("art-lab").textContent=tx("美术实验室","Art FX Lab");$("warehouse").textContent=tx("仓库","Warehouse");$("codex").textContent=tx("图鉴","Codex");$("achievements").textContent=tx("成就","Achievements");
+  $("title").textContent=tx("深渊流战 · 八层远征","Abyss Flow · Eight-Floor Expedition");$("eyebrow").textContent=tx("深渊远征 · UI 测试版 1.9.1","ABYSS EXPEDITION · UI BETA 1.9.1");
   $("sub").textContent=tx("自主释放技能，敌人独立行动；数字键或点击技能按钮","Cast freely while enemies act independently. Click skills or use keys 1–4");
   $("notice").textContent=tx("独立测试版：职业、怪物、遗物、四选一事件、商店、双核试炼与存档备份。实时数值仍需实战调优","Standalone Beta: classes, monsters, relics, one-of-four events, shops, Twin Cores and save backups. Real-time balance remains under playtesting");
   $("restart").textContent=tx("返回选角色","Character selection");$("export-save").textContent=tx("导出存档","Export save");$("import-save").textContent=tx("导入存档","Import save");
@@ -115,13 +117,13 @@ function renderArchive(){const layer=$("archive-layer");layer.hidden=false;
   layer.innerHTML=`<div class="modal archive"><h2>${archiveKind==="codex"?tx("怪物图鉴","Monster Codex"):tx("成就","Achievements")}</h2><div class="archive-list">${rows}</div><button class="card compact" id="archive-close">${tx("返回","Return")}</button></div>`;
   $("archive-close").onclick=()=>{archiveKind=null;layer.hidden=true;render();};
 }
-function renderTrial(){const t=game.trial;
-  modal(["双核试炼","Trial of Twin Cores"],[`剩余 ${40-t.moves} 步 · 先推箱子，再用箱子把怪物撞向金色核心。怪物不能直接推动`,`Moves left: ${40-t.moves} · Push a box into the monster to drive it onto golden cores. You cannot push the monster directly`],`
-    <p>${tx("人：你 · 箱：箱子 · 怪：怪物 · 核：核心。边缘卡住会重置位置","P: player · B: box · M: monster · C: core. Edge traps trigger a reposition")}</p><div class="trial-grid">${Array.from({length:64},(_,c)=>{const type=c===t.player?"player":c===t.monster?"monster":t.boxes.includes(c)?"box":t.cores.includes(c)?"core":c===t.shattered?"shattered":"empty";return `<div class="tile ${type}">${({player:tx("人","P"),monster:tx("怪","M"),box:tx("箱","B"),core:tx("核","C"),shattered:"✦",empty:""})[type]}</div>`}).join("")}</div><div class="directions"><button data-dir="0,-1">↑</button><button data-dir="-1,0">←</button><button data-dir="0,1">↓</button><button data-dir="1,0">→</button><button id="trial-quit">${tx("放弃（按失败结算）","Forfeit (failure penalty)")}</button></div>`);
+function renderTrial(){const t=game.trial,previous=trialViewState,changed=(type,c)=>previous&&(type==="player"?c===t.player&&c!==previous.player:type==="monster"?c===t.monster&&c!==previous.monster:type==="box"?t.boxes.includes(c)&&!previous.boxes.includes(c):false);trialViewState=clone(t);
+  modal(["双核试炼","Trial of Twin Cores"],[`剩余 ${40-t.moves} 步 · 借助石箱推动守卫撞碎双核`,`${40-t.moves} moves remain · Use stone crates to drive the guardian through both cores`],`
+    <div class="trial-hud"><div><span>${tx("剩余步数","MOVES LEFT")}</span><b>${40-t.moves}</b></div><div><span>${tx("未破核心","CORES REMAIN")}</span><b>${t.cores.length}</b></div><p>${tx("你不能直接推动守卫；石箱卡在边缘时会被深渊重置","You cannot push the guardian directly. Crates trapped on the rim are reclaimed by the abyss.")}</p></div><div class="trial-board"><div class="trial-grid" role="grid" aria-label="${tx("双核试炼棋盘","Twin Cores puzzle board")}">${Array.from({length:64},(_,c)=>{const type=c===t.player?"player":c===t.monster?"monster":t.boxes.includes(c)?"box":t.cores.includes(c)?"core":c===t.shattered?"shattered":"empty",motion=changed(type,c)?` ${type}-moved`:"";return `<div class="tile ${type}${motion}" role="gridcell"><span>${({player:"◆",monster:"◉",box:"▣",core:"✦",shattered:"✹",empty:""})[type]}</span></div>`}).join("")}</div></div><div class="trial-legend"><span><i class="player"></i>${tx("你","You")}</span><span><i class="box"></i>${tx("石箱","Crate")}</span><span><i class="monster"></i>${tx("守卫","Guardian")}</span><span><i class="core"></i>${tx("核心","Core")}</span></div><div class="directions trial-controls"><button data-dir="0,-1" aria-label="${tx("向上","Move up")}">↑<small>W</small></button><button data-dir="-1,0" aria-label="${tx("向左","Move left")}">←<small>A</small></button><button data-dir="0,1" aria-label="${tx("向下","Move down")}">↓<small>S</small></button><button data-dir="1,0" aria-label="${tx("向右","Move right")}">→<small>D</small></button><button id="trial-quit">${tx("放弃试炼","Forfeit trial")}</button></div>`);$("overlay").querySelector(".modal").classList.add("trial-modal");
   bind("[data-dir]",b=>trialMove(...b.dataset.dir.split(",").map(Number)));$("trial-quit").onclick=()=>{if(confirm(tx("放弃将扣当前生命、金币和一件遗物，确定吗？","Forfeit loses current health, gold and one relic. Continue?"))){settleTrial(false);commit();}};
 }
 function init(){
-  if(globalThis.ABYSS_BETA_BUILD!=="1.8.0")throw new Error("Real-time Beta files are from different releases; deploy the complete 1.8.0 asset set");
+  if(globalThis.ABYSS_BETA_BUILD!=="1.9.1")throw new Error("Real-time Beta files are from different releases; deploy the complete 1.9.1 asset set");
   // A transformed/animated arena establishes its own fixed-position containing block.
   // Mount dialogs directly on body so all controls remain reachable on short screens.
   document.body.append($("overlay"));

@@ -9,8 +9,8 @@ WORKDIR /app
 RUN groupadd --gid 10001 abyss && useradd --uid 10001 --gid abyss --no-create-home abyss && mkdir /data && chown abyss:abyss /data
 COPY --from=build /classes /app/classes
 COPY web/public/ /app/public/
-ENV ABYSS_HOST=0.0.0.0 PORT=8080 ABYSS_WEB_ASSETS=/app/public ABYSS_WEB_DATA=/data ABYSS_MAX_PLAYERS=8
+ENV ABYSS_HOST=0.0.0.0 ABYSS_WEB_ASSETS=/app/public ABYSS_WEB_DATA=/data ABYSS_MAX_PLAYERS=8
 USER abyss
-EXPOSE 8080
+EXPOSE 10000
 VOLUME ["/data"]
 CMD ["java", "-Xmx128m", "-Djava.awt.headless=true", "-cp", "/app/classes", "abyss.web.WebServer"]

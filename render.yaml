@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: typebasedgame
+    runtime: docker
+    plan: free
+    dockerfilePath: ./web/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: ABYSS_SECURE_COOKIE
+        value: "true"
+      - key: ABYSS_MAX_PLAYERS
+        value: "8"

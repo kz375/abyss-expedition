@@ -46,7 +46,7 @@ public final class WebServer implements AutoCloseable {
         WebServer app = new WebServer(new InetSocketAddress(host, port),
                 Path.of(env("ABYSS_WEB_ASSETS", "web/public")), Path.of(env("ABYSS_WEB_DATA", "web-data")),
                 Integer.parseInt(env("ABYSS_MAX_PLAYERS", "8")), Boolean.parseBoolean(env("ABYSS_SECURE_COOKIE", "false")),
-                env("ABYSS_PUBLIC_ORIGIN", ""));
+                publicOrigin());
         Runtime.getRuntime().addShutdownHook(new Thread(app::close));
         app.start();
         System.out.println("Abyss Expedition web: http://" + host + ":" + app.port());
@@ -57,6 +57,11 @@ public final class WebServer implements AutoCloseable {
     }
 
     private static String env(String name, String fallback) { return System.getenv().getOrDefault(name, fallback); }
+    private static String publicOrigin() {
+        String configured = env("ABYSS_PUBLIC_ORIGIN", "").strip();
+        if (!configured.isEmpty()) return configured.replaceAll("/+$", "");
+        return env("RENDER_EXTERNAL_URL", "").strip().replaceAll("/+$", "");
+    }
     public void start() { server.start(); }
     public int port() { return server.getAddress().getPort(); }
 

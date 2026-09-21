@@ -1,13 +1,14 @@
 "use strict";
 
-globalThis.ABYSS_BETA_BUILD = "1.5.0";
+globalThis.ABYSS_BETA_BUILD = "1.6.0";
 
 const $ = id => document.getElementById(id);
 const clamp = (value, max) => Math.max(0, Math.min(max, value));
 const choice = list => list[Math.floor(random() * list.length)];
 const BETA_PROFILE_KEY = "abyss-flow-beta-profile-v1";
 const BETA_RUN_KEY = "abyss-flow-beta-run-v1";
-const readProfile = () => { try { const value=JSON.parse(localStorage.getItem(BETA_PROFILE_KEY)); return value && typeof value === "object" && !Array.isArray(value) ? value : {locale:"zh",kills:{},achievements:{}}; } catch { return {locale:"zh",kills:{},achievements:{}}; } };
+const emptyProfile=()=>({locale:"zh",kills:{},achievements:{},progress:{},claims:{},warehouse:[],equipped:{weapon:null,armor:null,charm:null}});
+const readProfile = () => { try { const value=JSON.parse(localStorage.getItem(BETA_PROFILE_KEY)); return value && typeof value === "object" && !Array.isArray(value) ? value : emptyProfile(); } catch { return emptyProfile(); } };
 const profile = readProfile();
 const writeProfile = () => { try { localStorage.setItem(BETA_PROFILE_KEY, JSON.stringify(profile)); } catch {} };
 const clearRun = () => { try { localStorage.removeItem(BETA_RUN_KEY); } catch {} };

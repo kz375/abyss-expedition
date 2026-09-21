@@ -40,6 +40,20 @@ const RELICS = [
   {id:"serpent",name:["蛇之戒","Serpent Ring"],desc:["普攻附加 3 秒中毒","Basic attacks apply 3 seconds of poison"],poison:true}
 ];
 const RELIC_BY_ID=Object.fromEntries(RELICS.map(r=>[r.id,r]));
+// Account equipment persists outside expeditions. Each new run snapshots these
+// three slots so warehouse changes cannot alter an active battle.
+const ACCOUNT_ITEMS=[
+  {id:"iron_blade",slot:"weapon",name:["远征铁刃","Expedition Ironblade"],desc:["攻击 +4","Attack +4"],attack:4},
+  {id:"ember_staff",slot:"weapon",name:["余烬法杖","Ember Staff"],desc:["灼烧伤害 +25%","Burn damage +25%"],burn:1.25},
+  {id:"hunter_bow",slot:"weapon",name:["猎渊长弓","Abyss Hunter Bow"],desc:["暴击率 +8%","Critical chance +8%"],crit:.08},
+  {id:"bastion_plate",slot:"armor",name:["堡垒胸甲","Bastion Plate"],desc:["生命上限 +18，防御 +2","Max health +18; defense +2"],max:18,defense:2},
+  {id:"bone_mail",slot:"armor",name:["白骨锁甲","Bone Mail"],desc:["每场战斗获得 24 护盾","Gain 24 ward each battle"],ward:24},
+  {id:"mist_cloak",slot:"armor",name:["雾行斗篷","Mistwalker Cloak"],desc:["技能冷却 -6%","Skill cooldown -6%"],cooldown:.94},
+  {id:"blood_charm",slot:"charm",name:["血契护符","Blood-Pact Charm"],desc:["实际伤害的 5% 转为生命","Heal 5% of actual damage"],leech:.05},
+  {id:"lucky_coin",slot:"charm",name:["归途金币","Homebound Coin"],desc:["金币收益 +15%","Gold gain +15%"],goldBonus:.15},
+  {id:"hourglass",slot:"charm",name:["裂隙沙漏","Rift Hourglass"],desc:["技能冷却 -5%","Skill cooldown -5%"],cooldown:.95}
+];
+const ACCOUNT_ITEM_BY_ID=Object.fromEntries(ACCOUNT_ITEMS.map(item=>[item.id,item]));
 // Each species has its own rotation, tempo and counterplay, also used by summons.
 const MONSTER_MODULES = [
   {moves:["bite","double"],speed:1.15,weakness:["蓄力时眩晕","Stun during wind-up"]},

@@ -21,8 +21,10 @@ try{
   const wait=async expression=>{for(let i=0;i<100;i++){if(await evaluate(expression))return;await delay(60)}throw Error('Timed out: '+expression+' '+JSON.stringify(errors))};
   const click=async selector=>{await evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:"center"})`);await delay(350);const p=await evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)}),r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return {x,y,reachable:e.contains(document.elementFromPoint(x,y))}})()`);assert.ok(p.reachable,'click target is visible and not covered: '+selector);await command('Input.dispatchMouseEvent',{type:'mousePressed',x:p.x,y:p.y,button:'left',clickCount:1});await delay(100);await command('Input.dispatchMouseEvent',{type:'mouseReleased',x:p.x,y:p.y,button:'left',clickCount:1});};
   await command('Runtime.enable');await command('Page.enable');await command('Emulation.setDeviceMetricsOverride',{width:1280,height:960,deviceScaleFactor:1,mobile:false});await command('Page.navigate',{url:origin+'/realtime-test/'});await wait('typeof game!=="undefined" && game.phase==="menu"');
-  check(await evaluate('globalThis.ABYSS_BETA_BUILD==="1.5.0"'),'all scripts use Beta build 1.5.0');
+  check(await evaluate('globalThis.ABYSS_BETA_BUILD==="1.6.0"'),'all scripts use Beta build 1.6.0');
   check(await evaluate('document.querySelectorAll("[data-hero]").length===5'),'five visible classes, Creator hidden');
+  check(await evaluate('/^[0-9a-f-]{36}$/i.test(profile.accountId)'),'player receives a persistent account identity');
+  await click('#menu-warehouse');check(await evaluate('archiveKind==="warehouse"&&$("archive-layer").innerText.includes(profile.accountId)'),'empty account warehouse opens with its account id');await click('#archive-close');
   check(await evaluate('new Set(Object.values(HEROES).map(h=>JSON.stringify(h.skills.map(s=>s[3])))).size===6'),'six classes expose distinct skill kits');
   check(await evaluate('Object.values(HEROES).flatMap(h=>h.skills).every(s=>!["heal","cleanse","drain"].includes(s[3]))'),'no class retains an active healing skill');
   await command('Emulation.setDeviceMetricsOverride',{width:390,height:667,deviceScaleFactor:1,mobile:true});await delay(800);
@@ -74,5 +76,9 @@ try{
   await click('[data-hero="mage"]');check(await evaluate('game.heroId==="mage"&&game.phase==="battle"&&saveError.length>0'),'blocked storage allows play and reports that progress is unsaved');
   await evaluate('Storage.prototype.getItem=originalGet;Storage.prototype.setItem=originalSet;saveRun();openArchive("codex");restoreRun()');
   check(await evaluate('archiveKind===null&&$("archive-layer").hidden&&game.paused'),'restoring a run closes stale archive layers and pauses combat');
+  await evaluate('finish(true)');check(await evaluate('profile.warehouse.length===1&&!!game.extractedItem'),'victory extracts one item to the account warehouse');
+  await click('#again');await click('#menu-warehouse');check(await evaluate('document.querySelectorAll("[data-equip]").length===1'),'extracted item appears in warehouse');await click('[data-equip]');
+  const equipped=await evaluate('profile.warehouse[0]');await click('#archive-close');await click('[data-hero="warrior"]');check(await evaluate(`Object.values(game.loadout).includes(${JSON.stringify(equipped)})`),'equipped warehouse item is snapshotted into the next run');
+  const firstAccount=await evaluate('profile.accountId');await evaluate('game.finished=true;localStorage.clear()');await command('Page.reload');await wait('typeof game!=="undefined"&&game.phase==="menu"');check(await evaluate(`profile.accountId!==${JSON.stringify(firstAccount)}&&profile.warehouse.length===0`),'a separate browser profile receives an independent empty account');
   check(errors.length===0,'no browser runtime exceptions: '+JSON.stringify(errors));console.log(`${checks} browser checks passed. Screenshots: ${temp}`);
 }finally{socket?.close();chrome.kill();await new Promise(r=>server.close(r));}

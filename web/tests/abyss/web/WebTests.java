@@ -54,7 +54,7 @@ public final class WebTests {
             server.start(); origin = URI.create("http://127.0.0.1:" + server.port()); client = browser();
             check(call("/", null).body().contains("id=\"board\""), "web board delivered");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("1.5.0-class-identity"), "beta page uses one cache-busted release");
+            check(betaPage.contains("1.6.0-account-warehouse"), "beta page uses one cache-busted release");
             var betaScripts = java.util.regex.Pattern.compile("<script\\s+src=\"([^\"]+)\"").matcher(betaPage);
             int betaScriptCount = 0;
             while (betaScripts.find()) {

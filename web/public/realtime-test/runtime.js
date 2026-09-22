@@ -91,16 +91,16 @@ function target(){return game.summons[0]||game.enemy;}
 function combatEvent(type,payload={}){return CombatCore.emit(game.combat,type,{time:game.clock,...payload});}
 function addBreak(m,amount,source="hit"){if(!m||m.hp<=0||m.brokenUntil>game.clock)return 0;const gain=Math.max(0,amount)*CombatCore.breakPower(game.combat.pressure);m.break=Math.min(m.breakMax,m.break+gain);combatEvent("break_gain",{target:m.uid,amount:gain,source});if(m.break>=m.breakMax){m.break=0;m.brokenUntil=game.clock+CombatCore.BROKEN_MS;m.stunned=Math.max(m.stunned,CombatCore.BROKEN_MS/1000);m.telegraph=null;m.next=m.brokenUntil;combatEvent("broken",{target:m.uid,duration:CombatCore.BROKEN_MS});}return gain;}
 function setGuard(active){if(!game||game.phase!=="battle"||game.paused||archiveKind||game.heroId!=="warrior")return false;const c=game.combat;if(active&&!c.guard){if(c.guardCooldownUntil>game.clock)return false;c.guard=true;c.guardStarted=game.clock;c.guardWardGranted=false;combatEvent("guard_start");}else if(!active&&c.guard){const held=game.clock-c.guardStarted;c.guard=false;c.guardCooldownUntil=game.clock+CombatCore.GUARD_COOLDOWN_MS;if(held<CombatCore.HOLD_GUARD_MS){c.guardTapUntil=game.clock+CombatCore.PERFECT_GUARD_MS;combatEvent("guard_tap",{until:c.guardTapUntil});}combatEvent("guard_end",{held,cooldown:CombatCore.GUARD_COOLDOWN_MS});}return true;}
-function damageHero(amount,reflect=true,continuous=false,attacker=null){if(game.hp<=0)return 0;let guard=1;if(!continuous&&game.heroId==="warrior"){const c=game.combat,held=c.guard?game.clock-c.guardStarted:Infinity,perfect=c.guard&&held<=CombatCore.PERFECT_GUARD_MS||c.guardTapUntil>=game.clock;if(perfect){c.guardTapUntil=-1;combatEvent("perfect_guard",{target:attacker?.uid});if(attacker){addBreak(attacker,38,"perfect_guard");attacker.stunned=Math.max(attacker.stunned,.65);attacker.telegraph=null;attacker.next=Math.max(attacker.next,game.clock+650);}return 0;}if(c.guard){const reduction=CombatCore.guardReduction(held);guard=1-reduction;combatEvent("guard",{target:attacker?.uid,reduction});}}const e=effects(),incoming=(continuous?Math.max(0,amount):Math.max(1,amount-e.defense))*(game.statuses.sunder>0?1.25:1)*(1-e.damageReduction)*guard,absorbed=Math.min(game.shield,incoming);game.shield-=absorbed;
-  const dealt=Math.min(game.hp,incoming-absorbed);game.hp-=dealt;game.stats.taken+=dealt;if(dealt>.5)feedback("player",dealt,"damage");
+function damageHero(amount,reflect=true,continuous=false,attacker=null,kind="damage"){if(game.hp<=0)return 0;let guard=1;if(!continuous&&game.heroId==="warrior"){const c=game.combat,held=c.guard?game.clock-c.guardStarted:Infinity,perfect=c.guard&&held<=CombatCore.PERFECT_GUARD_MS||c.guardTapUntil>=game.clock;if(perfect){c.guardTapUntil=-1;combatEvent("perfect_guard",{target:attacker?.uid});if(attacker){addBreak(attacker,38,"perfect_guard");attacker.stunned=Math.max(attacker.stunned,.65);attacker.telegraph=null;attacker.next=Math.max(attacker.next,game.clock+650);}return 0;}if(c.guard){const reduction=CombatCore.guardReduction(held);guard=1-reduction;combatEvent("guard",{target:attacker?.uid,reduction});}}const e=effects(),incoming=(continuous?Math.max(0,amount):Math.max(1,amount-e.defense))*(game.statuses.sunder>0?1.25:1)*(1-e.damageReduction)*guard,absorbed=Math.min(game.shield,incoming);game.shield-=absorbed;if(absorbed>.5)feedback("player",absorbed,"shield",{vibrate:false});
+  const dealt=Math.min(game.hp,incoming-absorbed);game.hp-=dealt;game.stats.taken+=dealt;if(dealt>.08)feedback("player",dealt,kind,{heavy:!continuous&&dealt>game.max*.12});
   if(reflect&&dealt&&effects().thorns)damageEnemy(dealt*effects().thorns,false,false);
   if(game.hp<=0&&effects().phoenix&&!game.phoenixUsed){game.phoenixUsed=true;game.revives++;game.hp=game.max*.4;game.stats.healed+=game.hp;}
   return dealt;
 }
-function damageEnemy(amount,direct=true,leech=true){const m=target();if(!m||m.hp<=0)return 0;
+function damageEnemy(amount,direct=true,leech=true,kind="damage",critical=false){const m=target();if(!m||m.hp<=0)return 0;
   amount=Math.max(0,amount)*(m.curse>0?1.25:1)*(direct?CombatCore.playerPower(game.combat.pressure):1)*(m.brokenUntil>game.clock?1.55:1);if(direct)amount=Math.max(1,amount-m.defense);
-  const absorbed=Math.min(m.shield,amount);m.shield-=absorbed;const dealt=Math.min(m.hp,amount-absorbed);m.hp-=dealt;game.stats.damage+=dealt;
-  if(direct&&dealt>.5)feedback("enemy",dealt,"damage");if(leech&&effects().leech)heal(dealt*effects().leech);
+  const absorbed=Math.min(m.shield,amount);m.shield-=absorbed;if(absorbed>.5)feedback("enemy",absorbed,"shield",{vibrate:false});const dealt=Math.min(m.hp,amount-absorbed);m.hp-=dealt;game.stats.damage+=dealt;
+  if(dealt>.08)feedback("enemy",dealt,kind,{critical,heavy:critical||direct&&dealt>m.max*.12});if(leech&&effects().leech)heal(dealt*effects().leech);
   if(direct&&m.counter>0&&m.hp>0)damageHero(m.attack*.6,false);
   if(game.heroId==="creator"&&m.hp>0&&m.hp/m.max<.1){game.stats.damage+=m.hp;m.hp=0;}
   if(m.hp<=0&&m.minion){recordKill(m);game.summons=game.summons.filter(e=>e!==m);const boss=game.enemy;if(boss.zone==="BOSS"){
@@ -112,13 +112,13 @@ function advanceBoss(m){const phase=m.hp/m.max<=.33?3:m.hp/m.max<=.66?2:1;while(
 function skillCooldown(index){const ms=hero().skills[index][2]*effects().cooldown;return index===1&&game.heroId==="paladin"?Math.max(2800,ms):ms;}
 function cast(index){if(game.phase!=="battle"||game.paused||archiveKind||!Number.isInteger(index)||index<0||index>3||game.cd[index]>game.clock)return false;
   if(!hero().skills[index])return false;
-  const [, , ,type,value]=hero().skills[index],e=effects();game.cd[index]=game.clock+skillCooldown(index);game.stats.casts++;
-  const hit=(multiplier=1)=>{const foe=target(),hunt=1+(foe?.zone==="BOSS"?e.bossPower:0)+(foe?.elite?e.elitePower:0);return damageEnemy(e.attack*value*multiplier*e.power*hunt*(game.hp/game.max<.35?1+e.low:1)*(game.statuses.weak>0?.8:1)*(random()<e.crit?1.5:1));};
+  const [, , ,type,value]=hero().skills[index],e=effects();game.cd[index]=game.clock+skillCooldown(index);game.stats.casts++;combatEvent("skill_cast",{index,type});if(typeof pulseControl==="function")pulseControl(index);
+  const hit=(multiplier=1)=>{const foe=target(),hunt=1+(foe?.zone==="BOSS"?e.bossPower:0)+(foe?.elite?e.elitePower:0),critical=random()<e.crit,kind=({burn:"burn",soulfire:"burn",poison:"poison",arcane:"arcane",curse:"void"})[type]||"damage";return damageEnemy(e.attack*value*multiplier*e.power*hunt*(game.hp/game.max<.35?1+e.low:1)*(game.statuses.weak>0?.8:1)*(critical?1.5:1),true,true,kind,critical);};
   const m=target();let dealt=0;
   if(!["shield","rewind","purify","rewrite"].includes(type))dealt=hit(type==="finisher"&&m.hp/m.max<.35?2:1);
   if(type==="damage"&&game.heroId==="ranger"&&random()<.15)hit();
   if(type==="multi")hit();if(type==="rend")for(let n=0;n<4;n++)hit();
-  if(type==="arcane"&&m.burn>0)damageEnemy(e.attack*.75*e.power);
+  if(type==="arcane"&&m.burn>0)damageEnemy(e.attack*.75*e.power,true,true,"arcane");
   if(type==="cleave"&&m.hp>0){m.curse=Math.max(m.curse,1.5);addBreak(m,12,"cleave");}
   if(type==="smite")addWard(7);
   if(type==="soulward")addWard(dealt*.45);
@@ -147,8 +147,8 @@ function performMove(m,action){if(m.hp<=0||game.hp<=0)return;const attack=m.atta
   else if(action==="summon"){if(!m.minion)spawnSummon();else m.shield=clamp(m.shield+m.max*.1,m.max);}
   else{
     if(action==="dispel")game.shield*=.25;
-    const damage=damageHero(attack*(action==="charge"?1.9:action==="nova"?1.5:action==="double"?.7:1.15),true,false,m);
-    if(action==="double"&&game.hp>0)damageHero(attack*.7,true,false,m);
+    const kind=action==="poison"?"poison":action==="burn"?"burn":action==="nova"||action==="curse"?"void":"damage",damage=damageHero(attack*(action==="charge"?1.9:action==="nova"?1.5:action==="double"?.7:1.15),true,false,m,kind);
+    if(action==="double"&&game.hp>0)damageHero(attack*.7,true,false,m,"damage");
     if(action==="drain"&&m.hp>0)m.hp=clamp(m.hp+damage*.5,m.max);
     if(action==="poison")game.statuses.poison=6;if(action==="burn")game.statuses.burn=5;
     if(action==="weak")game.statuses.weak=5;
@@ -168,8 +168,8 @@ function step(ms){if(!game||game.phase!=="battle"||game.paused||archiveKind||gam
   for(const k of Object.keys(game.statuses))game.statuses[k]=Math.max(0,game.statuses[k]-s);
   game.shield=Math.max(0,game.shield-s*1.6);
   for(const m of [game.enemy,...game.summons]){m.shield=Math.max(0,m.shield-s*1.2);for(const k of ["stunned","rage","counter","poison","burn","curse"])m[k]=Math.max(0,m[k]-s);if(m.brokenUntil<=game.clock&&m.break>0)m.break=Math.max(0,m.break-s*1.5);}
-  if(burnTime>0)damageEnemy(burnTime*5*effects().power*effects().burn,false);if(poisonTime>0&&target()===m)damageEnemy(poisonTime*4,false);
-  if(heroPoisonTime>0)damageHero(heroPoisonTime*4,false,true);if(heroBurnTime>0)damageHero(heroBurnTime*5,false,true);
+  if(burnTime>0)damageEnemy(burnTime*5*effects().power*effects().burn,false,false,"burn");if(poisonTime>0&&target()===m)damageEnemy(poisonTime*4,false,false,"poison");
+  if(heroPoisonTime>0)damageHero(heroPoisonTime*4,false,true,null,"poison");if(heroBurnTime>0)damageHero(heroBurnTime*5,false,true,null,"burn");
   checkEnd();if(game.phase!=="battle")return;
   if(game.heroId==="paladin"&&game.clock>=game.pulse){addWard(10);game.pulse=game.clock+4000;}
   for(const entity of [game.enemy,...game.summons]){enemyStep(entity);checkEnd();if(game.phase!=="battle")break;}

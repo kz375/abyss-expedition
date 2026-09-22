@@ -75,8 +75,9 @@ public final class WebTests {
             }
             String artPage = call("/art-test/", null).body();
             check(artPage.contains("ART FX LAB"), "art and combat FX lab delivered");
-            check(call("/art-test/style.css?v=0.4.0", null).headers().firstValue("Content-Type").orElse("").contains("text/css"), "art lab stylesheet MIME type");
-            check(call("/art-test/lab.js?v=0.4.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "art lab script MIME type");
+            check(call("/art-test/style.css?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("text/css"), "art lab stylesheet MIME type");
+            check(call("/art-test/actors.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "separate character catalog MIME type");
+            check(call("/art-test/lab.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "art lab action engine MIME type");
             check(call("/assets/enemies/iron-golem-test.png", null).headers().firstValue("Content-Type").orElse("").equals("image/png"), "production test monster art delivered");
             check(call("/src/gameBody.java", null).statusCode() == 404, "source not exposed");
             check(call("/../saves/abyss-expedition.save", null).statusCode() == 404, "no path traversal");

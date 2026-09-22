@@ -1,0 +1,21 @@
+{
+  "id":"humanoid-heavy-v1","canvas":[600,900],"origin":[300,850],
+  "bones":[
+    {"id":"root","parent":null,"pivot":[300,850]},
+    {"id":"torso","parent":"root","pivot":[300,470]},
+    {"id":"head","parent":"torso","pivot":[300,300]},
+    {"id":"arm.l.upper","parent":"torso","pivot":[225,410]},
+    {"id":"arm.l.lower","parent":"arm.l.upper","pivot":[165,530]},
+    {"id":"hand.l","parent":"arm.l.lower","pivot":[150,650]},
+    {"id":"arm.r.upper","parent":"torso","pivot":[375,410]},
+    {"id":"arm.r.lower","parent":"arm.r.upper","pivot":[430,530]},
+    {"id":"hand.r","parent":"arm.r.lower","pivot":[445,650]},
+    {"id":"leg.l.thigh","parent":"root","pivot":[260,650]},
+    {"id":"leg.l.calf","parent":"leg.l.thigh","pivot":[250,755]},
+    {"id":"foot.l","parent":"leg.l.calf","pivot":[245,845]},
+    {"id":"leg.r.thigh","parent":"root","pivot":[340,650]},
+    {"id":"leg.r.calf","parent":"leg.r.thigh","pivot":[355,755]},
+    {"id":"foot.r","parent":"leg.r.calf","pivot":[365,845]}
+  ],
+  "sockets":{"weapon":"hand.r","offhand":"hand.l","back":"torso","headFx":"head"}
+}

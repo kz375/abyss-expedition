@@ -15,10 +15,12 @@ public final class WebServer implements AutoCloseable {
     private static final String COOKIE = "abyss_player";
     private static final Set<String> ASSETS = Set.of("index.html", "app.js", "styles.css", "shield-bars.css", "mark.svg", "assets/abyss-gateway-v1.png", "realtime-test/index.html", "realtime-test/style.css", "realtime-test/campaign.js",
             "realtime-test/content.js", "realtime-test/runtime.js", "realtime-test/interface.js",
-            "art-test/index.html", "art-test/style.css", "art-test/actors.js", "art-test/lab.js",
+            "art-test/index.html", "art-test/style.css", "art-test/actors.js", "art-test/rig.js", "art-test/lab.js",
             "assets/characters/warrior.png", "assets/characters/mage.png", "assets/characters/ranger.png",
             "assets/characters/paladin.png", "assets/characters/necromancer.png", "assets/characters/creator.png",
-            "assets/enemies/iron-golem-test.png");
+            "assets/enemies/iron-golem-test.png",
+            "assets/animation/skeletons/humanoid-heavy.json", "assets/animation/actions/greatsword-v1.json",
+            "assets/animation/characters/warrior-initial.json");
     private final HttpServer server;
     private final Path assets, data;
     private final Map<String, GameProcess> games = new HashMap<>();
@@ -81,7 +83,7 @@ public final class WebServer implements AutoCloseable {
                 if (!method.equals("GET")) { error(exchange, 405, "Method not allowed"); return; }
                 String file = path.equals("/") || path.equals("/realtime-test/") ? "realtime-test/index.html" : path.equals("/legacy/") ? "index.html" : path.equals("/art-test/") ? "art-test/index.html" : path.substring(1);
                 if (!ASSETS.contains(file)) { error(exchange, 404, "Not found"); return; }
-                String type = file.endsWith(".js") ? "text/javascript" : file.endsWith(".css") ? "text/css" : file.endsWith(".svg") ? "image/svg+xml" : file.endsWith(".png") ? "image/png" : "text/html";
+                String type = file.endsWith(".js") ? "text/javascript" : file.endsWith(".css") ? "text/css" : file.endsWith(".json") ? "application/json" : file.endsWith(".svg") ? "image/svg+xml" : file.endsWith(".png") ? "image/png" : "text/html";
                 send(exchange, 200, type, Files.readAllBytes(assets.resolve(file))); return;
             }
             if (!sameOrigin(exchange)) { error(exchange, 403, "Cross-site request rejected"); return; }

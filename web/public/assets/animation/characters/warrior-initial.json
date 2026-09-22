@@ -1,0 +1,7 @@
+{
+  "id":"warrior-initial","name":{"zh":"战士 · 初始骨架","en":"Warrior · Initial Rig"},
+  "skeleton":"/assets/animation/skeletons/humanoid-heavy.json",
+  "actions":"/assets/animation/actions/greatsword-v1.json",
+  "skin":"iron-vow-prototype","facing":"right","scale":1,
+  "parts":["cape","leg.l.thigh","leg.r.thigh","leg.l.calf","leg.r.calf","foot.l","foot.r","torso","head","arm.l.upper","arm.l.lower","hand.l","arm.r.upper","arm.r.lower","hand.r","weapon"]
+}

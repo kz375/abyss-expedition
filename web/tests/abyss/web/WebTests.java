@@ -77,7 +77,11 @@ public final class WebTests {
             check(artPage.contains("ART FX LAB"), "art and combat FX lab delivered");
             check(call("/art-test/style.css?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("text/css"), "art lab stylesheet MIME type");
             check(call("/art-test/actors.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "separate character catalog MIME type");
+            check(call("/art-test/rig.js?v=0.6.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "reusable rig runtime MIME type");
             check(call("/art-test/lab.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "art lab action engine MIME type");
+            check(call("/assets/animation/skeletons/humanoid-heavy.json", null).headers().firstValue("Content-Type").orElse("").contains("application/json"), "skeleton model delivered as JSON");
+            check(call("/assets/animation/actions/greatsword-v1.json", null).body().contains("\"heavy\""), "greatsword action set includes heavy attack");
+            check(call("/assets/animation/characters/warrior-initial.json", null).body().contains("humanoid-heavy"), "warrior model binds the reusable skeleton");
             check(call("/assets/enemies/iron-golem-test.png", null).headers().firstValue("Content-Type").orElse("").equals("image/png"), "production test monster art delivered");
             check(call("/src/gameBody.java", null).statusCode() == 404, "source not exposed");
             check(call("/../saves/abyss-expedition.save", null).statusCode() == 404, "no path traversal");

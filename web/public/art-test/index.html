@@ -7,6 +7,7 @@
   <title>深渊美术实验室 · Art FX Beta</title>
   <link rel="stylesheet" href="/art-test/style.css?v=0.5.0">
   <script src="/art-test/actors.js?v=0.5.0" defer></script>
+  <script src="/art-test/rig.js?v=0.6.0" defer></script>
   <script src="/art-test/lab.js?v=0.5.0" defer></script>
 </head>
 <body>
@@ -21,7 +22,7 @@
     <section class="stage scene-crypt" id="stage" aria-label="战斗特效预览区">
       <i class="frame-corner tl"></i><i class="frame-corner tr"></i><i class="frame-corner bl"></i><i class="frame-corner br"></i><div class="combat-vignette"></div>
       <div class="stage-label"><span id="scene-name">地下墓穴 · CRYPT</span><b>LIVE PREVIEW</b></div>
-      <div class="combatant hero"><div class="ground"></div><span class="combat-role" id="hero-role"></span><div class="art" id="hero-shape"><img id="hero-art" alt="测试角色"></div><h2 id="hero-name"></h2><div class="health"><i></i></div></div>
+      <div class="combatant hero"><div class="ground"></div><span class="combat-role" id="hero-role"></span><div class="art" id="hero-shape"><img id="hero-art" alt="测试角色"><div class="paper-rig" id="hero-rig" aria-label="可复用战士骨架模型"></div></div><h2 id="hero-name"></h2><div class="health"><i></i></div></div>
       <div class="versus">VS</div>
       <div class="combatant enemy" id="enemy"><div class="ground"></div><span class="combat-role">TARGET · FX ANCHOR</span><div class="art fallback" id="enemy-shape"><img id="enemy-art" alt="怪物测试素材"></div><h2 id="unit-name"></h2><div class="health"><i id="enemy-health"></i></div><div class="status-stack" id="status-stack"></div></div>
       <div class="fx-layer" id="fx-layer" aria-live="polite"></div>

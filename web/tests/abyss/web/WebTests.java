@@ -68,6 +68,7 @@ public final class WebTests {
                 betaScriptCount++;
             }
             check(betaScriptCount == 5, "all five beta modules referenced");
+            check(call("/assets/backgrounds/dark-theme-cc0.png", null).headers().firstValue("Content-Type").orElse("").equals("image/png"), "CC0 combat background delivered");
             for (String hero : List.of("warrior", "mage", "ranger", "paladin", "necromancer", "creator")) {
                 var art = call("/assets/characters/" + hero + ".png", null);
                 check(art.statusCode() == 200, "character art delivered: " + hero);

@@ -18,7 +18,7 @@ public final class WebServer implements AutoCloseable {
             "art-test/index.html", "art-test/style.css", "art-test/actors.js", "art-test/rig.js", "art-test/lab.js",
             "assets/characters/warrior.png", "assets/characters/mage.png", "assets/characters/ranger.png",
             "assets/characters/paladin.png", "assets/characters/necromancer.png", "assets/characters/creator.png",
-            "assets/enemies/iron-golem-test.png",
+            "assets/enemies/iron-golem-test.png", "assets/backgrounds/dark-theme-cc0.png",
             "assets/animation/skeletons/humanoid-heavy.json", "assets/animation/actions/greatsword-v1.json",
             "assets/animation/characters/warrior-initial.json");
     private final HttpServer server;

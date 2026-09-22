@@ -17,7 +17,8 @@ public final class WebServer implements AutoCloseable {
             "realtime-test/content.js", "realtime-test/runtime.js", "realtime-test/interface.js",
             "art-test/index.html", "art-test/style.css", "art-test/lab.js",
             "assets/characters/warrior.png", "assets/characters/mage.png", "assets/characters/ranger.png",
-            "assets/characters/paladin.png", "assets/characters/necromancer.png", "assets/characters/creator.png");
+            "assets/characters/paladin.png", "assets/characters/necromancer.png", "assets/characters/creator.png",
+            "assets/enemies/iron-golem-test.png");
     private final HttpServer server;
     private final Path assets, data;
     private final Map<String, GameProcess> games = new HashMap<>();

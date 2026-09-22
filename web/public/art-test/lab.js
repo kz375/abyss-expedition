@@ -1,24 +1,25 @@
 "use strict";
-const units={bat:{zh:"洞窟蝙蝠",en:"Cave Bat",kind:"bat"},assassin:{zh:"暗影刺客",en:"Shadow Assassin",kind:"assassin"},golem:{zh:"钢铁魔像",en:"Iron Golem",kind:"golem"},boss:{zh:"深渊领主",en:"Abyss Lord",kind:"boss"}};
+const units={golem:{zh:"钢铁魔像 · 实装素材",en:"Iron Golem · Production Art",kind:"golem",art:"/assets/enemies/iron-golem-test.png"},bat:{zh:"洞窟蝙蝠 · 剪影",en:"Cave Bat · Silhouette",kind:"bat"},assassin:{zh:"暗影刺客 · 剪影",en:"Shadow Assassin · Silhouette",kind:"assassin"},boss:{zh:"深渊领主 · 剪影",en:"Abyss Lord · Silhouette",kind:"boss"}};
 const scenes={crypt:["地下墓穴 · CRYPT","Crypt · CRYPT"],rift:["深渊裂隙 · RIFT","Abyssal Rift · RIFT"],forge:["遗忘熔炉 · FORGE","Forgotten Forge · FORGE"]};
 let locale="zh",objectUrl=null,timers=[];const $=id=>document.getElementById(id),tx=(zh,en)=>locale==="en"?en:zh;
-function renderUnits(){const value=$("unit").value||"bat";$("unit").innerHTML=Object.entries(units).map(([id,u])=>`<option value="${id}">${tx(u.zh,u.en)}</option>`).join("");$("unit").value=value;selectUnit();}
-function selectUnit(){const u=units[$("unit").value];$("unit-name").textContent=tx(u.zh,u.en);$("enemy-shape").className=`art fallback ${u.kind}`;$("enemy").classList.toggle("boss",u.kind==="boss");clearFx();}
+function renderUnits(){const value=$("unit").value||"golem";$("unit").innerHTML=Object.entries(units).map(([id,u])=>`<option value="${id}">${tx(u.zh,u.en)}</option>`).join("");$("unit").value=units[value]?value:"golem";selectUnit();}
+function selectUnit(){const u=units[$("unit").value],shape=$("enemy-shape"),image=$("enemy-art");$("unit-name").textContent=tx(u.zh,u.en);shape.className=`art ${u.art?"":"fallback"} ${u.kind}`;image.src=u.art||"";$("enemy").classList.toggle("boss",u.kind==="boss");$("enemy-health").style.width="82%";clearFx();}
 function clearFx(){timers.forEach(clearTimeout);timers=[];$("fx-layer").replaceChildren();$("enemy").className=$("enemy").classList.contains("boss")?"combatant enemy boss":"combatant enemy";$("status-stack").replaceChildren();}
 function particle(className,text=""){const node=document.createElement("span");node.className=className;node.textContent=text;$("fx-layer").append(node);node.addEventListener("animationend",()=>node.remove(),{once:true});return node;}
 function burst(className,count,setup){for(let i=0;i<count;i++){const p=particle(className);p.style.setProperty("--i",i);p.style.setProperty("--a",`${i*360/count}deg`);p.style.setProperty("--x",`${43+(i*17)%28}%`);p.style.animationDelay=`${(i%5)*.025}s`;setup?.(p,i);}}
 function shake(strength="heavy"){const stage=$("stage");stage.classList.remove("shake","shake-light");void stage.offsetWidth;stage.classList.add(strength==="light"?"shake-light":"shake");timers.push(setTimeout(()=>stage.classList.remove("shake","shake-light"),520));}
 function hitEnemy(duration=520){$("enemy").classList.add("hit");timers.push(setTimeout(()=>$("enemy").classList.remove("hit"),duration));}
+function damageEnemy(amount){const bar=$("enemy-health"),current=parseFloat(bar.style.width)||82;bar.style.width=`${Math.max(8,current-amount)}%`;timers.push(setTimeout(()=>bar.style.width="82%",1500));}
 function accent(type,label){particle(`fx-title ${type}`,tx(label[0],label[1]));particle("speed-lines");particle("chromatic-pulse");}
 function trigger(type){
   $("stage").dataset.fx=type;clearTimeout(trigger.reset);trigger.reset=setTimeout(()=>delete $("stage").dataset.fx,1200);
-  if(type==="slash"){accent("physical",["裂空斩","RIFT SLASH"]);particle("slash slash-a");particle("slash slash-b");particle("slash slash-c");particle("slash-flash");burst("slash-spark",20);burst("slash-shard",8);hitEnemy();shake("light");}
-  if(type==="impact"){accent("physical",["破城重击","SIEGE IMPACT"]);particle("impact-core");particle("impact-ring ring-one");particle("impact-ring ring-two");particle("impact-ring ring-three");particle("ground-wave");particle("ground-crack");burst("debris",26);hitEnemy(650);shake();}
+  if(type==="slash"){accent("physical",["裂空斩","RIFT SLASH"]);particle("hero-lunge");particle("slash slash-a");particle("slash slash-b");particle("slash slash-c");particle("slash-flash");burst("slash-spark",20);burst("slash-shard",8);hitEnemy();damageEnemy(10);shake("light");}
+  if(type==="impact"){accent("physical",["破城重击","SIEGE IMPACT"]);particle("hero-lunge heavy");particle("impact-core");particle("impact-ring ring-one");particle("impact-ring ring-two");particle("impact-ring ring-three");particle("ground-wave");particle("ground-crack");burst("debris",26);hitEnemy(650);damageEnemy(18);shake();}
   if(type==="burn"){accent("fire",["炼狱灼烧","INFERNO"]);particle("fire-aura");particle("fire-core");burst("ember",28);burst("smoke",10);status("灼烧","BURN");}
   if(type==="poison"){particle("poison-pool");burst("poison",16);burst("poison-mist",6);status("中毒","POISON");}
   if(type==="shield"){particle("shield-dome");particle("shield-ring");burst("shield-rune",8);status("屏障","WARD");}
   if(type==="nova"){accent("void",["深渊新星","ABYSSAL NOVA"]);particle("nova");particle("nova-core");particle("rune-wheel");burst("nova-spark",30);burst("void-fragment",18);shake();}
-  if(type==="critical"){particle("critical-flash");particle("critical-stamp",tx("暴击","CRITICAL"));particle("damage-number critical-number","−1,284");burst("blood-spark",18);hitEnemy();shake("light");}
+  if(type==="critical"){particle("critical-flash");particle("critical-stamp",tx("暴击","CRITICAL"));particle("damage-number critical-number","−1,284");burst("blood-spark",18);hitEnemy();damageEnemy(24);shake("light");}
   if(type==="lightning"){particle("lightning-bolt");particle("lightning-bolt fork");particle("lightning-ground");burst("electric-spark",18);hitEnemy();shake();status("感电","SHOCK");}
   if(type==="freeze"){particle("frost-burst");burst("ice-shard",16);particle("frost-ring");status("冻结","FROZEN");}
   if(type==="heal"){particle("heal-column");burst("heal-mote",18);particle("heal-number","+386");}

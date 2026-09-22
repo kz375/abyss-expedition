@@ -55,7 +55,7 @@ public final class WebTests {
             check(call("/", null).body().contains("ABYSS EXPEDITION · 2.0"), "unified 2.0 homepage delivered");
             check(call("/legacy/", null).body().contains("id=\"board\""), "legacy server-save game remains available");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("2.2.0-combat-core"), "combat-core page uses one cache-busted release");
+            check(betaPage.contains("2.2.1-guard-hud"), "guard-hud page uses one cache-busted release");
             var betaScripts = java.util.regex.Pattern.compile("<script\\s+src=\"([^\"]+)\"").matcher(betaPage);
             int betaScriptCount = 0;
             while (betaScripts.find()) {

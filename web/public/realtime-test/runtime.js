@@ -201,7 +201,7 @@ function selectRelic(id){if(game.phase!=="reward"||!game.rewardOffers.includes(i
 function afterReward(){if(game.rewardReturn==="victory")return finish(true);if(game.rewardReturn==="advance")return advanceFloor();if(game.rewardReturn==="trial"){heal(game.max);return eventResult(["核心破碎，生命已恢复，遗物已领取","Cores shattered. Health restored and relic claimed"]);}openEvents();}
 function openEvents(){game.phase="events";game.paused=true;game.eventUsed=false;game.eventId=null;game.eventOffers=draw(EVENT_CATALOG.filter(e=>e[0]!=="trial"||!game.trialUsed).map(e=>e[0]),4);}
 function chooseEvent(id){if(game.phase!=="events"||game.eventUsed||!game.eventOffers.includes(id))return;game.eventUsed=true;game.eventId=id;game.phase=id==="shop"?"shop":"event";if(id==="shop"){game.shopStock=draw(SHOP.map(s=>s.id),3);game.bought=[];}commit();}
-function advanceFloor(){game.floor++;game.returnFromBattle=false;beginBattle(game.plan[game.floor]);}
+function advanceFloor(){game.floor++;game.returnFromBattle=false;if(game.combat.mode!=="endless"){game.combat.pressure=0;game.combat.tier=0;combatEvent("pressure_reset",{floor:game.floor+1});}beginBattle(game.plan[game.floor]);}
 function eventResult(result){game.result=result;game.phase="result";if(game.hp<=0)finish(false);}
 function eventBattle(){const pool=ROSTER.map((m,i)=>({m,i})).filter(({m})=>m.zone===["EARLY","EARLY","MID","MID","LATE","LATE","DEEP","BOSS"][game.floor]);beginBattle({index:choice(pool).i,elite:true},true);}
 function spendGold(cost){if(game.gold<cost)return false;game.gold-=cost;return true;}

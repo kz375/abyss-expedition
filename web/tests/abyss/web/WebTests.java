@@ -55,7 +55,7 @@ public final class WebTests {
             check(call("/", null).body().contains("ABYSS EXPEDITION · 2.0"), "unified 2.0 homepage delivered");
             check(call("/legacy/", null).body().contains("id=\"board\""), "legacy server-save game remains available");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("2.1.0-character-art"), "character-art page uses one cache-busted release");
+            check(betaPage.contains("2.2.0-combat-core"), "combat-core page uses one cache-busted release");
             var betaScripts = java.util.regex.Pattern.compile("<script\\s+src=\"([^\"]+)\"").matcher(betaPage);
             int betaScriptCount = 0;
             while (betaScripts.find()) {
@@ -66,7 +66,7 @@ public final class WebTests {
                 check(!asset.body().isBlank(), "beta script is not empty: " + script);
                 betaScriptCount++;
             }
-            check(betaScriptCount == 4, "all four beta modules referenced");
+            check(betaScriptCount == 5, "all five beta modules referenced");
             for (String hero : List.of("warrior", "mage", "ranger", "paladin", "necromancer", "creator")) {
                 var art = call("/assets/characters/" + hero + ".png", null);
                 check(art.statusCode() == 200, "character art delivered: " + hero);

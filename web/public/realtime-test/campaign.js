@@ -1,6 +1,6 @@
 "use strict";
 
-globalThis.ABYSS_BETA_BUILD = "2.1.0";
+globalThis.ABYSS_BETA_BUILD = "2.2.0";
 
 const HERO_ART = Object.freeze({
   warrior:"/assets/characters/warrior.png", mage:"/assets/characters/mage.png",
@@ -25,7 +25,7 @@ const MONSTER_EN = {"洞窟蝙蝠":"Cave Bat","深渊猎犬":"Abyss Hound","迷�
 // from the Java save/combat values while real-time pacing is tested.
 const HEROES = {
   warrior: {name:"战士", enName:"Warrior", key:"WARRIOR · IRON WILL", hp:220, attack:32, passive:"铁意：每场战斗开始时获得 70 护盾", enPassive:"Iron Will: gain 70 ward at each battle start", skills:[
-    ["横扫","110% 攻击并短暂破甲 · 0.72 秒",720,"cleave",1.1], ["破甲斩","240% 攻击并打断 · 3 秒",3000,"sunder",2.4], ["铁壁","获得 58 护盾 · 6 秒",6000,"shield",58], ["处决重斩","180% 攻击；低于 35% 时翻倍 · 5.2 秒",5200,"finisher",1.8]
+    ["横扫","快速攻击并积累破势 · 0.72 秒",720,"cleave",1.1], ["破甲斩","打断意图并大量积累破势 · 3 秒",3000,"sunder",2.05], ["处决重斩","破势期间造成爆发伤害 · 5.2 秒",5200,"finisher",1.8]
   ]},
   mage: {name:"法师", enName:"Mage", key:"MAGE · MANA FLOW", hp:188, attack:35, passive:"法力流：技能冷却缩短 15%", enPassive:"Mana Flow: skills recharge 15% faster", skills:[
     ["奥术箭","95% 攻击；对灼烧目标额外爆发 · 0.58 秒",580,"arcane",.95], ["奥术爆发","250% 攻击并灼烧 · 2.7 秒",2700,"burn",2.5], ["秘法屏障","获得 34 护盾 · 5 秒",5000,"shield",34], ["时间回响","刷新前三个技能 · 11 秒",11000,"rewind",0]

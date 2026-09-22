@@ -43,8 +43,9 @@ function runId(){
   const hex=[...bytes].map(b=>b.toString(16).padStart(2,"0")).join("");
   return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
 }
-function newRun(id,seed,mode){
+function newRun(id,seed,mode,runMode="expedition"){
   if(!HEROES[id]||!DIFFICULTIES[mode])return;
+  if(!["expedition","endless"].includes(runMode))runMode="expedition";
   // Keep the previous local record recoverable when starting a fresh run.
   let old=null;
   try{old=localStorage.getItem(BETA_RUN_KEY);}catch{}
@@ -56,7 +57,7 @@ function newRun(id,seed,mode){
     gold:35,potions:1,relics:[],statuses:{poison:0,burn:0,weak:0,sunder:0},enemy:null,summons:[],nextEntity:0,
     floorStart:0,trialUsed:false,trial:null,returnFromBattle:false,rewardOffers:[],eventOffers:[],eventId:null,eventUsed:false,
     rewardReturn:"events",result:["",""],shopStock:[],bought:[],killCounts:{},revives:0,phoenixUsed:false,
-    loadout:accountLoadout(),extractedItems:[],storySeen:[],
+    loadout:accountLoadout(),extractedItems:[],storySeen:[],combat:CombatCore.create(runMode),
     stats:{damage:0,taken:0,healed:0,casts:0,kills:0,floors:[],phases:[],startedAt:Date.now()}};
   game.rng=hashSeed(game.seed);
   reconcile();game.hp=game.max;game.potions+=effects().startPotions;
@@ -77,7 +78,7 @@ function makeEnemy(index,elite=false,minion=false){const base=ROSTER[index],d=di
   const max=Math.round(minion?base.hp*d.hp*(1+game.floor*.1)*.5:Math.max(base.hp*d.hp*scale,game.initialHp*1.1));
   return {uid:++game.nextEntity,index,name:base.name,elite,minion,zone:minion?"SUMMON":base.zone,max,hp:max,shield:0,
     attack:base.attack*d.attack*(elite?1.2:1)*(minion?.55:1),defense:base.zone==="BOSS"?4:elite?3:0,speed:MONSTER_MODULES[index].speed,
-    next:game.clock+(minion?2400:1600),count:0,rotation:0,phase:1,phaseMax:max,weakened:0,telegraph:null,stunned:0,counter:0,rage:0,poison:0,burn:0,curse:game.heroId==="necromancer"?8:0};
+    next:game.clock+(minion?2400:1200),count:0,rotation:0,phase:1,phaseMax:max,weakened:0,telegraph:null,intentStarted:0,stunned:0,counter:0,rage:0,poison:0,burn:0,curse:game.heroId==="necromancer"?8:0,break:0,breakMax:minion?65:base.zone==="BOSS"?160:100,brokenUntil:0};
 }
 function beginBattle(plan,ambush=false){
   game.enemy=makeEnemy(plan.index,plan.elite);game.summons=[];game.phase="battle";game.paused=false;game.returnFromBattle=ambush;
@@ -87,14 +88,17 @@ function beginBattle(plan,ambush=false){
 }
 function spawnSummon(){if(game.summons.length>=2)return;const index=Math.floor(random()*ROSTER.length);game.summons.push(makeEnemy(index,random()<.05,true));}
 function target(){return game.summons[0]||game.enemy;}
-function damageHero(amount,reflect=true,continuous=false){if(game.hp<=0)return 0;const e=effects(),incoming=(continuous?Math.max(0,amount):Math.max(1,amount-e.defense))*(game.statuses.sunder>0?1.25:1)*(1-e.damageReduction),absorbed=Math.min(game.shield,incoming);game.shield-=absorbed;
+function combatEvent(type,payload={}){return CombatCore.emit(game.combat,type,{time:game.clock,...payload});}
+function addBreak(m,amount,source="hit"){if(!m||m.hp<=0||m.brokenUntil>game.clock)return 0;const gain=Math.max(0,amount)*CombatCore.breakPower(game.combat.pressure);m.break=Math.min(m.breakMax,m.break+gain);combatEvent("break_gain",{target:m.uid,amount:gain,source});if(m.break>=m.breakMax){m.break=0;m.brokenUntil=game.clock+CombatCore.BROKEN_MS;m.stunned=Math.max(m.stunned,CombatCore.BROKEN_MS/1000);m.telegraph=null;m.next=m.brokenUntil;combatEvent("broken",{target:m.uid,duration:CombatCore.BROKEN_MS});}return gain;}
+function setGuard(active){if(!game||game.phase!=="battle"||game.paused||archiveKind||game.heroId!=="warrior")return false;if(active&&!game.combat.guard){game.combat.guard=true;game.combat.guardStarted=game.clock;combatEvent("guard_start");}else if(!active&&game.combat.guard){game.combat.guard=false;combatEvent("guard_end");}return true;}
+function damageHero(amount,reflect=true,continuous=false,attacker=null){if(game.hp<=0)return 0;let guard=1;if(!continuous&&game.heroId==="warrior"&&game.combat.guard){const perfect=game.clock-game.combat.guardStarted<=CombatCore.PERFECT_GUARD_MS;if(perfect){combatEvent("perfect_guard",{target:attacker?.uid});if(attacker){addBreak(attacker,38,"perfect_guard");attacker.stunned=Math.max(attacker.stunned,.65);attacker.telegraph=null;attacker.next=Math.max(attacker.next,game.clock+650);}return 0;}guard=.35;combatEvent("guard",{target:attacker?.uid});}const e=effects(),incoming=(continuous?Math.max(0,amount):Math.max(1,amount-e.defense))*(game.statuses.sunder>0?1.25:1)*(1-e.damageReduction)*guard,absorbed=Math.min(game.shield,incoming);game.shield-=absorbed;
   const dealt=Math.min(game.hp,incoming-absorbed);game.hp-=dealt;game.stats.taken+=dealt;if(dealt>.5)feedback("player",dealt,"damage");
   if(reflect&&dealt&&effects().thorns)damageEnemy(dealt*effects().thorns,false,false);
   if(game.hp<=0&&effects().phoenix&&!game.phoenixUsed){game.phoenixUsed=true;game.revives++;game.hp=game.max*.4;game.stats.healed+=game.hp;}
   return dealt;
 }
 function damageEnemy(amount,direct=true,leech=true){const m=target();if(!m||m.hp<=0)return 0;
-  amount=Math.max(0,amount)*(m.curse>0?1.25:1);if(direct)amount=Math.max(1,amount-m.defense);
+  amount=Math.max(0,amount)*(m.curse>0?1.25:1)*(direct?CombatCore.playerPower(game.combat.pressure):1)*(m.brokenUntil>game.clock?1.55:1);if(direct)amount=Math.max(1,amount-m.defense);
   const absorbed=Math.min(m.shield,amount);m.shield-=absorbed;const dealt=Math.min(m.hp,amount-absorbed);m.hp-=dealt;game.stats.damage+=dealt;
   if(direct&&dealt>.5)feedback("enemy",dealt,"damage");if(leech&&effects().leech)heal(dealt*effects().leech);
   if(direct&&m.counter>0&&m.hp>0)damageHero(m.attack*.6,false);
@@ -107,6 +111,7 @@ function damageEnemy(amount,direct=true,leech=true){const m=target();if(!m||m.hp
 function advanceBoss(m){const phase=m.hp/m.max<=.33?3:m.hp/m.max<=.66?2:1;while(m.phase<phase){m.phase++;const ratio=m.hp/m.max;m.max*=1.15;m.hp=ratio*m.max;m.attack*=1.15;m.defense*=1.15;m.speed*=1.15;m.shield*=1.15;game.stats.phases.push({floor:game.floor+1,phase:m.phase,time:game.clock});spawnSummon();}}
 function skillCooldown(index){const ms=hero().skills[index][2]*effects().cooldown;return index===1&&game.heroId==="paladin"?Math.max(2800,ms):ms;}
 function cast(index){if(game.phase!=="battle"||game.paused||archiveKind||!Number.isInteger(index)||index<0||index>3||game.cd[index]>game.clock)return false;
+  if(!hero().skills[index])return false;
   const [, , ,type,value]=hero().skills[index],e=effects();game.cd[index]=game.clock+skillCooldown(index);game.stats.casts++;
   const hit=(multiplier=1)=>{const foe=target(),hunt=1+(foe?.zone==="BOSS"?e.bossPower:0)+(foe?.elite?e.elitePower:0);return damageEnemy(e.attack*value*multiplier*e.power*hunt*(game.hp/game.max<.35?1+e.low:1)*(game.statuses.weak>0?.8:1)*(random()<e.crit?1.5:1));};
   const m=target();let dealt=0;
@@ -114,10 +119,11 @@ function cast(index){if(game.phase!=="battle"||game.paused||archiveKind||!Number
   if(type==="damage"&&game.heroId==="ranger"&&random()<.15)hit();
   if(type==="multi")hit();if(type==="rend")for(let n=0;n<4;n++)hit();
   if(type==="arcane"&&m.burn>0)damageEnemy(e.attack*.75*e.power);
-  if(type==="cleave"&&m.hp>0)m.curse=Math.max(m.curse,1.5);
+  if(type==="cleave"&&m.hp>0){m.curse=Math.max(m.curse,1.5);addBreak(m,12,"cleave");}
   if(type==="smite")addWard(7);
   if(type==="soulward")addWard(dealt*.45);
-  if(["sunder","judgment"].includes(type)&&m.hp>0){m.stunned=type==="judgment"?1:1.3;m.telegraph=null;m.next=Math.max(m.next,game.clock+1800);}
+  if(["sunder","judgment"].includes(type)&&m.hp>0){const interrupted=!!m.telegraph;m.stunned=type==="judgment"?1:1.3;m.telegraph=null;m.next=Math.max(m.next,game.clock+1800);addBreak(m,interrupted?34:22,"interrupt");combatEvent("interrupt",{target:m.uid,success:interrupted});}
+  if(type==="finisher"&&m.hp>0)addBreak(m,18,"heavy");
   if(type==="shield")addWard(value);
   if(type==="purify"){game.statuses={poison:0,burn:0,weak:0,sunder:0};addWard(value);}
   if(type==="rewind")for(let i=0;i<3;i++)game.cd[i]=game.clock;
@@ -133,7 +139,7 @@ function monsterMove(m){let moves=MONSTER_MODULES[m.index].moves;
   if(m.zone==="BOSS"&&m.phase===3)moves=m.index===19?["counter","charge","sweep"]:["nova","rage","drain"];
   return moves[m.rotation%moves.length];
 }
-function performMove(m,action){if(m.hp<=0||game.hp<=0)return;const attack=m.attack*(m.rage>0?1.3:1);
+function performMove(m,action){if(m.hp<=0||game.hp<=0)return;const attack=m.attack*(m.rage>0?1.3:1)*CombatCore.enemyPower(game.combat.pressure);
   if(action==="shield")m.shield=clamp(m.shield+m.max*.12,m.max);
   else if(action==="heal")m.hp=clamp(m.hp+m.max*.1,m.max);
   else if(action==="counter")m.counter=3;
@@ -141,8 +147,8 @@ function performMove(m,action){if(m.hp<=0||game.hp<=0)return;const attack=m.atta
   else if(action==="summon"){if(!m.minion)spawnSummon();else m.shield=clamp(m.shield+m.max*.1,m.max);}
   else{
     if(action==="dispel")game.shield*=.25;
-    const damage=damageHero(attack*(action==="charge"?1.9:action==="nova"?1.5:action==="double"?.7:1.15));
-    if(action==="double"&&game.hp>0)damageHero(attack*.7);
+    const damage=damageHero(attack*(action==="charge"?1.9:action==="nova"?1.5:action==="double"?.7:1.15),true,false,m);
+    if(action==="double"&&game.hp>0)damageHero(attack*.7,true,false,m);
     if(action==="drain"&&m.hp>0)m.hp=clamp(m.hp+damage*.5,m.max);
     if(action==="poison")game.statuses.poison=6;if(action==="burn")game.statuses.burn=5;
     if(action==="weak")game.statuses.weak=5;
@@ -151,17 +157,16 @@ function performMove(m,action){if(m.hp<=0||game.hp<=0)return;const attack=m.atta
   }
 }
 function enemyStep(m){if(m.hp<=0||m.stunned>0||game.clock<m.next)return;
-  if(m.telegraph){const action=m.telegraph;m.telegraph=null;performMove(m,action);m.rotation++;m.count++;m.next=game.clock+2200/m.speed;}
-  else if(m.count%3===2){m.telegraph=monsterMove(m);m.next=game.clock+1100;}
-  else{damageHero(m.attack*(m.rage>0?1.3:1));m.count++;m.next=game.clock+1900/m.speed;}
+  if(m.telegraph){const action=m.telegraph;m.telegraph=null;combatEvent("intent_execute",{target:m.uid,action});performMove(m,action);m.rotation++;m.count++;m.next=game.clock+2200/(m.speed*CombatCore.enemySpeed(game.combat.pressure));}
+  else{const action=monsterMove(m),intent=CombatCore.intent(action,game.combat.pressure);m.telegraph=action;m.intentStarted=game.clock;m.next=game.clock+intent.windup;combatEvent("intent",{target:m.uid,action,kind:intent.kind,duration:intent.windup});}
 }
 function step(ms){if(!game||game.phase!=="battle"||game.paused||archiveKind||game.finished)return;
   // Slow the shared simulation during telegraphs: player input remains immediate.
-  const slow=[game.enemy,...game.summons].some(m=>m.telegraph&&m.stunned<=0);const dt=Math.min(80,Math.max(0,ms))*(slow?.55:1),s=dt/1000;game.clock+=dt;
+  const slow=[game.enemy,...game.summons].some(m=>m.telegraph&&m.stunned<=0);const dt=Math.min(80,Math.max(0,ms))*(slow?.55:1),s=dt/1000;game.clock+=dt;game.combat.pressure=Math.min(CombatCore.PRESSURE_MAX,game.combat.pressure+CombatCore.pressure(dt,game.combat.mode));const tier=CombatCore.tier(game.combat.pressure);if(tier!==game.combat.tier){game.combat.tier=tier;combatEvent("pressure_tier",{tier});}
   const m=target(),burnTime=Math.min(s,m.burn),poisonTime=Math.min(s,m.poison),heroPoisonTime=Math.min(s,game.statuses.poison),heroBurnTime=Math.min(s,game.statuses.burn);
   for(const k of Object.keys(game.statuses))game.statuses[k]=Math.max(0,game.statuses[k]-s);
   game.shield=Math.max(0,game.shield-s*1.6);
-  for(const m of [game.enemy,...game.summons]){m.shield=Math.max(0,m.shield-s*1.2);for(const k of ["stunned","rage","counter","poison","burn","curse"])m[k]=Math.max(0,m[k]-s);}
+  for(const m of [game.enemy,...game.summons]){m.shield=Math.max(0,m.shield-s*1.2);for(const k of ["stunned","rage","counter","poison","burn","curse"])m[k]=Math.max(0,m[k]-s);if(m.brokenUntil<=game.clock&&m.break>0)m.break=Math.max(0,m.break-s*1.5);}
   if(burnTime>0)damageEnemy(burnTime*5*effects().power*effects().burn,false);if(poisonTime>0&&target()===m)damageEnemy(poisonTime*4,false);
   if(heroPoisonTime>0)damageHero(heroPoisonTime*4,false,true);if(heroBurnTime>0)damageHero(heroBurnTime*5,false,true);
   checkEnd();if(game.phase!=="battle")return;
@@ -182,12 +187,14 @@ function syncProfile(){
 function checkEnd(){if(game.phase!=="battle")return;
   if(game.hp<=0){game.hp=0;finish(false);return;}
   if(game.enemy.hp<=0){game.enemy.hp=0;recordKill(game.enemy);gainGold(18+game.floor*7+(game.enemy.elite?18:0));
+    if(game.combat.mode==="endless"){game.combat.wave++;combatEvent("wave_clear",{wave:game.combat.wave-1});const index=Math.floor(random()*ROSTER.length),elite=game.combat.wave%4===0;game.enemy=makeEnemy(index,elite);const scale=1+(game.combat.wave-1)*.09;game.enemy.max*=scale;game.enemy.hp=game.enemy.max;game.enemy.attack*=1+(game.combat.wave-1)*.055;game.summons=[];game.floorStart=game.clock;commit();return;}
     if(!game.returnFromBattle)game.stats.floors.push({floor:game.floor+1,ms:game.clock-game.floorStart});
     game.rewardReturn=game.returnFromBattle?"advance":game.floor===7?"victory":"events";openReward();commit();
   }
 }
-function extractAccountItems(){profile.claims||={};profile.warehouse||=[];if(Object.hasOwn(profile.claims,game.id)){const ids=profile.claims[game.id];game.extractedItems=Array.isArray(ids)?ids.map(id=>profile.warehouse.find(g=>g.id===id)).filter(Boolean).map(clone):[];return game.extractedItems;}const rule=LOOT_RULES[game.difficulty],count=rule.count[0]+Math.floor(random()*(rule.count[1]-rule.count[0]+1)),items=Array.from({length:count},()=>generateGear());profile.warehouse.push(...items);profile.claims[game.id]=items.map(item=>item.id);game.extractedItems=clone(items);return game.extractedItems;}
+function extractAccountItems(){profile.claims||={};profile.warehouse||=[];if(Object.hasOwn(profile.claims,game.id)){const ids=profile.claims[game.id];game.extractedItems=Array.isArray(ids)?ids.map(id=>profile.warehouse.find(g=>g.id===id)).filter(Boolean).map(clone):[];return game.extractedItems;}const rule=LOOT_RULES[game.difficulty],pressureBonus=game.combat?.mode==="endless"?Math.min(2,Math.floor(game.combat.pressure/35)):0,waveBonus=game.combat?.mode==="endless"?Math.min(2,Math.floor((game.combat.wave-1)/4)):0,count=rule.count[0]+Math.floor(random()*(rule.count[1]-rule.count[0]+1))+pressureBonus+waveBonus,items=Array.from({length:count},()=>generateGear());profile.warehouse.push(...items);profile.claims[game.id]=items.map(item=>item.id);game.extractedItems=clone(items);return game.extractedItems;}
 function finish(win){game.phase=win?"victory":"defeat";game.finished=true;game.paused=true;if(win)extractAccountItems();syncProfile();writeProfile();clearRun();commit();}
+function extractEndless(){if(game?.phase!=="battle"||game.combat?.mode!=="endless"||game.combat.wave<=1)return false;finish(true);return true;}
 function openReward(all=false){game.phase="reward";game.paused=true;game.rewardOffers=draw(RELICS.filter(r=>!game.relics.includes(r.id)).map(r=>r.id),all?RELICS.length:3);}
 function selectRelic(id){if(game.phase!=="reward"||!game.rewardOffers.includes(id))return;grantRelic(id);game.rewardOffers=[];afterReward();commit();}
 function afterReward(){if(game.rewardReturn==="victory")return finish(true);if(game.rewardReturn==="advance")return advanceFloor();if(game.rewardReturn==="trial"){heal(game.max);return eventResult(["核心破碎，生命已恢复，遗物已领取","Cores shattered. Health restored and relic claimed"]);}openEvents();}
@@ -301,7 +308,7 @@ function validRun(s){
 }
 function saveEnvelope(){return {format:"abyss-beta",version:2,run:game,profile};}
 function saveRun(){if(!game?.heroId||game.finished)return;syncProfile();try{localStorage.setItem(BETA_RUN_KEY,JSON.stringify(saveEnvelope()));writeProfile();saveError="";}catch{saveError=tx("保存失败：请立即导出备份（浏览器存储不可用或已满）","Save failed: export a backup now (storage unavailable or full)");} }
-function migrateRunGear(run){if(!run||typeof run!=="object")return run;if(run.loadout&&typeof run.loadout==="object")for(const slot of ACCOUNT_SLOTS){const value=run.loadout[slot];if(typeof value==="string"){const item=legacyGear(value);run.loadout[slot]=item?.slot===slot?item:null;}}if(run.extractedItem!==undefined){run.extractedItems=[];delete run.extractedItem;}run.extractedItems??=[];run.storySeen=Array.isArray(run.storySeen)?[...new Set(run.storySeen.filter(n=>Number.isInteger(n)&&n>=0&&n<8))]:[];return run;}
+function migrateRunGear(run){if(!run||typeof run!=="object")return run;if(run.loadout&&typeof run.loadout==="object")for(const slot of ACCOUNT_SLOTS){const value=run.loadout[slot];if(typeof value==="string"){const item=legacyGear(value);run.loadout[slot]=item?.slot===slot?item:null;}}if(run.extractedItem!==undefined){run.extractedItems=[];delete run.extractedItem;}run.extractedItems??=[];run.storySeen=Array.isArray(run.storySeen)?[...new Set(run.storySeen.filter(n=>Number.isInteger(n)&&n>=0&&n<8))]:[];run.combat=run.combat&&["expedition","endless"].includes(run.combat.mode)?run.combat:CombatCore.create("expedition");run.combat.events=Array.isArray(run.combat.events)?run.combat.events:[];run.combat.guard=false;for(const m of [run.enemy,...(run.summons||[])])if(m){m.break??=0;m.breakMax??=m.minion?65:m.zone==="BOSS"?160:100;m.brokenUntil??=0;m.intentStarted??=0;}return run;}
 function loadRun(text){const data=JSON.parse(text);if(data.format!=="abyss-beta"||data.version!==2)throw new Error("Incompatible or invalid Beta save");migrateRunGear(data.run);if(!validRun(data.run))throw new Error("Incompatible or invalid Beta save");return clone(data.run);}
 function restoreRun(text){try{const source=text||localStorage.getItem(BETA_RUN_KEY),parsed=JSON.parse(source),restored=loadRun(source),p=parsed.profile;
     profile.claims||={};profile.warehouse||=[];profile.equipped||={weapon:null,armor:null,charm:null};

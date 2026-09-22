@@ -61,7 +61,6 @@ function renderSkills(){const signature=game.heroId+profile.locale;if(signature!
   if(!game.heroId)return;[...$("skills").children].filter(b=>b.id!=="guard").forEach((b,index)=>{const left=Math.max(0,game.cd[index]-game.clock);b.disabled=game.phase!=="battle"||game.paused||!!archiveKind||left>0;b.classList.toggle("ready",left===0);b.querySelector(".cool").style.transform=`scaleX(${clamp(left/skillCooldown(index),1)})`;b.querySelector(".cooldown-text").textContent=left?`${(left/1000).toFixed(1)}s`:tx("就绪","READY");b.querySelector("small").textContent=skillDescription(hero().skills[index],index);});$("guard")?.classList.toggle("active",!!game.combat?.guard);
 }
 function render(){if(!game)return;const m=game.enemy,active=!!game.heroId,portrait=$("player-card").querySelector(".portrait");let heroImage=portrait.querySelector("img");if(!heroImage){heroImage=document.createElement("img");heroImage.alt="";portrait.append(heroImage);}heroImage.src=active?HERO_ART[game.heroId]:"";portrait.hidden=!active;
-  const chapter=active?STORY_CHAPTERS[game.floor]:null,seen=active&&(game.storySeen||[]).includes(game.floor),story=$("story-banner");story.hidden=!chapter||seen||game.phase!=="battle";if(!story.hidden){$("story-title").textContent=label(chapter.title);$("story-body").textContent=label(chapter.body);}
   $("hero-hp").style.transform=`scaleX(${active?game.hp/game.max:0})`;$("hero-shield").style.transform=`scaleX(${active?game.shield/game.max:0})`;
   $("enemy-hp").style.transform=`scaleX(${m?m.hp/m.max:0})`;$("enemy-shield").style.transform=`scaleX(${m?m.shield/m.max:0})`;
   $("hero-hp-text").textContent=active?`${Math.ceil(game.hp)} / ${Math.ceil(game.max)}`:"—";$("enemy-hp-text").textContent=m?`${Math.ceil(m.hp)} / ${Math.ceil(m.max)}`:"—";
@@ -129,7 +128,7 @@ function renderTrial(){const t=game.trial,previous=trialViewState,changed=(type,
   bind("[data-dir]",b=>trialMove(...b.dataset.dir.split(",").map(Number)));$("trial-quit").onclick=()=>{if(confirm(tx("放弃将扣当前生命、金币和一件遗物，确定吗？","Forfeit loses current health, gold and one relic. Continue?"))){settleTrial(false);commit();}};
 }
 function init(){
-  if(globalThis.ABYSS_BETA_BUILD!=="2.2.2")throw new Error("Unified release files are from different versions; deploy the complete 2.2.2 asset set");
+  if(globalThis.ABYSS_BETA_BUILD!=="2.2.3")throw new Error("Unified release files are from different versions; deploy the complete 2.2.3 asset set");
   // A transformed/animated arena establishes its own fixed-position containing block.
   // Mount dialogs directly on body so all controls remain reachable on short screens.
   document.body.append($("overlay"));
@@ -143,7 +142,6 @@ function init(){
   const danger=document.createElement("div");danger.id="danger-banner";danger.className="danger-banner";danger.hidden=true;document.querySelector(".arena-head").after(danger);const stats=document.createElement("div");stats.id="combat-stats";stats.className="combat-stats";document.querySelector(".arena-head").append(stats);
   const layer=document.createElement("div");layer.id="archive-layer";layer.className="overlay archive-layer";layer.hidden=true;document.body.append(layer);
   $("export-save").onclick=exportRun;$("import-save").onclick=()=>$("import-file").click();$("import-file").onchange=async event=>{const file=event.target.files[0];event.target.value="";if(!file)return;if(file.size>1e6){saveError=tx("存档文件过大","Save file too large");render();return;}try{const text=await file.text();loadRun(text);if(game.heroId&&!game.finished&&!confirm(tx("导入将替换当前续局，是否继续？","Import replaces the current run. Continue?")))return;restoreRun(text);}catch{saveError=tx("不是兼容的正式版存档；原存档没有修改","Not a compatible release save; existing save is unchanged");render();}};
-  $("story-close").onclick=()=>{if(!game.heroId)return;game.storySeen??=[];if(!game.storySeen.includes(game.floor))game.storySeen.push(game.floor);commit();};
   $("pause").onclick=()=>{if(game.phase!=="battle"||archiveKind)return;game.paused=!game.paused;commit();};
   $("restart").onclick=()=>{if(game.heroId&&!game.finished)saveRun();game=emptyGame();archiveKind=null;$("archive-layer").hidden=true;skillSignature="";commit();};
   $("language").onclick=()=>{profile.locale=profile.locale==="en"?"zh":"en";writeProfile();renderScene();if(archiveKind)renderArchive();};$("warehouse").onclick=()=>openArchive("warehouse");$("codex").onclick=()=>openArchive("codex");$("achievements").onclick=()=>openArchive("achievements");$("potion").onclick=usePotion;

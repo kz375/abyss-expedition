@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="深渊远征 2.0 · 八层实时暗黑远征">
   <title>深渊远征 · 战斗框架 2.2</title>
-  <link rel="stylesheet" href="/realtime-test/style.css?v=2.2.3-hud-hierarchy">
-  <script src="/realtime-test/campaign.js?v=2.2.3-hud-hierarchy" defer></script>
-  <script src="/realtime-test/content.js?v=2.2.3-hud-hierarchy" defer></script>
-  <script src="/realtime-test/combat-core.js?v=2.2.3-hud-hierarchy" defer></script>
-  <script src="/realtime-test/runtime.js?v=2.2.3-hud-hierarchy" defer></script>
-  <script src="/realtime-test/interface.js?v=2.2.3-hud-hierarchy" defer></script>
+  <link rel="stylesheet" href="/realtime-test/style.css?v=2.2.4-faceoff">
+  <script src="/realtime-test/campaign.js?v=2.2.4-faceoff" defer></script>
+  <script src="/realtime-test/content.js?v=2.2.4-faceoff" defer></script>
+  <script src="/realtime-test/combat-core.js?v=2.2.4-faceoff" defer></script>
+  <script src="/realtime-test/runtime.js?v=2.2.4-faceoff" defer></script>
+  <script src="/realtime-test/interface.js?v=2.2.4-faceoff" defer></script>
 </head>
 <body>
   <main class="page">
@@ -20,11 +20,11 @@
     <p class="notice" id="notice">实时战斗 · 永久仓库 · 分支事件 · 双核试炼 · 中英双语</p>
     <section class="arena" aria-label="实时战斗地牢">
       <div class="arena-head"><span id="floor-label">选择职业后开始</span><span id="flow"><i></i><span id="flow-text">战斗冻结</span></span></div>
-      <div class="combat-system" id="combat-system"><div class="intent-callout" id="intent-callout"><span>ENEMY INTENT</span><strong id="intent-action">等待敌方行动</strong><b id="intent-countdown">—</b></div><div class="system-meter break"><span>BREAK</span><b id="break-text">0 / 100</b><i><em id="break-fill"></em></i></div><div class="system-meter pressure compact"><span>PRESSURE</span><b id="pressure-text">0%</b><i><em id="pressure-fill"></em></i></div></div>
       <div class="fighter player" id="player-card"><p class="role" id="hero-role">PLAYER</p><h2 id="hero-name">选择一名英雄</h2><span class="portrait" aria-hidden="true"></span><div class="meter"><b>生命</b><strong id="hero-hp-text">—</strong><div class="bar hp"><span id="hero-hp"></span></div><div class="bar shield"><span id="hero-shield"></span></div><em id="hero-shield-text">无护盾</em></div><div class="statuses" id="hero-status"></div><p class="passive" id="hero-passive">职业被动将在这里显示</p></div>
       <div class="impact" id="impact" aria-hidden="true">✦</div>
-      <div class="fighter enemy" id="enemy-card"><p class="role" id="enemy-role">HOSTILE</p><h2 id="enemy-name">深渊正在等待</h2><span class="portrait" aria-hidden="true"></span><div class="meter"><b>生命</b><strong id="enemy-hp-text">—</strong><div class="bar hp"><span id="enemy-hp"></span></div><div class="bar shield"><span id="enemy-shield"></span></div><em id="enemy-shield-text">无护盾</em></div><div class="statuses" id="enemy-status"></div><div class="summons" id="summons" aria-live="polite"></div><p class="intent" id="intent">敌人尚未苏醒。</p></div>
+      <div class="fighter enemy" id="enemy-card"><div class="enemy-intent" id="intent-callout"><span>INTENT</span><strong id="intent-action">观察敌方动作</strong><b id="intent-countdown">—</b></div><p class="role" id="enemy-role">HOSTILE</p><h2 id="enemy-name">深渊正在等待</h2><span class="portrait" aria-hidden="true"></span><div class="meter"><b>生命</b><strong id="enemy-hp-text">—</strong><div class="bar hp"><span id="enemy-hp"></span></div><div class="bar shield"><span id="enemy-shield"></span></div><em id="enemy-shield-text">无护盾</em><div class="enemy-break"><span>BREAK</span><b id="break-text">0 / 100</b><i><em id="break-fill"></em></i></div></div><div class="statuses" id="enemy-status"></div><div class="summons" id="summons" aria-live="polite"></div></div>
       <div class="skills" id="skills" aria-label="技能栏"></div>
+      <div class="pressure-dock"><span>ABYSS PRESSURE</span><b id="pressure-text">0%</b><i><em id="pressure-fill"></em></i></div>
       <div class="overlay" id="overlay"></div>
     </section>
     <section class="below"><div class="journal" id="journal">[系统] 选择职业以开启完整实时远征测试。</div><div class="run-stats"><span id="gold">金币 0</span><span id="relics">遗物 0</span></div><button id="pause">暂停</button><button id="restart" class="danger">重新开始</button></section>

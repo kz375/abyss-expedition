@@ -71,11 +71,9 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId,portra
   const warned=active&&[m,...game.summons].some(e=>e.telegraph);$("flow").classList.toggle("paused",game.paused||game.phase!=="battle");
   $("flow-text").textContent=game.paused||game.phase!=="battle"?tx("已暂停","Paused"):warned?tx("危险预警 · 时间减速","Danger · Slow time"):tx("实时战斗","Real-time battle");
   $("enemy-card").classList.toggle("charging",!!m?.telegraph);$("player-card").classList.toggle("defeated",game.phase==="defeat");$("enemy-card").classList.toggle("defeated",!!m&&m.hp<=0);
-  $("danger-banner").hidden=!warned;$("danger-banner").textContent=warned?tx("⚠ 敌方蓄力中 · 立刻防御或打断","⚠ ENEMY CHARGING · DEFEND OR INTERRUPT"):"";
   const intentEntity=[m,...(game.summons||[])].find(e=>e?.telegraph),intentLeft=intentEntity?Math.max(0,intentEntity.next-game.clock):0;$("intent-callout").classList.toggle("armed",!!intentEntity);$("intent-action").textContent=intentEntity?label(ACTION_NAMES[intentEntity.telegraph]):tx("观察敌方动作","READ THE ENEMY");$("intent-countdown").textContent=intentEntity?`${(intentLeft/1000).toFixed(2)}s`:"—";
   if(active){const pressure=game.combat.pressure,foe=target(),broken=foe?.brokenUntil>game.clock;$("pressure-fill").style.transform=`scaleX(${pressure/100})`;$("pressure-text").textContent=`${Math.floor(pressure)}% · T${game.combat.tier}`;$("break-fill").style.transform=`scaleX(${broken?1:(foe?.break||0)/(foe?.breakMax||100)})`;$("break-text").textContent=broken?tx("破势！爆发窗口","BROKEN · BURST NOW"):`${Math.floor(foe?.break||0)} / ${foe?.breakMax||100}`;document.body.dataset.pressure=game.combat.tier;}
   if(active){const e=effects();$("combat-stats").innerHTML=`<span>${tx("攻击","ATK")} <b>${Math.round(e.attack)}</b></span><span>${tx("防御","DEF")} <b>${Math.round(e.defense)}</b></span><span>${tx("暴击","CRIT")} <b>${Math.round(e.crit*100)}%</b></span><span>${tx("减伤","DR")} <b>${Math.round(e.damageReduction*100)}%</b></span>`;}else $("combat-stats").replaceChildren();
-  $("intent").textContent=m?(m.telegraph?`${label(ACTION_NAMES[m.telegraph])} · ${Math.max(0,(m.next-game.clock)/1000).toFixed(1)}${tx("秒后释放：现在防御或打断","s: defend or interrupt now")}`:game.summons.length?tx("护卫在场：先击败护卫才能伤害首领","Guardians active: defeat them before the boss"):tx("下个机制：","Next mechanism: ")+label(ACTION_NAMES[monsterMove(m)])):"";
   $("gold").textContent=tx("金币 ","Gold ")+(game.gold||0);$("relics").textContent=tx("遗物 ","Relics ")+(game.relics?.length||0);
   $("pause").textContent=game.paused?tx("继续","Resume"):tx("暂停","Pause");$("pause").disabled=game.phase!=="battle"||!!archiveKind;
   $("potion").textContent=`${tx("药瓶","Healing Bottle")} (${game.potions||0})`;$("potion").disabled=game.phase!=="battle"||game.paused||!game.potions||!!archiveKind;
@@ -128,7 +126,7 @@ function renderTrial(){const t=game.trial,previous=trialViewState,changed=(type,
   bind("[data-dir]",b=>trialMove(...b.dataset.dir.split(",").map(Number)));$("trial-quit").onclick=()=>{if(confirm(tx("放弃将扣当前生命、金币和一件遗物，确定吗？","Forfeit loses current health, gold and one relic. Continue?"))){settleTrial(false);commit();}};
 }
 function init(){
-  if(globalThis.ABYSS_BETA_BUILD!=="2.2.3")throw new Error("Unified release files are from different versions; deploy the complete 2.2.3 asset set");
+  if(globalThis.ABYSS_BETA_BUILD!=="2.2.4")throw new Error("Unified release files are from different versions; deploy the complete 2.2.4 asset set");
   // A transformed/animated arena establishes its own fixed-position containing block.
   // Mount dialogs directly on body so all controls remain reachable on short screens.
   document.body.append($("overlay"));
@@ -139,7 +137,7 @@ function init(){
   writeProfile();
   const toolbar=document.createElement("div");toolbar.className="save-actions";toolbar.innerHTML='<button id="export-save"></button><button id="import-save"></button><input id="import-file" type="file" accept="application/json,.json" hidden>';
   document.querySelector(".below").after(toolbar);const potion=document.createElement("button");potion.id="potion";document.querySelector(".below").append(potion);const extract=document.createElement("button");extract.id="extract-endless";extract.textContent=tx("撤离深渊","Extract");extract.onclick=extractEndless;document.querySelector(".below").append(extract);
-  const danger=document.createElement("div");danger.id="danger-banner";danger.className="danger-banner";danger.hidden=true;document.querySelector(".arena-head").after(danger);const stats=document.createElement("div");stats.id="combat-stats";stats.className="combat-stats";document.querySelector(".arena-head").append(stats);
+  const stats=document.createElement("div");stats.id="combat-stats";stats.className="combat-stats";document.querySelector(".arena-head").append(stats);
   const layer=document.createElement("div");layer.id="archive-layer";layer.className="overlay archive-layer";layer.hidden=true;document.body.append(layer);
   $("export-save").onclick=exportRun;$("import-save").onclick=()=>$("import-file").click();$("import-file").onchange=async event=>{const file=event.target.files[0];event.target.value="";if(!file)return;if(file.size>1e6){saveError=tx("存档文件过大","Save file too large");render();return;}try{const text=await file.text();loadRun(text);if(game.heroId&&!game.finished&&!confirm(tx("导入将替换当前续局，是否继续？","Import replaces the current run. Continue?")))return;restoreRun(text);}catch{saveError=tx("不是兼容的正式版存档；原存档没有修改","Not a compatible release save; existing save is unchanged");render();}};
   $("pause").onclick=()=>{if(game.phase!=="battle"||archiveKind)return;game.paused=!game.paused;commit();};

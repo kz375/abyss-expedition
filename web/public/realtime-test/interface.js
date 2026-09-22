@@ -24,6 +24,7 @@ function menu(){
     <div class="save-actions">${hasLocalSave()?`<button id="resume-run">${tx("继续本地远征","Continue local run")}</button><button id="raw-backup">${tx("下载原始存档备份","Download original save backup")}</button>`:""}<button id="import-menu">${tx("导入正式版存档","Import save")}</button></div>
     <div class="cards hero-grid">${Object.entries(HEROES).filter(([id])=>id!=="creator"||creatorUnlocked).map(([id,h])=>`<button class="card hero-choice" data-hero="${id}"><span class="tag">${esc(h.key)}</span><strong>${esc(tx(h.name,h.enName))}</strong><small>${tx("生命","HP")} ${h.hp} · ${tx("攻击","ATK")} ${h.attack}<br>${esc(tx(h.passive,h.enPassive))}<br><em>${h.skills.map(s=>esc(nameOfSkill(s))).join(" · ")}</em></small></button>`).join("")}</div>
     ${creatorUnlocked?"":`<div class="secret"><input id="creator-code" placeholder="${tx("已知隐藏口令？在这里输入","Know a secret code? Enter it here")}" aria-label="${tx("隐藏角色口令","Secret character code")}"><button id="unlock-creator">${tx("确认","Confirm")}</button></div>`}<a class="back" href="/legacy/">← ${tx("打开旧版存档","Open legacy save")}</a>`);
+  document.querySelectorAll("[data-hero]").forEach(button=>{const image=document.createElement("img");image.className="hero-choice-art";image.src=HERO_ART[button.dataset.hero];image.alt="";image.loading="eager";button.prepend(image);});
   bind("[data-hero]",button=>{if(hasLocalSave()&&!confirm(tx("开始新远征会替换本地续局，确定吗？","Starting a new run replaces the local save. Continue?")))return;newRun(button.dataset.hero,$("seed").value,$("difficulty").value);});
   $("seed").value=previousSeed;$("difficulty").value=previousDifficulty;const updatePreview=()=>$("loot-preview").innerHTML=lootPreview($("difficulty").value);$("difficulty").onchange=updatePreview;updatePreview();
   $("menu-language").onclick=()=>$("language").click();$("menu-warehouse").onclick=()=>openArchive("warehouse");$("menu-codex").onclick=()=>openArchive("codex");$("menu-achievements").onclick=()=>openArchive("achievements");
@@ -59,7 +60,7 @@ function skillDescription(skill,index){const type=skill[3],v=skill[4],pct=Math.r
 function renderSkills(){const signature=game.heroId+profile.locale;if(signature!==skillSignature){skillSignature=signature;$("skills").replaceChildren();if(game.heroId)hero().skills.forEach((skill,index)=>{const b=document.createElement("button");b.className="skill";b.innerHTML=`<span class="key">${index+1}</span><strong>${esc(nameOfSkill(skill))}</strong><small></small><span class="cool"></span><b class="cooldown-text"></b>`;b.onclick=()=>cast(index);$("skills").append(b);});}
   if(!game.heroId)return;[...$("skills").children].forEach((b,index)=>{const left=Math.max(0,game.cd[index]-game.clock);b.disabled=game.phase!=="battle"||game.paused||!!archiveKind||left>0;b.classList.toggle("ready",left===0);b.querySelector(".cool").style.transform=`scaleX(${clamp(left/skillCooldown(index),1)})`;b.querySelector(".cooldown-text").textContent=left?`${(left/1000).toFixed(1)}s`:tx("就绪","READY");b.querySelector("small").textContent=skillDescription(hero().skills[index],index);});
 }
-function render(){if(!game)return;const m=game.enemy,active=!!game.heroId;
+function render(){if(!game)return;const m=game.enemy,active=!!game.heroId,portrait=$("player-card").querySelector(".portrait");let heroImage=portrait.querySelector("img");if(!heroImage){heroImage=document.createElement("img");heroImage.alt="";portrait.append(heroImage);}heroImage.src=active?HERO_ART[game.heroId]:"";portrait.hidden=!active;
   const chapter=active?STORY_CHAPTERS[game.floor]:null,seen=active&&(game.storySeen||[]).includes(game.floor),story=$("story-banner");story.hidden=!chapter||seen||game.phase!=="battle";if(!story.hidden){$("story-title").textContent=label(chapter.title);$("story-body").textContent=label(chapter.body);}
   $("hero-hp").style.transform=`scaleX(${active?game.hp/game.max:0})`;$("hero-shield").style.transform=`scaleX(${active?game.shield/game.max:0})`;
   $("enemy-hp").style.transform=`scaleX(${m?m.hp/m.max:0})`;$("enemy-shield").style.transform=`scaleX(${m?m.shield/m.max:0})`;
@@ -125,7 +126,7 @@ function renderTrial(){const t=game.trial,previous=trialViewState,changed=(type,
   bind("[data-dir]",b=>trialMove(...b.dataset.dir.split(",").map(Number)));$("trial-quit").onclick=()=>{if(confirm(tx("放弃将扣当前生命、金币和一件遗物，确定吗？","Forfeit loses current health, gold and one relic. Continue?"))){settleTrial(false);commit();}};
 }
 function init(){
-  if(globalThis.ABYSS_BETA_BUILD!=="2.0.0")throw new Error("Unified release files are from different versions; deploy the complete 2.0.0 asset set");
+  if(globalThis.ABYSS_BETA_BUILD!=="2.1.0")throw new Error("Unified release files are from different versions; deploy the complete 2.1.0 asset set");
   // A transformed/animated arena establishes its own fixed-position containing block.
   // Mount dialogs directly on body so all controls remain reachable on short screens.
   document.body.append($("overlay"));

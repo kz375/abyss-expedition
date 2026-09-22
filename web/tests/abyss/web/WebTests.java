@@ -55,7 +55,7 @@ public final class WebTests {
             check(call("/", null).body().contains("ABYSS EXPEDITION · 2.0"), "unified 2.0 homepage delivered");
             check(call("/legacy/", null).body().contains("id=\"board\""), "legacy server-save game remains available");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("2.0.0-unified"), "unified page uses one cache-busted release");
+            check(betaPage.contains("2.1.0-character-art"), "character-art page uses one cache-busted release");
             var betaScripts = java.util.regex.Pattern.compile("<script\\s+src=\"([^\"]+)\"").matcher(betaPage);
             int betaScriptCount = 0;
             while (betaScripts.find()) {
@@ -67,6 +67,12 @@ public final class WebTests {
                 betaScriptCount++;
             }
             check(betaScriptCount == 4, "all four beta modules referenced");
+            for (String hero : List.of("warrior", "mage", "ranger", "paladin", "necromancer", "creator")) {
+                var art = call("/assets/characters/" + hero + ".png", null);
+                check(art.statusCode() == 200, "character art delivered: " + hero);
+                check(art.headers().firstValue("Content-Type").orElse("").equals("image/png"), "character art MIME type: " + hero);
+                check(art.body().length() > 1000, "character art is not empty: " + hero);
+            }
             String artPage = call("/art-test/", null).body();
             check(artPage.contains("ART FX LAB"), "art and combat FX lab delivered");
             check(call("/art-test/style.css?v=0.3.0", null).headers().firstValue("Content-Type").orElse("").contains("text/css"), "art lab stylesheet MIME type");

@@ -1,6 +1,12 @@
 "use strict";
 
-globalThis.ABYSS_BETA_BUILD = "2.0.0";
+globalThis.ABYSS_BETA_BUILD = "2.1.0";
+
+const HERO_ART = Object.freeze({
+  warrior:"/assets/characters/warrior.png", mage:"/assets/characters/mage.png",
+  ranger:"/assets/characters/ranger.png", paladin:"/assets/characters/paladin.png",
+  necromancer:"/assets/characters/necromancer.png", creator:"/assets/characters/creator.png"
+});
 
 const $ = id => document.getElementById(id);
 const clamp = (value, max) => Math.max(0, Math.min(max, value));

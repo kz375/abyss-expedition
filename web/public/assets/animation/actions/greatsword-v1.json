@@ -5,6 +5,7 @@
     "slash":{"duration":480,"poses":[{"at":0,"root":{"x":0},"torso":{"r":-7},"arm.r.upper":{"r":-42}},{"at":150,"root":{"x":18},"torso":{"r":9},"arm.r.upper":{"r":38},"arm.r.lower":{"r":48}},{"at":310,"root":{"x":54},"torso":{"r":-15},"arm.r.upper":{"r":112},"arm.r.lower":{"r":12}},{"at":480,"root":{"x":0},"torso":{"r":0},"arm.r.upper":{"r":0},"arm.r.lower":{"r":0}}]},
     "heavy":{"duration":760,"poses":[{"at":0,"root":{"x":0},"torso":{"r":0}},{"at":260,"root":{"x":-18,"y":8},"torso":{"r":-13},"arm.r.upper":{"r":-72},"arm.r.lower":{"r":-35}},{"at":520,"root":{"x":58},"torso":{"r":20},"arm.r.upper":{"r":132},"arm.r.lower":{"r":28}},{"at":760,"root":{"x":0},"torso":{"r":0},"arm.r.upper":{"r":0},"arm.r.lower":{"r":0}}]},
     "hit":{"duration":420,"poses":[{"at":0,"root":{"x":0},"torso":{"r":0}},{"at":130,"root":{"x":-24},"torso":{"r":-11},"head":{"r":-8}},{"at":420,"root":{"x":0},"torso":{"r":0},"head":{"r":0}}]},
-    "death":{"duration":900,"poses":[{"at":0,"root":{"y":0},"torso":{"r":0}},{"at":500,"root":{"y":45},"torso":{"r":42},"arm.r.upper":{"r":35}},{"at":900,"root":{"y":120},"torso":{"r":76},"arm.r.upper":{"r":62}}]}
+    "death":{"duration":900,"poses":[{"at":0,"root":{"y":0},"torso":{"r":0}},{"at":500,"root":{"y":45},"torso":{"r":42},"arm.r.upper":{"r":35}},{"at":900,"root":{"y":120},"torso":{"r":76},"arm.r.upper":{"r":62}}]},
+    "guard":{"duration":520,"loop":false,"poses":[{"at":0,"torso":{"r":0},"arm.r.upper":{"r":0}},{"at":180,"root":{"x":-7},"torso":{"r":-9},"arm.r.upper":{"r":-48},"arm.r.lower":{"r":-26}},{"at":390,"root":{"x":-4},"torso":{"r":-7},"arm.r.upper":{"r":-42},"arm.r.lower":{"r":-20}},{"at":520,"root":{"x":0},"torso":{"r":0},"arm.r.upper":{"r":0},"arm.r.lower":{"r":0}}]}
   }
 }

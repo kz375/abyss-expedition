@@ -130,7 +130,7 @@ function renderTrial(){const t=game.trial,previous=trialViewState,changed=(type,
   bind("[data-dir]",b=>trialMove(...b.dataset.dir.split(",").map(Number)));$("trial-quit").onclick=()=>{if(confirm(tx("放弃将扣当前生命、金币和一件遗物，确定吗？","Forfeit loses current health, gold and one relic. Continue?"))){settleTrial(false);commit();}};
 }
 function init(){
-  if(globalThis.ABYSS_BETA_BUILD!=="2.2.10")throw new Error("Unified release files are from different versions; deploy the complete 2.2.10 asset set");
+  if(globalThis.ABYSS_BETA_BUILD!=="2.2.11")throw new Error("Unified release files are from different versions; deploy the complete 2.2.11 asset set");
   // A transformed/animated arena establishes its own fixed-position containing block.
   // Mount dialogs directly on body so all controls remain reachable on short screens.
   document.body.append($("overlay"));

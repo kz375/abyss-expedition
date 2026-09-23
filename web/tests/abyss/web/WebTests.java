@@ -55,7 +55,8 @@ public final class WebTests {
             check(call("/", null).body().contains("ABYSS EXPEDITION · 2.0"), "unified 2.0 homepage delivered");
             check(call("/legacy/", null).body().contains("id=\"board\""), "legacy server-save game remains available");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("2.2.10-hit-flash"), "hit-flash page uses one cache-busted release");
+            check(betaPage.contains("2.2.11-castle-rig"), "castle-rig page uses one cache-busted release");
+            check(betaPage.contains("distant-castle") && !betaPage.contains("abyss-gate\"><i"), "castle horizon replaces the central abyss gate");
             check(betaPage.contains("battle-road"), "combat scene includes the shared battle road");
             check(betaPage.contains("abyss-scenery"), "authored abyss scenery layer is present");
             check(!betaPage.contains("story-banner"), "story beta is absent from release battle");
@@ -82,7 +83,7 @@ public final class WebTests {
             check(artPage.contains("id=\"story-beta\""), "story beta lives in the test gallery");
             check(call("/art-test/style.css?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("text/css"), "art lab stylesheet MIME type");
             check(call("/art-test/actors.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "separate character catalog MIME type");
-            check(call("/art-test/rig.js?v=0.6.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "reusable rig runtime MIME type");
+            check(call("/art-test/rig.js?v=0.7.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "reusable rig runtime MIME type");
             check(call("/art-test/lab.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "art lab action engine MIME type");
             check(call("/assets/animation/skeletons/humanoid-heavy.json", null).headers().firstValue("Content-Type").orElse("").contains("application/json"), "skeleton model delivered as JSON");
             check(call("/assets/animation/actions/greatsword-v1.json", null).body().contains("\"heavy\""), "greatsword action set includes heavy attack");

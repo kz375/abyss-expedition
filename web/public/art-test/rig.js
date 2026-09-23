@@ -6,14 +6,20 @@ async function loadRig(){
   const [skeleton,actionSet]=await Promise.all([fetch(character.skeleton).then(r=>r.json()),fetch(character.actions).then(r=>r.json())]);
   const host=document.getElementById("hero-rig");if(!host)return;
   host.innerHTML=`<b class="rig-root">${character.parts.map(id=>`<i class="rig-part part-${id.replaceAll(".","-")}" data-part="${id}"></i>`).join("")}</b>`;
-  rigModel={character,skeleton,actionSet,host};playRigAction("idle");
+  const bones=new Map(skeleton.bones.map(bone=>[bone.id,bone])),baseAngles=new Map();
+  for(const id of character.parts){const node=host.querySelector(`[data-part="${id}"]`);if(!node)continue;const matrix=getComputedStyle(node).transform;if(matrix&&matrix!=="none"){const values=matrix.match(/matrix\(([^)]+)\)/)?.[1].split(",").map(Number);if(values)baseAngles.set(id,Math.atan2(values[1],values[0])*180/Math.PI);}}
+  rigModel={character,skeleton,actionSet,host,bones,baseAngles};globalThis.rigModel=rigModel;host.dataset.bones=String(bones.size);playRigAction("idle");
 }
-function poseTransform(value={}){return `translate(${value.x||0}px,${value.y||0}px) rotate(${value.r||0}deg)`;}
+function worldPose(id,pose,seen=new Set()){
+  if(!rigModel||seen.has(id))return {x:0,y:0,r:0};seen.add(id);const bone=rigModel.bones.get(id),parent=bone?.parent||(id==="weapon"?rigModel.skeleton.sockets?.weapon:id==="cape"?rigModel.skeleton.sockets?.back:null),local=pose[id]||{},up=parent?worldPose(parent,pose,seen):{x:0,y:0,r:0};
+  return {x:up.x+(local.x||0),y:up.y+(local.y||0),r:up.r+(local.r||0)};
+}
+function poseTransform(id,pose){const value=worldPose(id,pose),base=rigModel.baseAngles.get(id)||0;return `translate(${value.x}px,${value.y}px) rotate(${base+value.r}deg)`;}
 function playRigAction(name){
   if(!rigModel)return;clearTimeout(rigTimer);const action=rigModel.actionSet.actions[name]||rigModel.actionSet.actions.idle;
   rigModel.host.dataset.action=name;const frames=action.poses.map(p=>({offset:p.at/action.duration,...p}));
-  const partIds=new Set(frames.flatMap(frame=>Object.keys(frame).filter(key=>key!=="at"&&key!=="offset")));
-  partIds.forEach(id=>{const node=id==="root"?rigModel.host.querySelector(".rig-root"):rigModel.host.querySelector(`[data-part="${id}"]`);if(!node)return;node.getAnimations().forEach(animation=>animation.cancel());node.animate(frames.map(frame=>({offset:frame.offset,transform:poseTransform(frame[id])})),{duration:action.duration,iterations:action.loop?Infinity:1,easing:"ease-in-out",fill:"forwards"});});
+  const partIds=["root",...rigModel.character.parts];
+  partIds.forEach(id=>{const node=id==="root"?rigModel.host.querySelector(".rig-root"):rigModel.host.querySelector(`[data-part="${id}"]`);if(!node)return;node.getAnimations().forEach(animation=>animation.cancel());node.animate(frames.map(frame=>({offset:frame.offset,transform:poseTransform(id,frame)})),{duration:action.duration,iterations:action.loop?Infinity:1,easing:"ease-in-out",fill:"forwards"});});
   if(!action.loop)rigTimer=setTimeout(()=>playRigAction("idle"),action.duration+40);
 }
 globalThis.playRigAction=playRigAction;

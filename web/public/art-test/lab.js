@@ -13,7 +13,7 @@ function hitEnemy(duration=520){$("enemy").classList.add("hit");timers.push(setT
 function damageEnemy(amount){const bar=$("enemy-health"),current=parseFloat(bar.style.width)||82;bar.style.width=`${Math.max(8,current-amount)}%`;timers.push(setTimeout(()=>bar.style.width="82%",1500));}
 function accent(type,label){particle(`fx-title ${type}`,tx(label[0],label[1]));particle("speed-lines");particle("chromatic-pulse");}
 function trigger(type){
-  globalThis.playRigAction?.(({slash:"slash",impact:"heavy",critical:"slash",execute:"heavy"})[type]||"idle");
+  globalThis.playRigAction?.(({slash:"slash",impact:"heavy",critical:"slash",execute:"heavy",shield:"guard",lightning:"hit"})[type]||"idle");
   $("stage").dataset.fx=type;clearTimeout(trigger.reset);trigger.reset=setTimeout(()=>delete $("stage").dataset.fx,1200);
   if(type==="slash"){accent("physical",["裂空斩","RIFT SLASH"]);particle("hero-lunge");particle("slash slash-a");particle("slash slash-b");particle("slash slash-c");particle("slash-flash");burst("slash-spark",20);burst("slash-shard",8);hitEnemy();damageEnemy(10);shake("light");}
   if(type==="impact"){accent("physical",["破城重击","SIEGE IMPACT"]);particle("hero-lunge heavy");particle("impact-core");particle("impact-ring ring-one");particle("impact-ring ring-two");particle("impact-ring ring-three");particle("ground-wave");particle("ground-crack");burst("debris",26);hitEnemy(650);damageEnemy(18);shake();}

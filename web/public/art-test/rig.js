@@ -17,10 +17,14 @@ function worldPose(id,pose,seen=new Set()){
 function poseTransform(id,pose){const value=worldPose(id,pose),base=rigModel.baseAngles.get(id)||0;return `translate(${value.x}px,${value.y}px) rotate(${base+value.r}deg)`;}
 function playRigAction(name){
   if(!rigModel)return;clearTimeout(rigTimer);const action=rigModel.actionSet.actions[name]||rigModel.actionSet.actions.idle;
-  rigModel.host.dataset.action=name;const frames=action.poses.map(p=>({offset:p.at/action.duration,...p}));
+  rigModel.host.dataset.action=name;rigModel.host.dataset.playing="true";
+  // Hold a non-looping move at its impact pose: clips originally reset in less
+  // than a second, so a successful click was too easy to miss in the gallery.
+  const poses=action.loop?action.poses:[...action.poses.slice(0,-1),{...action.poses.at(-2),at:action.duration}];
+  const frames=poses.map(p=>({offset:p.at/action.duration,...p}));
   const partIds=["root",...rigModel.character.parts];
   partIds.forEach(id=>{const node=id==="root"?rigModel.host.querySelector(".rig-root"):rigModel.host.querySelector(`[data-part="${id}"]`);if(!node)return;node.getAnimations().forEach(animation=>animation.cancel());node.animate(frames.map(frame=>({offset:frame.offset,transform:poseTransform(id,frame)})),{duration:action.duration,iterations:action.loop?Infinity:1,easing:"ease-in-out",fill:"forwards"});});
-  if(!action.loop)rigTimer=setTimeout(()=>playRigAction("idle"),action.duration+40);
+  if(!action.loop)rigTimer=setTimeout(()=>playRigAction("idle"),action.duration+720);
 }
 globalThis.playRigAction=playRigAction;
 addEventListener("DOMContentLoaded",()=>loadRig().catch(error=>{document.getElementById("hero-rig")?.setAttribute("data-error",error.message);}));

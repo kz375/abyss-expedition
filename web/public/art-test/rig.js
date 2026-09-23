@@ -20,13 +20,14 @@ function poseTransform(id,pose){const value=worldPose(id,pose),base=rigModel.bas
 function playRigAction(name){
   pendingRigAction=name;if(!rigModel)return false;clearTimeout(rigTimer);const action=rigModel.actionSet.actions[name]||rigModel.actionSet.actions.idle;
   rigModel.host.dataset.action=name;rigModel.host.dataset.playing="true";
-  // Hold a non-looping move at its impact pose: clips originally reset in less
-  // than a second, so a successful click was too easy to miss in the gallery.
-  const poses=action.loop?action.poses:[...action.poses.slice(0,-1),{...action.poses.at(-2),at:action.duration}];
+  const status=document.getElementById("rig-action-name");if(status)status.textContent=name==="idle"?"READY · IDLE":`▶ ${name.replaceAll("_"," ").toUpperCase()} · PLAYING`;
+  // Preview ordinary moves at their impact pose. Guard and death own an authored
+  // hold pose and stay there until another action is selected.
+  const poses=action.loop||action.hold?action.poses:[...action.poses.slice(0,-1),{...action.poses.at(-2),at:action.duration}];
   const frames=poses.map(p=>({offset:p.at/action.duration,...p}));
   const partIds=["root",...rigModel.character.parts];
-  partIds.forEach(id=>{const node=id==="root"?rigModel.host.querySelector(".rig-root"):rigModel.host.querySelector(`[data-part="${id}"]`);if(!node)return;node.getAnimations().forEach(animation=>animation.cancel());node.animate(frames.map(frame=>({offset:frame.offset,transform:poseTransform(id,frame)})),{duration:action.duration,iterations:action.loop?Infinity:1,easing:"ease-in-out",fill:"forwards"});});
-  if(!action.loop)rigTimer=setTimeout(()=>playRigAction("idle"),action.duration+720);
+  partIds.forEach(id=>{const node=id==="root"?rigModel.host.querySelector(".rig-root"):rigModel.host.querySelector(`[data-part="${id}"]`);if(!node)return;const current=getComputedStyle(node).transform;node.getAnimations().forEach(animation=>animation.cancel());const authored=frames.map(frame=>({offset:frame.offset,transform:poseTransform(id,frame),easing:frame.easing||"ease-in-out"})),second=authored[1]?.offset||.25,blendOffset=Math.min(second*.45,(rigModel.actionSet.transitionMs||80)/action.duration),keyframes=[{offset:0,transform:current==="none"?authored[0].transform:current,easing:"ease-out"},{...authored[0],offset:blendOffset},...authored.slice(1)];node.animate(keyframes,{duration:action.duration,iterations:action.loop?Infinity:1,easing:"linear",fill:"forwards"});});
+  if(!action.loop&&!action.hold)rigTimer=setTimeout(()=>playRigAction("idle"),action.duration+720);
   return true;
 }
 globalThis.playRigAction=playRigAction;

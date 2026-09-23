@@ -8,13 +8,21 @@ async function loadRig(){
   const [skeleton,skin,actionSet]=await Promise.all([fetch(rigAssetUrl(character.skeleton)).then(r=>{if(!r.ok)throw Error("Skeleton missing");return r.json();}),fetch(rigAssetUrl(character.skin)).then(r=>{if(!r.ok)throw Error("Skin missing");return r.json();}),fetch(rigAssetUrl(character.actions)).then(r=>{if(!r.ok)throw Error("Action set missing");return r.json();})]);
   const host=document.getElementById("hero-rig");if(!host)return;
   host.innerHTML=`<b class="rig-root">${character.parts.map(id=>`<i class="rig-part part-${id.replaceAll(".","-")}" data-part="${id}"></i>`).join("")}</b>`;
-  const bones=new Map(skeleton.bones.map(bone=>[bone.id,bone])),baseAngles=new Map();
-  for(const id of character.parts){const node=host.querySelector(`[data-part="${id}"]`);if(!node)continue;const matrix=getComputedStyle(node).transform;if(matrix&&matrix!=="none"){const values=matrix.match(/matrix\(([^)]+)\)/)?.[1].split(",").map(Number);if(values)baseAngles.set(id,Math.atan2(values[1],values[0])*180/Math.PI);}}
-  rigModel={character,skeleton,skin,actionSet,host,bones,baseAngles};globalThis.rigModel=rigModel;host.dataset.bones=String(bones.size);host.dataset.skin=skin.id;host.dataset.ready="true";delete host.dataset.error;const status=document.getElementById("rig-action-name");if(status)status.textContent="READY · IDLE";playRigAction(pendingRigAction);
+  const bones=new Map(skeleton.bones.map(bone=>[bone.id,bone])),baseAngles=new Map(),joints=new Map([["root",{x:host.clientWidth/2,y:host.clientHeight}]]);
+  for(const id of character.parts){const node=host.querySelector(`[data-part="${id}"]`);if(!node)continue;const style=getComputedStyle(node),matrix=style.transform;if(matrix&&matrix!=="none"){const values=matrix.match(/matrix\(([^)]+)\)/)?.[1].split(",").map(Number);if(values)baseAngles.set(id,Math.atan2(values[1],values[0])*180/Math.PI);}if(bones.has(id)){const origin=style.transformOrigin.split(" ").map(parseFloat);joints.set(id,{x:node.offsetLeft+(origin[0]||0),y:node.offsetTop+(origin[1]||0)});}}
+  rigModel={character,skeleton,skin,actionSet,host,bones,baseAngles,joints};globalThis.rigModel=rigModel;host.dataset.bones=String(bones.size);host.dataset.skin=skin.id;host.dataset.ready="true";delete host.dataset.error;const status=document.getElementById("rig-action-name");if(status)status.textContent="READY · IDLE";playRigAction(pendingRigAction);
 }
-function worldPose(id,pose,seen=new Set()){
-  if(!rigModel||seen.has(id))return {x:0,y:0,r:0};seen.add(id);const bone=rigModel.bones.get(id),parent=bone?.parent||rigModel.character.attachments?.[id]||null,local=pose[id]||{},up=parent?worldPose(rigModel.skeleton.sockets?.[parent]||parent,pose,seen):{x:0,y:0,r:0};
-  return {x:up.x+(local.x||0),y:up.y+(local.y||0),r:up.r+(local.r||0)};
+function worldPose(id,pose,cache=new Map()){
+  if(!rigModel)return {x:0,y:0,r:0};
+  const socketTarget=rigModel.character.attachments?.[id],resolved=socketTarget?rigModel.skeleton.sockets?.[socketTarget]:id;
+  if(resolved!==id)return worldPose(resolved,pose,cache);
+  if(cache.has(id))return cache.get(id);
+  const bone=rigModel.bones.get(id);if(!bone)return {x:0,y:0,r:0};
+  const local=pose[id]||{},joint=rigModel.joints.get(id)||{x:0,y:0},baseX=joint.x,baseY=joint.y;
+  let value;
+  if(!bone.parent)value={x:local.x||0,y:local.y||0,r:local.r||0,worldX:baseX+(local.x||0),worldY:baseY+(local.y||0)};
+  else{const parent=worldPose(bone.parent,pose,cache),parentJoint=rigModel.joints.get(bone.parent)||{x:0,y:0},angle=parent.r*Math.PI/180,dx=baseX-parentJoint.x,dy=baseY-parentJoint.y,rotX=dx*Math.cos(angle)-dy*Math.sin(angle),rotY=dx*Math.sin(angle)+dy*Math.cos(angle),worldX=parent.worldX+rotX+(local.x||0),worldY=parent.worldY+rotY+(local.y||0);value={x:worldX-baseX,y:worldY-baseY,r:parent.r+(local.r||0),worldX,worldY};}
+  cache.set(id,value);return value;
 }
 function poseTransform(id,pose){const value=worldPose(id,pose),base=rigModel.baseAngles.get(id)||0;return `translate(${value.x}px,${value.y}px) rotate(${base+value.r}deg)`;}
 function playRigAction(name){
@@ -25,8 +33,7 @@ function playRigAction(name){
   // hold pose and stay there until another action is selected.
   const poses=action.loop||action.hold?action.poses:[...action.poses.slice(0,-1),{...action.poses.at(-2),at:action.duration}];
   const frames=poses.map(p=>({offset:p.at/action.duration,...p}));
-  const partIds=["root",...rigModel.character.parts];
-  partIds.forEach(id=>{const node=id==="root"?rigModel.host.querySelector(".rig-root"):rigModel.host.querySelector(`[data-part="${id}"]`);if(!node)return;const current=getComputedStyle(node).transform;node.getAnimations().forEach(animation=>animation.cancel());const authored=frames.map(frame=>({offset:frame.offset,transform:poseTransform(id,frame),easing:frame.easing||"ease-in-out"})),second=authored[1]?.offset||.25,blendOffset=Math.min(second*.45,(rigModel.actionSet.transitionMs||80)/action.duration),keyframes=[{offset:0,transform:current==="none"?authored[0].transform:current,easing:"ease-out"},{...authored[0],offset:blendOffset},...authored.slice(1)];node.animate(keyframes,{duration:action.duration,iterations:action.loop?Infinity:1,easing:"linear",fill:"forwards"});});
+  rigModel.character.parts.forEach(id=>{const node=rigModel.host.querySelector(`[data-part="${id}"]`);if(!node)return;const current=getComputedStyle(node).transform;node.getAnimations().forEach(animation=>animation.cancel());const authored=frames.map(frame=>({offset:frame.offset,transform:poseTransform(id,frame),easing:frame.easing||"ease-in-out"})),second=authored[1]?.offset||.25,blendOffset=Math.min(second*.45,(rigModel.actionSet.transitionMs||80)/action.duration),keyframes=[{offset:0,transform:current==="none"?authored[0].transform:current,easing:"ease-out"},{...authored[0],offset:blendOffset},...authored.slice(1)];node.animate(keyframes,{duration:action.duration,iterations:action.loop?Infinity:1,easing:"linear",fill:"forwards"});});
   if(!action.loop&&!action.hold)rigTimer=setTimeout(()=>playRigAction("idle"),action.duration+720);
   return true;
 }

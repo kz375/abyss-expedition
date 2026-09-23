@@ -85,6 +85,16 @@ public final class WebTests {
             check(call("/art-test/actors.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "separate character catalog MIME type");
             check(call("/art-test/rig.js?v=0.7.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "reusable rig runtime MIME type");
             check(call("/art-test/lab.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "art lab action engine MIME type");
+            for (String rigAsset : List.of(
+                    "assets/animation/characters/warrior-v1.json",
+                    "assets/animation/skeletons/humanoid-v1.json",
+                    "assets/animation/skins/warrior-iron-vow-v1.json",
+                    "assets/animation/actions/humanoid-combat-v1.json")) {
+                var response = call("/" + rigAsset, null);
+                check(response.statusCode() == 200, "active humanoid rig asset delivered: " + rigAsset);
+                check(response.headers().firstValue("Content-Type").orElse("").contains("application/json"), "active humanoid rig asset MIME type: " + rigAsset);
+                check(!response.body().isBlank(), "active humanoid rig asset is not empty: " + rigAsset);
+            }
             check(call("/assets/animation/skeletons/humanoid-heavy.json", null).headers().firstValue("Content-Type").orElse("").contains("application/json"), "skeleton model delivered as JSON");
             check(call("/assets/animation/actions/greatsword-v1.json", null).body().contains("\"heavy\""), "greatsword action set includes heavy attack");
             check(call("/assets/animation/characters/warrior-initial.json", null).body().contains("humanoid-heavy"), "warrior model binds the reusable skeleton");

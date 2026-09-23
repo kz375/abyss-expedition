@@ -19,6 +19,10 @@ public final class WebServer implements AutoCloseable {
             "assets/characters/warrior.png", "assets/characters/mage.png", "assets/characters/ranger.png",
             "assets/characters/paladin.png", "assets/characters/necromancer.png", "assets/characters/creator.png",
             "assets/enemies/iron-golem-test.png", "assets/backgrounds/dark-theme-cc0.png",
+            "assets/animation/characters/warrior-v1.json",
+            "assets/animation/skeletons/humanoid-v1.json",
+            "assets/animation/skins/warrior-iron-vow-v1.json",
+            "assets/animation/actions/humanoid-combat-v1.json",
             "assets/animation/skeletons/humanoid-heavy.json", "assets/animation/actions/greatsword-v1.json",
             "assets/animation/characters/warrior-initial.json");
     private final HttpServer server;

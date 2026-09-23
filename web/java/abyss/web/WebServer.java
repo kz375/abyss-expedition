@@ -24,6 +24,7 @@ public final class WebServer implements AutoCloseable {
             "assets/animation/skins/warrior-iron-vow-v1.json",
             "assets/animation/actions/humanoid-combat-v1.json",
             "assets/animation/actions/humanoid-combat-v2.json",
+            "assets/animation/actions/humanoid-locomotion-v1.json",
             "assets/animation/skeletons/humanoid-heavy.json", "assets/animation/actions/greatsword-v1.json",
             "assets/animation/characters/warrior-initial.json");
     private final HttpServer server;

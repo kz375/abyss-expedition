@@ -3,6 +3,7 @@
   "skeleton":"/assets/animation/skeletons/humanoid-v1.json",
   "skin":"/assets/animation/skins/warrior-iron-vow-v1.json",
   "actions":"/assets/animation/actions/humanoid-combat-v2.json",
+  "locomotion":"/assets/animation/actions/humanoid-locomotion-v1.json",
   "attachments":{"weapon":"weapon_socket","shield":"shield_socket","cape":"back_socket"},
   "parts":["pelvis","torso","head","upperArm_L","lowerArm_L","hand_L","upperArm_R","lowerArm_R","hand_R","thigh_L","shin_L","foot_L","thigh_R","shin_R","foot_R","cape","weapon","shield"]
 }

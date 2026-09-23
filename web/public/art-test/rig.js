@@ -5,12 +5,12 @@ const rigAssetUrl=path=>new URL(path.replace(/^\/assets\/animation\//,""),RIG_AS
 let rigModel=null,rigTimer=null,pendingRigAction="idle";
 async function loadRig(){
   const character=await fetch(RIG_CHARACTER).then(r=>{if(!r.ok)throw Error("Character rig missing");return r.json();});
-  const [skeleton,skin,actionSet]=await Promise.all([fetch(rigAssetUrl(character.skeleton)).then(r=>{if(!r.ok)throw Error("Skeleton missing");return r.json();}),fetch(rigAssetUrl(character.skin)).then(r=>{if(!r.ok)throw Error("Skin missing");return r.json();}),fetch(rigAssetUrl(character.actions)).then(r=>{if(!r.ok)throw Error("Action set missing");return r.json();})]);
+  const [skeleton,skin,actionSet,locomotion]=await Promise.all([fetch(rigAssetUrl(character.skeleton)).then(r=>{if(!r.ok)throw Error("Skeleton missing");return r.json();}),fetch(rigAssetUrl(character.skin)).then(r=>{if(!r.ok)throw Error("Skin missing");return r.json();}),fetch(rigAssetUrl(character.actions)).then(r=>{if(!r.ok)throw Error("Action set missing");return r.json();}),fetch(rigAssetUrl(character.locomotion)).then(r=>{if(!r.ok)throw Error("Locomotion set missing");return r.json();})]);
   const host=document.getElementById("hero-rig");if(!host)return;
   host.innerHTML=`<b class="rig-root">${character.parts.map(id=>`<i class="rig-part part-${id.replaceAll(".","-")}" data-part="${id}"></i>`).join("")}</b>`;
   const bones=new Map(skeleton.bones.map(bone=>[bone.id,bone])),baseAngles=new Map(),joints=new Map([["root",{x:host.clientWidth/2,y:host.clientHeight}]]);
   for(const id of character.parts){const node=host.querySelector(`[data-part="${id}"]`);if(!node)continue;const style=getComputedStyle(node),matrix=style.transform;if(matrix&&matrix!=="none"){const values=matrix.match(/matrix\(([^)]+)\)/)?.[1].split(",").map(Number);if(values)baseAngles.set(id,Math.atan2(values[1],values[0])*180/Math.PI);}if(bones.has(id)){const origin=style.transformOrigin.split(" ").map(parseFloat);joints.set(id,{x:node.offsetLeft+(origin[0]||0),y:node.offsetTop+(origin[1]||0)});}}
-  rigModel={character,skeleton,skin,actionSet,host,bones,baseAngles,joints};globalThis.rigModel=rigModel;host.dataset.bones=String(bones.size);host.dataset.skin=skin.id;host.dataset.ready="true";delete host.dataset.error;const status=document.getElementById("rig-action-name");if(status)status.textContent="READY · IDLE";playRigAction(pendingRigAction);
+  rigModel={character,skeleton,skin,actionSet,locomotion,host,bones,baseAngles,joints};globalThis.rigModel=rigModel;host.dataset.bones=String(bones.size);host.dataset.skin=skin.id;host.dataset.locomotion=locomotion.id;host.dataset.ready="true";delete host.dataset.error;const status=document.getElementById("rig-action-name");if(status)status.textContent="READY · IDLE";playRigAction(pendingRigAction);
 }
 function worldPose(id,pose,cache=new Map()){
   if(!rigModel)return {x:0,y:0,r:0};
@@ -25,13 +25,15 @@ function worldPose(id,pose,cache=new Map()){
   cache.set(id,value);return value;
 }
 function poseTransform(id,pose){const value=worldPose(id,pose),base=rigModel.baseAngles.get(id)||0;return `translate(${value.x}px,${value.y}px) rotate(${base+value.r}deg)`;}
+function mergePose(body,legs){const screenLegs=Object.fromEntries(Object.entries(legs).map(([id,value])=>[id,value&&typeof value==="object"&&Number.isFinite(value.r)?{...value,r:-value.r}:value])),merged={...screenLegs,...body};for(const id of new Set([...Object.keys(screenLegs),...Object.keys(body)]))if(screenLegs[id]&&body[id]&&typeof screenLegs[id]==="object"&&typeof body[id]==="object")merged[id]={...screenLegs[id],...body[id]};return merged;}
 function playRigAction(name){
   pendingRigAction=name;if(!rigModel)return false;clearTimeout(rigTimer);const action=rigModel.actionSet.actions[name]||rigModel.actionSet.actions.idle;
   rigModel.host.dataset.action=name;rigModel.host.dataset.playing="true";
   const status=document.getElementById("rig-action-name");if(status)status.textContent=name==="idle"?"READY · IDLE":`▶ ${name.replaceAll("_"," ").toUpperCase()} · PLAYING`;
   // Preview ordinary moves at their impact pose. Guard and death own an authored
   // hold pose and stay there until another action is selected.
-  const poses=action.loop||action.hold?action.poses:[...action.poses.slice(0,-1),{...action.poses.at(-2),at:action.duration}];
+  const bodyPoses=action.loop||action.hold?action.poses:[...action.poses.slice(0,-1),{...action.poses.at(-2),at:action.duration}],legPoses=rigModel.locomotion.profiles[name]||[];
+  const poses=bodyPoses.map((pose,index)=>mergePose(pose,legPoses[Math.min(index,legPoses.length-1)]||{}));
   const frames=poses.map(p=>({offset:p.at/action.duration,...p}));
   rigModel.character.parts.forEach(id=>{const node=rigModel.host.querySelector(`[data-part="${id}"]`);if(!node)return;const current=getComputedStyle(node).transform;node.getAnimations().forEach(animation=>animation.cancel());const authored=frames.map(frame=>({offset:frame.offset,transform:poseTransform(id,frame),easing:frame.easing||"ease-in-out"})),second=authored[1]?.offset||.25,blendOffset=Math.min(second*.45,(rigModel.actionSet.transitionMs||80)/action.duration),keyframes=[{offset:0,transform:current==="none"?authored[0].transform:current,easing:"ease-out"},{...authored[0],offset:blendOffset},...authored.slice(1)];node.animate(keyframes,{duration:action.duration,iterations:action.loop?Infinity:1,easing:"linear",fill:"forwards"});});
   if(!action.loop&&!action.hold)rigTimer=setTimeout(()=>playRigAction("idle"),action.duration+720);

@@ -1,0 +1,8 @@
+{
+  "id":"warrior-iron-vow-v1",
+  "type":"humanoid",
+  "displayName":{"zh":"战士 · 铁誓","en":"Warrior · Iron Vow"},
+  "portrait":"/assets/characters/warrior.png",
+  "layers":{"torso":"armor_iron","head":"helm_open","cape":"cloak_moss"},
+  "attachments":{"weapon":"greatsword_iron","shield":"kite_shield_iron"}
+}

@@ -55,7 +55,7 @@ public final class WebTests {
             check(call("/", null).body().contains("ABYSS EXPEDITION · 2.0"), "unified 2.0 homepage delivered");
             check(call("/legacy/", null).body().contains("id=\"board\""), "legacy server-save game remains available");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("2.2.14-duel-focus"), "duel-focus page uses one cache-busted release");
+            check(betaPage.contains("2.2.15-gallery-enemies"), "gallery-enemies page uses one cache-busted release");
             check(betaPage.contains("distant-castle") && !betaPage.contains("abyss-gate\"><i"), "castle horizon replaces the central abyss gate");
             check(betaPage.contains("battle-road"), "combat scene includes the shared battle road");
             check(betaPage.contains("abyss-scenery"), "authored abyss scenery layer is present");
@@ -70,7 +70,7 @@ public final class WebTests {
                 check(!asset.body().isBlank(), "beta script is not empty: " + script);
                 betaScriptCount++;
             }
-            check(betaScriptCount == 5, "all five beta modules referenced");
+            check(betaScriptCount == 6, "all five battle modules plus the shared Art Lab actor catalog are referenced");
             check(call("/assets/backgrounds/dark-theme-cc0.png", null).headers().firstValue("Content-Type").orElse("").equals("image/png"), "CC0 combat background delivered");
             for (String hero : List.of("warrior", "mage", "ranger", "paladin", "necromancer", "creator")) {
                 var art = call("/assets/characters/" + hero + ".png", null);

@@ -71,12 +71,12 @@
     ]},
     "death":{"duration":1750,"hold":true,"poses":[
       {"at":0,"easing":"ease-out","root":{"x":0,"y":0},"torso":{"r":0}},
-      {"at":220,"easing":"ease-out","root":{"x":-10,"y":4},"pelvis":{"r":-10},"torso":{"r":-18},"head":{"r":-13},"upperArm_L":{"r":22},"upperArm_R":{"r":-18}},
-      {"at":480,"easing":"ease-in","root":{"x":3,"y":25},"pelvis":{"r":22},"torso":{"r":35},"head":{"r":26},"upperArm_L":{"r":47},"upperArm_R":{"r":-52}},
-      {"at":760,"easing":"cubic-bezier(.1,.75,.2,1)","root":{"x":18,"y":67},"pelvis":{"r":43},"torso":{"r":68},"head":{"r":51},"upperArm_L":{"r":71},"upperArm_R":{"r":-77}},
-      {"at":1040,"easing":"ease-out","root":{"x":31,"y":118},"pelvis":{"r":64},"torso":{"r":91},"head":{"r":73},"upperArm_L":{"r":88},"upperArm_R":{"r":-94}},
-      {"at":1300,"easing":"ease-in-out","root":{"x":34,"y":132},"pelvis":{"r":67},"torso":{"r":94},"head":{"r":77},"upperArm_L":{"r":91},"upperArm_R":{"r":-97}},
-      {"at":1750,"root":{"x":34,"y":132},"pelvis":{"r":67},"torso":{"r":94},"head":{"r":77},"upperArm_L":{"r":91},"upperArm_R":{"r":-97}}
+      {"at":220,"easing":"ease-out","root":{"x":-2,"y":1},"pelvis":{"r":-2},"torso":{"r":-4},"head":{"r":-3},"upperArm_L":{"r":5},"upperArm_R":{"r":-4}},
+      {"at":480,"easing":"ease-in","root":{"x":-3,"y":5},"pelvis":{"r":3},"torso":{"r":6},"head":{"r":4},"upperArm_L":{"r":9},"upperArm_R":{"r":-10}},
+      {"at":760,"easing":"cubic-bezier(.1,.75,.2,1)","root":{"x":-4,"y":10},"pelvis":{"r":5},"torso":{"r":9},"head":{"r":6},"upperArm_L":{"r":12},"upperArm_R":{"r":-14}},
+      {"at":1040,"easing":"ease-out","root":{"x":-5,"y":15},"pelvis":{"r":7},"torso":{"r":12},"head":{"r":8},"upperArm_L":{"r":15},"upperArm_R":{"r":-17}},
+      {"at":1300,"easing":"ease-in-out","root":{"x":-6,"y":18},"pelvis":{"r":8},"torso":{"r":14},"head":{"r":10},"upperArm_L":{"r":17},"upperArm_R":{"r":-19}},
+      {"at":1750,"root":{"x":-6,"y":18},"pelvis":{"r":8},"torso":{"r":14},"head":{"r":10},"upperArm_L":{"r":17},"upperArm_R":{"r":-19}}
     ]}
   }
 }

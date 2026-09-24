@@ -14,13 +14,13 @@ async function loadRig(heroId="warrior"){
   host.innerHTML=`<b class="rig-root">${character.parts.map(id=>`<i class="rig-part part-${id.replaceAll(".","-")}" data-part="${id}"></i>`).join("")}</b>`;
   bindRigTexture(host,skin);
   const bones=new Map(skeleton.bones.map(bone=>[bone.id,bone])),baseAngles=new Map(),joints=new Map([["root",{x:host.clientWidth/2,y:host.clientHeight}]]);
-  for(const id of character.parts){const node=host.querySelector(`[data-part="${id}"]`);if(!node)continue;const style=getComputedStyle(node),matrix=style.transform;if(matrix&&matrix!=="none"){const values=matrix.match(/matrix\(([^)]+)\)/)?.[1].split(",").map(Number);if(values)baseAngles.set(id,Math.atan2(values[1],values[0])*180/Math.PI);}if(bones.has(id)){const origin=style.transformOrigin.split(" ").map(parseFloat);joints.set(id,{x:node.offsetLeft+(origin[0]||0),y:node.offsetTop+(origin[1]||0)});}}
+  for(const id of character.parts){const node=host.querySelector(`[data-part="${id}"]`);if(!node)continue;const style=getComputedStyle(node),matrix=style.transform;if(matrix&&matrix!=="none"){const values=matrix.match(/matrix\(([^)]+)\)/)?.[1].split(",").map(Number);if(values)baseAngles.set(id,Math.atan2(values[1],values[0])*180/Math.PI);}if(bones.has(id)||character.attachments?.[id]){const origin=style.transformOrigin.split(" ").map(parseFloat);joints.set(id,{x:node.offsetLeft+(origin[0]||0),y:node.offsetTop+(origin[1]||0)});}}
   rigModel={heroId,character,skeleton,skin,actionSet,locomotion,host,bones,baseAngles,joints};globalThis.rigModel=rigModel;host.dataset.hero=heroId;host.dataset.bones=String(bones.size);host.dataset.skin=skin.id;host.dataset.skeleton=skeleton.id;host.dataset.locomotion=locomotion.id;host.dataset.ready="true";delete host.dataset.error;const status=document.getElementById("rig-action-name");if(status)status.textContent=`READY · ${heroId.toUpperCase()} · ${skin.type.toUpperCase()}`;playRigAction(pendingRigAction);return true;
 }
 function worldPose(id,pose,cache=new Map()){
   if(!rigModel)return {x:0,y:0,r:0};
   const socketTarget=rigModel.character.attachments?.[id],resolved=socketTarget?rigModel.skeleton.sockets?.[socketTarget]:id;
-  if(resolved!==id)return worldPose(resolved,pose,cache);
+  if(resolved!==id){const target=worldPose(resolved,pose,cache),grip=rigModel.joints.get(id)||{x:0,y:0};return {x:target.worldX-grip.x,y:target.worldY-grip.y,r:target.r,worldX:target.worldX,worldY:target.worldY};}
   if(cache.has(id))return cache.get(id);
   const bone=rigModel.bones.get(id);if(!bone)return {x:0,y:0,r:0};
   const local=pose[id]||{},joint=rigModel.joints.get(id)||{x:0,y:0},baseX=joint.x,baseY=joint.y;
@@ -29,7 +29,7 @@ function worldPose(id,pose,cache=new Map()){
   else{const parent=worldPose(bone.parent,pose,cache),parentJoint=rigModel.joints.get(bone.parent)||{x:0,y:0},angle=parent.r*Math.PI/180,dx=baseX-parentJoint.x,dy=baseY-parentJoint.y,rotX=dx*Math.cos(angle)-dy*Math.sin(angle),rotY=dx*Math.sin(angle)+dy*Math.cos(angle),worldX=parent.worldX+rotX+(local.x||0),worldY=parent.worldY+rotY+(local.y||0);value={x:worldX-baseX,y:worldY-baseY,r:parent.r+(local.r||0),worldX,worldY};}
   cache.set(id,value);return value;
 }
-function poseTransform(id,pose){const value=worldPose(id,pose),base=rigModel.baseAngles.get(id)||0;return `translate(${value.x}px,${value.y}px) rotate(${base+value.r}deg)`;}
+function poseTransform(id,pose){const value=worldPose(id,pose),base=rigModel.baseAngles.get(id)||0,socketAngle=id==="weapon"?159:0;return `translate(${value.x}px,${value.y}px) rotate(${base+value.r+socketAngle}deg)`;}
 function mergePose(body,legs){const screenLegs=Object.fromEntries(Object.entries(legs).map(([id,value])=>[id,value&&typeof value==="object"&&Number.isFinite(value.r)?{...value,r:-value.r}:value])),merged={...screenLegs,...body};for(const id of new Set([...Object.keys(screenLegs),...Object.keys(body)]))if(screenLegs[id]&&body[id]&&typeof screenLegs[id]==="object"&&typeof body[id]==="object")merged[id]={...screenLegs[id],...body[id]};return merged;}
 function groundedPose(name,pose){const grounded={...pose};if(rigModel?.host.classList.contains("production-skin")&&pose.head&&Number.isFinite(pose.head.r))grounded.head={...pose.head,r:pose.head.r*.42};if(name==="idle")return grounded;if(pose.root)grounded.root={...pose.root,x:0};if(pose.pelvis&&Number.isFinite(pose.pelvis.r))grounded.pelvis={...pose.pelvis,r:pose.pelvis.r*.58};return grounded;}
 function modelPose(name,pose){

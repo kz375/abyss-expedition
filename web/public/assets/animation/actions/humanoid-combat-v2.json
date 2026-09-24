@@ -38,11 +38,11 @@
     ]},
     "guard":{"duration":900,"hold":true,"events":[{"at":140,"type":"windup"},{"at":300,"type":"impact"}],"poses":[
       {"at":0,"easing":"ease-out","root":{"x":0},"torso":{"r":0}},
-      {"at":140,"easing":"cubic-bezier(.1,.8,.2,1)","root":{"x":-8,"y":5},"pelvis":{"r":-7},"torso":{"r":-12},"head":{"r":4},"upperArm_L":{"r":-28},"lowerArm_L":{"r":-12},"upperArm_R":{"r":22}},
-      {"at":300,"easing":"ease-out","root":{"x":-14,"y":9},"pelvis":{"r":-11},"torso":{"r":-18},"head":{"r":7},"upperArm_L":{"r":-48},"lowerArm_L":{"r":-24},"upperArm_R":{"r":34}},
-      {"at":520,"easing":"ease-in-out","root":{"x":-12,"y":7},"pelvis":{"r":-9},"torso":{"r":-15},"upperArm_L":{"r":-45},"lowerArm_L":{"r":-21},"upperArm_R":{"r":31}},
-      {"at":700,"easing":"ease-in-out","root":{"x":-14,"y":10},"pelvis":{"r":-11},"torso":{"r":-18},"upperArm_L":{"r":-48},"lowerArm_L":{"r":-24},"upperArm_R":{"r":34}},
-      {"at":900,"root":{"x":-12,"y":7},"pelvis":{"r":-9},"torso":{"r":-15},"upperArm_L":{"r":-45},"lowerArm_L":{"r":-21},"upperArm_R":{"r":31}}
+      {"at":140,"easing":"cubic-bezier(.1,.8,.2,1)","root":{"x":-8,"y":5},"pelvis":{"r":-7},"torso":{"r":-12},"head":{"r":4},"upperArm_L":{"r":-28},"lowerArm_L":{"r":-12},"upperArm_R":{"r":-16},"lowerArm_R":{"r":-6}},
+      {"at":300,"easing":"ease-out","root":{"x":-14,"y":9},"pelvis":{"r":-11},"torso":{"r":-18},"head":{"r":7},"upperArm_L":{"r":-48},"lowerArm_L":{"r":-24},"upperArm_R":{"r":-24},"lowerArm_R":{"r":-9}},
+      {"at":520,"easing":"ease-in-out","root":{"x":-12,"y":7},"pelvis":{"r":-9},"torso":{"r":-15},"upperArm_L":{"r":-45},"lowerArm_L":{"r":-21},"upperArm_R":{"r":-21},"lowerArm_R":{"r":-8}},
+      {"at":700,"easing":"ease-in-out","root":{"x":-14,"y":10},"pelvis":{"r":-11},"torso":{"r":-18},"upperArm_L":{"r":-48},"lowerArm_L":{"r":-24},"upperArm_R":{"r":-24},"lowerArm_R":{"r":-9}},
+      {"at":900,"root":{"x":-12,"y":7},"pelvis":{"r":-9},"torso":{"r":-15},"upperArm_L":{"r":-45},"lowerArm_L":{"r":-21},"upperArm_R":{"r":-21},"lowerArm_R":{"r":-8}}
     ]},
     "perfect_guard":{"duration":720,"events":[{"at":90,"type":"impact"},{"at":280,"type":"counter"}],"poses":[
       {"at":0,"easing":"ease-out","root":{"x":0},"torso":{"r":0}},

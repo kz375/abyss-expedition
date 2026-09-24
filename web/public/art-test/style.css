@@ -70,6 +70,8 @@
 .production-skin[data-action="attack_01"] :is(.part-upperArm_R,.part-lowerArm_R,.part-hand_R),.production-skin[data-action="attack_02"] :is(.part-upperArm_R,.part-lowerArm_R,.part-hand_R),.production-skin[data-action="break_strike"] :is(.part-upperArm_R,.part-lowerArm_R,.part-hand_R){z-index:11!important}
 .production-skin[data-action="guard"] :is(.part-upperArm_L,.part-lowerArm_L,.part-hand_L),.production-skin[data-action="perfect_guard"] :is(.part-upperArm_L,.part-lowerArm_L,.part-hand_L){z-index:11!important}
 .production-skin[data-action="hit"] :is(.part-upperArm_L,.part-lowerArm_L,.part-hand_L,.part-upperArm_R,.part-lowerArm_R,.part-hand_R),.production-skin[data-action="break"] :is(.part-upperArm_L,.part-lowerArm_L,.part-hand_L,.part-upperArm_R,.part-lowerArm_R,.part-hand_R){z-index:7!important}
-.production-skin .rig-part{opacity:1;backface-visibility:visible}
-/* Narrow chain-mail underlays bridge transparent crop edges without replacing the painted skin. */
-.production-skin :is(.part-upperArm_L,.part-upperArm_R,.part-lowerArm_L,.part-lowerArm_R,.part-thigh_L,.part-thigh_R,.part-shin_L,.part-shin_R):after{display:block!important;content:"";position:absolute;z-index:-1;left:50%;top:8%;width:13px;height:86%;transform:translateX(-50%);border-radius:9px;background:linear-gradient(90deg,#171b18,#55584f 50%,#171b18);box-shadow:0 0 0 1px #8b7347aa}
+.production-skin .rig-part{opacity:1;visibility:visible;backface-visibility:visible}
+/* Stable production depth: limbs stay between the armour and held equipment for the whole action. */
+.production-skin :is(.part-upperArm_L,.part-upperArm_R,.part-lowerArm_L,.part-lowerArm_R){z-index:7}.production-skin :is(.part-hand_L,.part-hand_R){z-index:8}.production-skin :is(.part-thigh_L,.part-thigh_R){z-index:4}.production-skin :is(.part-shin_L,.part-shin_R){z-index:3}.production-skin :is(.part-foot_L,.part-foot_R){z-index:5}.production-skin .part-torso{z-index:6}.production-skin .part-head{z-index:9}.production-skin .part-pelvis{z-index:5}
+/* The painted crops already overlap at elbows and knees; synthetic fillers caused hollow tubes. */
+.production-skin :is(.part-upperArm_L,.part-upperArm_R,.part-lowerArm_L,.part-lowerArm_R,.part-thigh_L,.part-thigh_R,.part-shin_L,.part-shin_R):after{display:none!important}

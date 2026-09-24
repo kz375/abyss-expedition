@@ -15,7 +15,7 @@ globalThis.CombatCore=Object.freeze({
     rage:{windup:750,kind:"defend"},summon:{windup:1100,kind:"special"},dispel:{windup:950,kind:"special"},
     charge:{windup:1400,kind:"heavy"},nova:{windup:1500,kind:"ultimate"}
   }),
-  create(mode="expedition"){return {mode,pressure:0,tier:0,guard:false,guardStarted:-1,guardTapUntil:-1,guardCooldownUntil:0,guardWardGranted:false,wave:1,events:[],sequence:0,phantomAt:7000};},
+  create(mode="expedition"){return {mode,pressure:0,tier:0,encounter:0,guard:false,guardStarted:-1,guardTapUntil:-1,guardCooldownUntil:0,guardWardGranted:false,wave:1,events:[],sequence:0,phantomAt:7000};},
   pressure(deltaMs,mode){return deltaMs/(mode==="endless"?760:380);},
   tier(value){return value>=85?4:value>=65?3:value>=40?2:value>=18?1:0;},
   playerPower(value){return 1+value*.004;},

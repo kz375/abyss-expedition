@@ -52,7 +52,7 @@
 @media(max-width:700px){.paper-rig{--rig-scale-x:1.03;--rig-scale-y:1.03}}
 
 /* Warrior production skin: one texture is clipped by reusable Humanoid bones; equipment remains socketed. */
-.hero-shape:has(.production-skin)>img{opacity:.07}.production-skin{filter:drop-shadow(0 15px 13px #000d) drop-shadow(0 0 8px #c08d3d33)}
+.rigged-hero>img,.hero-shape:has(.production-skin)>img{display:none!important}.production-skin{filter:drop-shadow(0 15px 13px #000d) drop-shadow(0 0 8px #c08d3d33)}
 .production-skin .rig-part:not(.part-cape):not(.part-weapon):not(.part-shield){border:0;border-radius:0;clip-path:none;background-color:transparent;background-image:var(--rig-texture);background-repeat:no-repeat;background-size:var(--rig-texture-w) var(--rig-texture-h);box-shadow:none}
 .production-skin .rig-part:not(.part-cape):not(.part-weapon):not(.part-shield):before,.production-skin .rig-part:not(.part-cape):not(.part-weapon):not(.part-shield):after{display:none}
 .production-skin .part-head{left:71px;top:8px;width:48px;height:52px;background-position:calc(var(--rig-texture-x) - 71px) calc(var(--rig-texture-y) - 8px)}
@@ -63,3 +63,5 @@
 .production-skin .part-thigh_L{left:45px;top:168px;width:49px;height:72px;background-position:calc(var(--rig-texture-x) - 45px) calc(var(--rig-texture-y) - 168px)}.production-skin .part-shin_L{left:40px;top:220px;width:43px;height:74px;background-position:calc(var(--rig-texture-x) - 40px) calc(var(--rig-texture-y) - 220px)}.production-skin .part-foot_L{left:36px;top:274px;width:52px;height:43px;background-position:calc(var(--rig-texture-x) - 36px) calc(var(--rig-texture-y) - 274px)}
 .production-skin .part-thigh_R{left:101px;top:168px;width:46px;height:72px;background-position:calc(var(--rig-texture-x) - 101px) calc(var(--rig-texture-y) - 168px)}.production-skin .part-shin_R{left:108px;top:220px;width:41px;height:74px;background-position:calc(var(--rig-texture-x) - 108px) calc(var(--rig-texture-y) - 220px)}.production-skin .part-foot_R{left:105px;top:274px;width:51px;height:43px;background-position:calc(var(--rig-texture-x) - 105px) calc(var(--rig-texture-y) - 274px)}
 .production-skin[data-action="guard"] .part-shield,.production-skin[data-action="perfect_guard"] .part-shield{filter:brightness(1.08) drop-shadow(0 0 7px #85d8ea66)}
+.production-skin .part-weapon{left:132px;top:23px;width:50px;height:148px;border:0;clip-path:none;border-radius:0;background:var(--weapon-texture) center/contain no-repeat;box-shadow:none;transform-origin:50% 86%;filter:drop-shadow(0 4px 4px #000c)}
+.production-skin .part-shield{left:14px;top:100px;width:62px;height:84px;border:0;clip-path:none;border-radius:0;background:var(--shield-texture) center/contain no-repeat;box-shadow:none;transform-origin:72% 35%;filter:drop-shadow(0 5px 5px #000c)}

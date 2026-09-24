@@ -3,9 +3,9 @@
   "type":"humanoid",
   "displayName":{"zh":"战士 · 铁誓","en":"Warrior · Iron Vow"},
   "portrait":"/assets/characters/warrior.png",
-  "rigTexture":"/assets/characters/warrior-rig-v1.png",
+  "rigTexture":"/assets/characters/warrior-rig-v2.png",
   "rigTextureSize":[1086,1448],
   "rigTextureBinding":{"displaySize":[240,320],"offset":[-25,3]},
   "layers":{"torso":"armor_iron","head":"helm_open","cape":"cloak_moss"},
-  "attachments":{"weapon":"greatsword_iron","shield":"kite_shield_iron"}
+  "attachments":{"weapon":"/assets/animation/skins/warrior-greatsword-v2.png","shield":"/assets/animation/skins/warrior-shield-v2.png"}
 }

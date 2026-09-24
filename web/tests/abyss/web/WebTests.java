@@ -80,6 +80,9 @@ public final class WebTests {
             }
             var warriorRigSkin = call("/assets/characters/warrior-rig-v1.png", null);
             check(warriorRigSkin.statusCode() == 200 && warriorRigSkin.headers().firstValue("Content-Type").orElse("").contains("image/png"), "production Warrior rig skin is served as PNG");
+            check(call("/assets/characters/warrior-rig-v2.png", null).statusCode() == 200, "enemy-facing Warrior v2 skin is served");
+            check(call("/assets/animation/skins/warrior-greatsword-v2.png", null).statusCode() == 200, "detachable Warrior greatsword is served");
+            check(call("/assets/animation/skins/warrior-shield-v2.png", null).statusCode() == 200, "detachable Warrior shield is served");
             String artPage = call("/art-test/", null).body();
             check(artPage.contains("ART FX LAB"), "art and combat FX lab delivered");
             check(artPage.contains("id=\"story-beta\""), "story beta lives in the test gallery");
@@ -101,7 +104,7 @@ public final class WebTests {
             }
             check(call("/assets/animation/characters/warrior-v1.json", null).body().contains("humanoid-combat-v2"), "Warrior binds the upgraded motion-language action set");
             check(call("/assets/animation/characters/warrior-v1.json", null).body().contains("humanoid-locomotion-v1"), "Warrior binds an independent lower-body locomotion set");
-            check(call("/assets/animation/skins/warrior-iron-vow-v1.json", null).body().contains("warrior-rig-v1.png"), "Warrior skin binds the production rig texture");
+            check(call("/assets/animation/skins/warrior-iron-vow-v1.json", null).body().contains("warrior-rig-v2.png"), "Warrior skin binds the enemy-facing production texture");
             check(call("/assets/animation/skeletons/humanoid-heavy.json", null).headers().firstValue("Content-Type").orElse("").contains("application/json"), "skeleton model delivered as JSON");
             check(call("/assets/animation/actions/greatsword-v1.json", null).body().contains("\"heavy\""), "greatsword action set includes heavy attack");
             check(call("/assets/animation/characters/warrior-initial.json", null).body().contains("humanoid-heavy"), "warrior model binds the reusable skeleton");

@@ -90,6 +90,7 @@ public final class WebTests {
             String artPage = call("/art-test/", null).body();
             check(artPage.contains("ART FX LAB"), "art and combat FX lab delivered");
             check(artPage.contains("id=\"story-beta\""), "story beta lives in the test gallery");
+            check(artPage.contains("id=\"hero-select\"") && artPage.contains("data-class-preset=\"necromancer\""), "multi-rig hero selector and class FX presets live in the art lab");
             check(call("/art-test/style.css?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("text/css"), "art lab stylesheet MIME type");
             check(call("/art-test/actors.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "separate character catalog MIME type");
             check(call("/art-test/rig.js?v=0.7.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "reusable rig runtime MIME type");

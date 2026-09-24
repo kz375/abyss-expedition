@@ -1,18 +1,21 @@
 "use strict";
 const RIG_ASSET_ROOT=new URL("../assets/animation/",document.currentScript.src);
-const RIG_CHARACTER=new URL("characters/warrior-v1.json",RIG_ASSET_ROOT);
+const RIG_CHARACTERS=Object.freeze({warrior:"warrior-v1",mage:"mage-v1",ranger:"ranger-v1",paladin:"paladin-v1",necromancer:"necromancer-v1"});
 const rigAssetUrl=path=>new URL(path.replace(/^\/assets\/animation\//,""),RIG_ASSET_ROOT);
-let rigModel=null,rigTimer=null,pendingRigAction="idle",rigPlaybackRate=1;
+let rigModel=null,rigTimer=null,pendingRigAction="idle",rigPlaybackRate=1,rigRequest=0;
 function bindRigTexture(host,skin){if(!skin.rigTexture)return;const binding=skin.rigTextureBinding||{},size=binding.displaySize||[240,320],offset=binding.offset||[-25,3];host.classList.add("production-skin");host.style.setProperty("--rig-texture",`url(${new URL(skin.rigTexture,document.baseURI)})`);host.style.setProperty("--rig-texture-w",`${size[0]}px`);host.style.setProperty("--rig-texture-h",`${size[1]}px`);host.style.setProperty("--rig-texture-x",`${offset[0]}px`);host.style.setProperty("--rig-texture-y",`${offset[1]}px`);if(skin.attachments?.weapon?.startsWith("/"))host.style.setProperty("--weapon-texture",`url(${new URL(skin.attachments.weapon,document.baseURI)})`);if(skin.attachments?.shield?.startsWith("/"))host.style.setProperty("--shield-texture",`url(${new URL(skin.attachments.shield,document.baseURI)})`);}
-async function loadRig(){
-  const character=await fetch(RIG_CHARACTER).then(r=>{if(!r.ok)throw Error("Character rig missing");return r.json();});
+async function loadRig(heroId="warrior"){
+  const characterId=RIG_CHARACTERS[heroId];if(!characterId)throw Error("Unknown character rig");const request=++rigRequest;
+  const character=await fetch(new URL(`characters/${characterId}.json`,RIG_ASSET_ROOT)).then(r=>{if(!r.ok)throw Error("Character rig missing");return r.json();});
   const [skeleton,skin,actionSet,locomotion]=await Promise.all([fetch(rigAssetUrl(character.skeleton)).then(r=>{if(!r.ok)throw Error("Skeleton missing");return r.json();}),fetch(rigAssetUrl(character.skin)).then(r=>{if(!r.ok)throw Error("Skin missing");return r.json();}),fetch(rigAssetUrl(character.actions)).then(r=>{if(!r.ok)throw Error("Action set missing");return r.json();}),fetch(rigAssetUrl(character.locomotion)).then(r=>{if(!r.ok)throw Error("Locomotion set missing");return r.json();})]);
+  if(request!==rigRequest)return false;
   const host=document.getElementById("hero-rig");if(!host)return;
+  clearTimeout(rigTimer);host.getAnimations().forEach(animation=>animation.cancel());host.className=`paper-rig rig-${heroId} rig-type-${skin.type||"humanoid"}`;for(const property of ["--rig-texture","--weapon-texture","--shield-texture"])host.style.removeProperty(property);
   host.innerHTML=`<b class="rig-root">${character.parts.map(id=>`<i class="rig-part part-${id.replaceAll(".","-")}" data-part="${id}"></i>`).join("")}</b>`;
   bindRigTexture(host,skin);
   const bones=new Map(skeleton.bones.map(bone=>[bone.id,bone])),baseAngles=new Map(),joints=new Map([["root",{x:host.clientWidth/2,y:host.clientHeight}]]);
   for(const id of character.parts){const node=host.querySelector(`[data-part="${id}"]`);if(!node)continue;const style=getComputedStyle(node),matrix=style.transform;if(matrix&&matrix!=="none"){const values=matrix.match(/matrix\(([^)]+)\)/)?.[1].split(",").map(Number);if(values)baseAngles.set(id,Math.atan2(values[1],values[0])*180/Math.PI);}if(bones.has(id)){const origin=style.transformOrigin.split(" ").map(parseFloat);joints.set(id,{x:node.offsetLeft+(origin[0]||0),y:node.offsetTop+(origin[1]||0)});}}
-  rigModel={character,skeleton,skin,actionSet,locomotion,host,bones,baseAngles,joints};globalThis.rigModel=rigModel;host.dataset.bones=String(bones.size);host.dataset.skin=skin.id;host.dataset.locomotion=locomotion.id;host.dataset.ready="true";delete host.dataset.error;const status=document.getElementById("rig-action-name");if(status)status.textContent="READY · WARRIOR SKIN";playRigAction(pendingRigAction);
+  rigModel={heroId,character,skeleton,skin,actionSet,locomotion,host,bones,baseAngles,joints};globalThis.rigModel=rigModel;host.dataset.hero=heroId;host.dataset.bones=String(bones.size);host.dataset.skin=skin.id;host.dataset.skeleton=skeleton.id;host.dataset.locomotion=locomotion.id;host.dataset.ready="true";delete host.dataset.error;const status=document.getElementById("rig-action-name");if(status)status.textContent=`READY · ${heroId.toUpperCase()} · ${skin.type.toUpperCase()}`;playRigAction(pendingRigAction);return true;
 }
 function worldPose(id,pose,cache=new Map()){
   if(!rigModel)return {x:0,y:0,r:0};
@@ -45,5 +48,6 @@ function playRigAction(name){
   return true;
 }
 globalThis.playRigAction=playRigAction;
+globalThis.loadRigCharacter=loadRig;
 globalThis.setRigPlaybackRate=rate=>{rigPlaybackRate=Math.max(.25,Math.min(2,Number(rate)||1));return rigPlaybackRate;};
-addEventListener("DOMContentLoaded",()=>loadRig().catch(error=>{const host=document.getElementById("hero-rig"),status=document.getElementById("rig-action-name");host?.setAttribute("data-error",error.message);if(status)status.textContent=`RIG ERROR · ${error.message}`;console.error("Art Lab rig failed to load",error);}));
+addEventListener("DOMContentLoaded",()=>loadRig("warrior").catch(error=>{const host=document.getElementById("hero-rig"),status=document.getElementById("rig-action-name");host?.setAttribute("data-error",error.message);if(status)status.textContent=`RIG ERROR · ${error.message}`;console.error("Art Lab rig failed to load",error);}));

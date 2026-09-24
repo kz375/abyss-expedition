@@ -1,7 +1,7 @@
 "use strict";
 // Production combat adapter. Character art, skeleton data and actions remain
 // independent, so replacing a skin never changes combat rules or animation code.
-const COMBAT_RIG_CHARACTERS=Object.freeze({warrior:"warrior-v1",mage:"mage-v1",ranger:"ranger-v1",paladin:"paladin-v1",necromancer:"necromancer-v1"});
+const COMBAT_RIG_CHARACTERS=globalThis.ART_TEST_ACTORS?.rigCharacters||Object.freeze({warrior:"warrior-v1",mage:"mage-v1",ranger:"ranger-v1",paladin:"paladin-v1",necromancer:"necromancer-v1"});
 globalThis.COMBAT_RIG_CHARACTERS=COMBAT_RIG_CHARACTERS;
 const COMBAT_RIG_PARTS=new Set(["pelvis","torso","head","upperArm_L","lowerArm_L","hand_L","upperArm_R","lowerArm_R","hand_R","thigh_L","shin_L","foot_L","thigh_R","shin_R","foot_R"]);
 let combatRig=null,combatRigLoad=0,combatRigTimer=0,combatImpactTimer=0;
@@ -15,7 +15,7 @@ async function mountCombatRig(heroId,portrait){
   const [skeleton,skin,actions,locomotion]=await Promise.all([rigFetch(character.skeleton),rigFetch(character.skin),rigFetch(character.actions),rigFetch(character.locomotion)]);
   if(request!==combatRigLoad)return false;
   portrait.querySelectorAll("img,.combat-rig").forEach(node=>node.remove());
-  const host=document.createElement("span");host.className=`combat-rig production-rig rig-${heroId} rig-type-${skin.type||"humanoid"}`;host.dataset.hero=heroId;host.dataset.action="idle";host.innerHTML=`<b class="combat-rig-root">${character.parts.filter(part=>COMBAT_RIG_PARTS.has(part)||skin.attachments?.[part]).map(part=>`<i class="combat-rig-part part-${part}" data-part="${part}"></i>`).join("")}</b><span class="combat-rig-fx" aria-hidden="true"></span>`;portrait.append(host);
+  const host=document.createElement("span"),continuitySkin=skin.renderMode==="composite"?`<img class="rig-skin-base" src="${skin.rigTexture}" alt="" aria-hidden="true">`:"";host.className=`combat-rig production-rig rig-${heroId} rig-type-${skin.type||"humanoid"}`;host.dataset.hero=heroId;host.dataset.action="idle";host.innerHTML=`<b class="combat-rig-root">${continuitySkin}${character.parts.filter(part=>COMBAT_RIG_PARTS.has(part)||skin.attachments?.[part]).map(part=>`<i class="combat-rig-part part-${part}" data-part="${part}"></i>`).join("")}</b><span class="combat-rig-fx" aria-hidden="true"></span>`;portrait.append(host);
   const binding=skin.rigTextureBinding||{},size=binding.displaySize||[240,320],offset=binding.offset||[-25,3];host.style.setProperty("--rig-texture",`url(${combatRigUrl(skin.rigTexture)})`);host.style.setProperty("--rig-texture-w",`${size[0]}px`);host.style.setProperty("--rig-texture-h",`${size[1]}px`);host.style.setProperty("--rig-texture-x",`${offset[0]}px`);host.style.setProperty("--rig-texture-y",`${offset[1]}px`);host.dataset.fx=skin.fx||heroId;
   for(const [part,path] of Object.entries(skin.attachments||{}))if(path?.startsWith("/"))host.style.setProperty(`--${part}-texture`,`url(${combatRigUrl(path)})`);
   const bones=new Map(skeleton.bones.map(bone=>[bone.id,bone])),baseAngles=new Map(),joints=new Map([["root",{x:host.clientWidth/2,y:host.clientHeight}]]);

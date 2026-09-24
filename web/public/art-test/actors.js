@@ -2,9 +2,11 @@
 
 // Character assets are data only. The VFX/action engine in lab.js never needs
 // to know which hero or monster is installed here.
+const SHARED_RIG_CHARACTERS=Object.freeze({warrior:"warrior-v1",mage:"mage-v1",ranger:"ranger-v1",paladin:"paladin-v1",necromancer:"necromancer-v1"});
 globalThis.ART_TEST_ACTORS = Object.freeze({
   defaultHero:"warrior",
   defaultTarget:"golem",
+  rigCharacters:SHARED_RIG_CHARACTERS,
   heroes:Object.freeze({
     warrior:Object.freeze({
       zh:"战士 · 铁誓", en:"Warrior · Iron Vow",

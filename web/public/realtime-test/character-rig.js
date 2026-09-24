@@ -4,7 +4,7 @@
 const COMBAT_RIG_CHARACTERS=Object.freeze({warrior:"warrior-v1",mage:"mage-v1",ranger:"ranger-v1",paladin:"paladin-v1",necromancer:"necromancer-v1"});
 globalThis.COMBAT_RIG_CHARACTERS=COMBAT_RIG_CHARACTERS;
 const COMBAT_RIG_PARTS=new Set(["pelvis","torso","head","upperArm_L","lowerArm_L","hand_L","upperArm_R","lowerArm_R","hand_R","thigh_L","shin_L","foot_L","thigh_R","shin_R","foot_R"]);
-let combatRig=null,combatRigLoad=0,combatRigTimer=0;
+let combatRig=null,combatRigLoad=0,combatRigTimer=0,combatImpactTimer=0;
 const rigFetch=async path=>{const response=await fetch(path);if(!response.ok)throw Error(`Rig asset missing: ${path}`);return response.json();};
 function combatRigUrl(path){return new URL(path,document.baseURI).href;}
 async function mountCombatRig(heroId,portrait){
@@ -22,7 +22,7 @@ async function mountCombatRig(heroId,portrait){
   for(const part of character.parts){const node=host.querySelector(`[data-part="${part}"]`);if(!node)continue;const style=getComputedStyle(node),matrix=style.transform;if(matrix&&matrix!=="none"){const values=matrix.match(/matrix\(([^)]+)\)/)?.[1].split(",").map(Number);if(values)baseAngles.set(part,Math.atan2(values[1],values[0])*180/Math.PI);}if(bones.has(part)){const origin=style.transformOrigin.split(" ").map(parseFloat);joints.set(part,{x:node.offsetLeft+(origin[0]||0),y:node.offsetTop+(origin[1]||0)});}}
   combatRig={heroId,character,skeleton,skin,actions,locomotion,host,bones,baseAngles,joints};host.dataset.ready="true";playCombatRig("idle");return true;
 }
-function unmountCombatRig(portrait){combatRigLoad++;clearTimeout(combatRigTimer);combatRig=null;portrait?.querySelector(".combat-rig")?.remove();}
+function unmountCombatRig(portrait){combatRigLoad++;clearTimeout(combatRigTimer);clearTimeout(combatImpactTimer);combatRig=null;portrait?.querySelector(".combat-rig")?.remove();}
 function rigWorld(part,pose,cache=new Map()){
   if(!combatRig)return {x:0,y:0,r:0};const socket=combatRig.character.attachments?.[part],resolved=socket?combatRig.skeleton.sockets?.[socket]:part;if(resolved!==part)return rigWorld(resolved,pose,cache);if(cache.has(part))return cache.get(part);const bone=combatRig.bones.get(part);if(!bone)return {x:0,y:0,r:0};const local=pose[part]||{},joint=combatRig.joints.get(part)||{x:0,y:0};let value;
   if(!bone.parent)value={x:local.x||0,y:local.y||0,r:local.r||0,worldX:joint.x+(local.x||0),worldY:joint.y+(local.y||0)};else{const parent=rigWorld(bone.parent,pose,cache),parentJoint=combatRig.joints.get(bone.parent)||{x:0,y:0},angle=parent.r*Math.PI/180,dx=joint.x-parentJoint.x,dy=joint.y-parentJoint.y,worldX=parent.worldX+dx*Math.cos(angle)-dy*Math.sin(angle)+(local.x||0),worldY=parent.worldY+dx*Math.sin(angle)+dy*Math.cos(angle)+(local.y||0);value={x:worldX-joint.x,y:worldY-joint.y,r:parent.r+(local.r||0),worldX,worldY};}cache.set(part,value);return value;
@@ -36,5 +36,15 @@ function playCombatRig(name="idle"){
   if(!action.loop&&!action.hold)combatRigTimer=setTimeout(()=>playCombatRig("idle"),action.duration+180);return true;
 }
 function combatRigEffect(type,index=0){if(!combatRig)return;const fx=combatRig.host.querySelector(".combat-rig-fx");fx.replaceChildren();fx.dataset.type=type;fx.dataset.skill=String(index);for(let i=0;i<(index===2?9:6);i++){const spark=document.createElement("i");spark.style.setProperty("--i",i);spark.style.setProperty("--a",`${i*(360/(index===2?9:6))}deg`);fx.append(spark);}const wave=document.createElement("b");fx.append(wave);clearTimeout(fx._timer);fx._timer=setTimeout(()=>fx.replaceChildren(),700);}
-function playCombatSkill(heroId,index,type){const defensive=["shield","purify","rewind","rewrite"].includes(type),action=defensive?"guard":index===0?"attack_01":index===1?"attack_02":"break_strike";playCombatRig(action);combatRigEffect(type,index);}
+function combatEnemyEffect(type,index=0){
+  const card=document.getElementById("enemy-card"),portrait=card?.querySelector(".portrait");if(!portrait||portrait.hidden)return;
+  let fx=portrait.querySelector(".combat-contact-fx");if(!fx){fx=document.createElement("span");fx.className="combat-contact-fx";fx.setAttribute("aria-hidden","true");portrait.append(fx);}
+  fx.replaceChildren();fx.dataset.type=type;fx.dataset.skill=String(index);fx.className=`combat-contact-fx skill-${index} type-${type}`;
+  const slashes=index===2?3:index===1?2:1;for(let i=0;i<slashes;i++){const slash=document.createElement("i");slash.className="contact-slash";slash.style.setProperty("--i",i);fx.append(slash);}
+  const core=document.createElement("b");core.className="contact-core";fx.append(core);const ring=document.createElement("em");ring.className="contact-ring";fx.append(ring);
+  if(index>0){const crack=document.createElement("strong");crack.className="contact-crack";fx.append(crack);}
+  for(let i=0;i<(index===2?12:7);i++){const spark=document.createElement("small");spark.className="contact-spark";spark.style.setProperty("--i",i);spark.style.setProperty("--a",`${i*(360/(index===2?12:7))}deg`);fx.append(spark);}
+  card.classList.remove("contact-hit");void card.offsetWidth;card.classList.add("contact-hit");clearTimeout(fx._timer);fx._timer=setTimeout(()=>{fx.replaceChildren();card.classList.remove("contact-hit");},760);
+}
+function playCombatSkill(heroId,index,type){const defensive=["shield","purify","rewind","rewrite"].includes(type),action=defensive?"guard":index===0?"attack_01":index===1?"attack_02":"break_strike";playCombatRig(action);combatRigEffect(type,index);clearTimeout(combatImpactTimer);if(!defensive){const authored=combatRig?.actions?.actions?.[action],impact=authored?.events?.find(event=>event.type==="impact")?.at??Math.min(360,(authored?.duration||520)*.52);combatImpactTimer=setTimeout(()=>combatEnemyEffect(type,index),impact);}}
 globalThis.mountCombatRig=mountCombatRig;globalThis.playCombatRig=playCombatRig;globalThis.playCombatSkill=playCombatSkill;globalThis.unmountCombatRig=unmountCombatRig;

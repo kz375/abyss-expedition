@@ -18,7 +18,7 @@ public final class WebServer implements AutoCloseable {
             "art-test/index.html", "art-test/style.css", "art-test/actors.js", "art-test/rig.js", "art-test/lab.js",
             "assets/characters/warrior.png", "assets/characters/warrior-rig-v1.png", "assets/characters/warrior-rig-v2.png", "assets/characters/mage.png", "assets/characters/mage-rig-v1.png", "assets/characters/ranger.png", "assets/characters/ranger-rig-v1.png",
             "assets/characters/paladin.png", "assets/characters/paladin-rig-v1.png", "assets/characters/necromancer.png", "assets/characters/necromancer-rig-v1.png", "assets/characters/creator.png",
-            "assets/enemies/iron-golem-test.png", "assets/backgrounds/dark-theme-cc0.png",
+            "assets/enemies/iron-golem-test.png", "assets/enemies/cave-bat-v1.png", "assets/enemies/shadow-assassin-v1.png", "assets/enemies/abyss-lord-v1.png", "assets/backgrounds/dark-theme-cc0.png",
             "assets/animation/characters/warrior-v1.json", "assets/animation/characters/mage-v1.json", "assets/animation/characters/ranger-v1.json", "assets/animation/characters/paladin-v1.json", "assets/animation/characters/necromancer-v1.json",
             "assets/animation/skeletons/humanoid-v1.json",
             "assets/animation/skins/warrior-iron-vow-v1.json", "assets/animation/skins/mage-abyss-v1.json", "assets/animation/skins/ranger-shadow-v1.json", "assets/animation/skins/paladin-sun-v1.json", "assets/animation/skins/necromancer-bone-v1.json", "assets/animation/skins/warrior-greatsword-v2.png", "assets/animation/skins/warrior-shield-v2.png",

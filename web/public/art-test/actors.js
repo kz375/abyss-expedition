@@ -18,8 +18,8 @@ globalThis.ART_TEST_ACTORS = Object.freeze({
   }),
   targets:Object.freeze({
     golem:Object.freeze({zh:"钢铁魔像 · 实装素材",en:"Iron Golem · Production Art",kind:"golem",art:"/assets/enemies/iron-golem-test.png",scale:1.08,anchor:"50% 100%"}),
-    bat:Object.freeze({zh:"洞窟蝙蝠 · 剪影",en:"Cave Bat · Silhouette",kind:"bat"}),
-    assassin:Object.freeze({zh:"暗影刺客 · 剪影",en:"Shadow Assassin · Silhouette",kind:"assassin"}),
-    boss:Object.freeze({zh:"深渊领主 · 剪影",en:"Abyss Lord · Silhouette",kind:"boss",scale:1.12,anchor:"50% 100%"})
+    bat:Object.freeze({zh:"洞窟蝙蝠 · 实装素材",en:"Cave Bat · Production Art",kind:"bat",art:"/assets/enemies/cave-bat-v1.png",scale:1.04,anchor:"50% 100%"}),
+    assassin:Object.freeze({zh:"暗影刺客 · 实装素材",en:"Shadow Assassin · Production Art",kind:"assassin",art:"/assets/enemies/shadow-assassin-v1.png",scale:1.02,anchor:"50% 100%"}),
+    boss:Object.freeze({zh:"深渊领主 · 实装素材",en:"Abyss Lord · Production Art",kind:"boss",art:"/assets/enemies/abyss-lord-v1.png",scale:1.1,anchor:"50% 100%"})
   })
 });

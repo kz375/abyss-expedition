@@ -32,6 +32,14 @@ function worldPose(id,pose,cache=new Map()){
 function poseTransform(id,pose){const value=worldPose(id,pose),base=rigModel.baseAngles.get(id)||0;return `translate(${value.x}px,${value.y}px) rotate(${base+value.r}deg)`;}
 function mergePose(body,legs){const screenLegs=Object.fromEntries(Object.entries(legs).map(([id,value])=>[id,value&&typeof value==="object"&&Number.isFinite(value.r)?{...value,r:-value.r}:value])),merged={...screenLegs,...body};for(const id of new Set([...Object.keys(screenLegs),...Object.keys(body)]))if(screenLegs[id]&&body[id]&&typeof screenLegs[id]==="object"&&typeof body[id]==="object")merged[id]={...screenLegs[id],...body[id]};return merged;}
 function groundedPose(name,pose){const grounded={...pose};if(rigModel?.host.classList.contains("production-skin")&&pose.head&&Number.isFinite(pose.head.r))grounded.head={...pose.head,r:pose.head.r*.42};if(name==="idle")return grounded;if(pose.root)grounded.root={...pose.root,x:0};if(pose.pelvis&&Number.isFinite(pose.pelvis.r))grounded.pelvis={...pose.pelvis,r:pose.pelvis.r*.58};return grounded;}
+function modelPose(name,pose){
+  const hero=rigModel?.heroId;if(!hero||hero==="warrior")return pose;const out=structuredClone(pose),adjust=(part,changes)=>{out[part]={...(out[part]||{})};for(const [key,value] of Object.entries(changes))out[part][key]=(out[part][key]||0)+value;};
+  if(hero==="mage"){adjust("torso",{r:-2});adjust("head",{r:2});if(name.startsWith("attack")){adjust("upperArm_L",{r:-6});adjust("upperArm_R",{r:7});}}
+  if(hero==="ranger"){adjust("pelvis",{r:3,y:2});adjust("torso",{r:5,y:1});adjust("head",{r:-3});if(name!=="idle"){adjust("thigh_L",{r:-5});adjust("thigh_R",{r:6});}}
+  if(hero==="paladin"){for(const part of ["pelvis","torso","head","upperArm_L","upperArm_R","thigh_L","thigh_R"])if(out[part]?.r)out[part].r*=.78;adjust("pelvis",{y:1});}
+  if(hero==="necromancer"){adjust("torso",{r:-5});adjust("head",{r:5});if(name.startsWith("attack")||name==="break_strike"){adjust("upperArm_L",{r:-9});adjust("upperArm_R",{r:10});}}
+  return out;
+}
 function playRigAction(name){
   pendingRigAction=name;if(!rigModel)return false;clearTimeout(rigTimer);const action=rigModel.actionSet.actions[name]||rigModel.actionSet.actions.idle,duration=action.duration/rigPlaybackRate;
   rigModel.host.dataset.action=name;rigModel.host.dataset.playing="true";
@@ -39,7 +47,7 @@ function playRigAction(name){
   // Preview ordinary moves at their impact pose. Guard and death own an authored
   // hold pose and stay there until another action is selected.
   const authoredBodyPoses=action.loop||action.hold?action.poses:[...action.poses.slice(0,-1),{...action.poses.at(-2),at:action.duration}],bodyPoses=name==="death"&&rigModel.host.classList.contains("production-skin")?authoredBodyPoses.map(({at,easing})=>({at,easing})):authoredBodyPoses,legPoses=name==="death"&&rigModel.host.classList.contains("production-skin")?[]:rigModel.locomotion.profiles[name]||[];
-  const poses=bodyPoses.map((pose,index)=>groundedPose(name,mergePose(pose,legPoses[Math.min(index,legPoses.length-1)]||{})));
+  const poses=bodyPoses.map((pose,index)=>modelPose(name,groundedPose(name,mergePose(pose,legPoses[Math.min(index,legPoses.length-1)]||{}))));
   const frames=poses.map(p=>({offset:p.at/action.duration,...p}));
   const stageNode=rigModel.host.querySelector(".rig-root"),stageTrack=rigModel.locomotion.stage?.[name]||[],stageCurrent=getComputedStyle(stageNode).transform;stageNode.getAnimations().forEach(animation=>animation.cancel());const stageFrames=bodyPoses.map((pose,index)=>{const move=stageTrack[Math.min(index,stageTrack.length-1)]||{};return {offset:pose.at/action.duration,transform:`translate(${move.x||0}px,${move.y||0}px) rotate(${move.r||0}deg) rotateY(${move.yaw||0}deg)`,easing:pose.easing||"cubic-bezier(.22,.72,.18,1)"};}),stageSecond=stageFrames[1]?.offset||.25,stageBlend=Math.min(stageSecond*.52,(rigModel.actionSet.transitionMs||110)/action.duration),stageLead=name==="idle"?stageBlend:Math.min(stageSecond*.66,stageBlend+18/action.duration);stageNode.animate([{offset:0,transform:stageCurrent==="none"?stageFrames[0].transform:stageCurrent,easing:"cubic-bezier(.18,.72,.18,1)"},{...stageFrames[0],offset:stageBlend},...(stageLead>stageBlend?[{...stageFrames[0],offset:stageLead}]:[]),...stageFrames.slice(1)],{duration,iterations:action.loop?Infinity:1,easing:"linear",fill:"forwards"});
   const lowerBody=new Set(["thigh_L","shin_L","foot_L","thigh_R","shin_R","foot_R"]);

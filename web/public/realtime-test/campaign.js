@@ -1,6 +1,6 @@
 "use strict";
 
-globalThis.ABYSS_BETA_BUILD = "2.4.4";
+globalThis.ABYSS_BETA_BUILD = "2.5.0";
 
 const HERO_ART = Object.freeze({
   warrior:"/assets/characters/warrior.png", mage:"/assets/characters/mage.png",

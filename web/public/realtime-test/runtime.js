@@ -80,8 +80,9 @@ function makeEnemy(index,elite=false,minion=false){const base=ROSTER[index],d=di
     attack:base.attack*d.attack*(elite?1.2:1)*(minion?.55:1),defense:base.zone==="BOSS"?4:elite?3:0,speed:MONSTER_MODULES[index].speed,
     next:game.clock+(minion?2400:1200),count:0,rotation:0,phase:1,phaseMax:max,weakened:0,telegraph:null,intentStarted:0,stunned:0,counter:0,rage:0,poison:0,burn:0,curse:game.heroId==="necromancer"?8:0,break:0,breakMax:minion?65:base.zone==="BOSS"?160:100,brokenUntil:0};
 }
+function resetBreakState(enemy){if(!enemy)return;enemy.break=0;enemy.brokenUntil=0;enemy.stunned=0;}
 function beginBattle(plan,ambush=false){
-  game.enemy=makeEnemy(plan.index,plan.elite);game.summons=[];game.phase="battle";game.paused=false;game.returnFromBattle=ambush;
+  game.enemy=makeEnemy(plan.index,plan.elite);resetBreakState(game.enemy);game.summons=[];game.phase="battle";game.paused=false;game.returnFromBattle=ambush;
   game.phoenixUsed=false;game.floorStart=game.clock;game.statuses={poison:0,burn:0,weak:0,sunder:0};
   if(effects().reset)game.cd=[0,0,0,0];game.pulse=game.clock+4000;addWard(effects().ward+(game.heroId==="warrior"?70:0));
   game.result=[""," "];
@@ -188,7 +189,7 @@ function syncProfile(){
 function checkEnd(){if(game.phase!=="battle")return;
   if(game.hp<=0){game.hp=0;finish(false);return;}
   if(game.enemy.hp<=0){game.enemy.hp=0;recordKill(game.enemy);gainGold(18+game.floor*7+(game.enemy.elite?18:0));
-    if(game.combat.mode==="endless"){game.combat.wave++;combatEvent("wave_clear",{wave:game.combat.wave-1});const index=Math.floor(random()*ROSTER.length),elite=game.combat.wave%4===0;game.enemy=makeEnemy(index,elite);const scale=1+(game.combat.wave-1)*.09;game.enemy.max*=scale;game.enemy.hp=game.enemy.max;game.enemy.attack*=1+(game.combat.wave-1)*.055;game.summons=[];game.floorStart=game.clock;commit();return;}
+    if(game.combat.mode==="endless"){game.combat.wave++;combatEvent("wave_clear",{wave:game.combat.wave-1});const index=Math.floor(random()*ROSTER.length),elite=game.combat.wave%4===0;game.enemy=makeEnemy(index,elite);resetBreakState(game.enemy);const scale=1+(game.combat.wave-1)*.09;game.enemy.max*=scale;game.enemy.hp=game.enemy.max;game.enemy.attack*=1+(game.combat.wave-1)*.055;game.summons=[];game.floorStart=game.clock;commit();return;}
     if(!game.returnFromBattle)game.stats.floors.push({floor:game.floor+1,ms:game.clock-game.floorStart});
     game.rewardReturn=game.returnFromBattle?"advance":game.floor===7?"victory":"events";openReward();commit();
   }

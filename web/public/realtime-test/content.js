@@ -1,10 +1,10 @@
 "use strict";
 // Content IDs, not translated labels, are persisted in Beta saves.
 const DIFFICULTIES = {
-  explorer: {name:["探索者","Explorer"], hp:.85, attack:.85, hero:1, gold:.85},
-  adventurer: {name:["冒险者","Adventurer"], hp:1, attack:1, hero:1, gold:1},
-  nightmare: {name:["噩梦","Nightmare"], hp:1.3, attack:1.2, hero:1, gold:1.5},
-  ultra: {name:["超级噩梦","Ultra Nightmare"], hp:4, attack:2.4, hero:3.7, gold:2}
+  explorer: {name:["探索者","Explorer"], hp:.92, attack:.9, speed:.96, hero:1, gold:.85},
+  adventurer: {name:["冒险者","Adventurer"], hp:1.18, attack:1.12, speed:1.03, hero:1, gold:1},
+  nightmare: {name:["噩梦","Nightmare"], hp:1.58, attack:1.42, speed:1.1, hero:1, gold:1.5},
+  ultra: {name:["超级噩梦","Ultra Nightmare"], hp:4.8, attack:3.15, speed:1.16, hero:3.7, gold:2}
 };
 const SKILL_NAMES = [
   ["横扫","Cleave"],["破甲斩","Armor Break"],["铁壁","Iron Wall"],["处决重斩","Execution Blow"],

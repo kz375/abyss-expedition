@@ -74,10 +74,10 @@ function gainGold(value){const gain=Math.floor(value*difficulty().gold*(1+effect
 function heal(value){if(game.hp<=0)return 0;const actual=Math.max(0,Math.min(game.max-game.hp,value*effects().healing));game.hp+=actual;game.stats.healed+=actual;if(actual>.5)feedback("player",actual,"heal");return actual;}
 function addWard(value){game.shield=clamp(game.shield+value,game.max);}
 function grantRelic(id){if(!RELIC_BY_ID[id]||game.relics.includes(id))return false;const r=RELIC_BY_ID[id];game.relics.push(id);reconcile();if(r.max)heal(r.max);if(r.gold)game.gold+=r.gold;return true;}
-function makeEnemy(index,elite=false,minion=false){const base=ROSTER[index],d=difficulty(),scale=(1+game.floor*.13)*(elite?1.35:1);
-  const max=Math.round(minion?base.hp*d.hp*(1+game.floor*.1)*.5:Math.max(base.hp*d.hp*scale,game.initialHp*1.1));
+function makeEnemy(index,elite=false,minion=false){const base=ROSTER[index],d=difficulty(),healthScale=(1+game.floor*.16)*(elite?1.48:1),attackScale=(1+game.floor*.1)*(elite?1.3:1);
+  const max=Math.round(minion?base.hp*d.hp*(1+game.floor*.12)*.58:Math.max(base.hp*d.hp*healthScale,game.initialHp*1.32));
   return {uid:++game.nextEntity,index,name:base.name,elite,minion,zone:minion?"SUMMON":base.zone,max,hp:max,shield:0,
-    attack:base.attack*d.attack*(elite?1.2:1)*(minion?.55:1),defense:base.zone==="BOSS"?4:elite?3:0,speed:MONSTER_MODULES[index].speed,
+    attack:base.attack*d.attack*attackScale*(minion?.62:1),defense:(base.zone==="BOSS"?5:elite?4:0)+Math.floor(game.floor/3),speed:MONSTER_MODULES[index].speed*d.speed*(elite?1.08:1),
     next:game.clock+(minion?2400:1200),count:0,rotation:0,phase:1,phaseMax:max,weakened:0,telegraph:null,intentStarted:0,stunned:0,counter:0,rage:0,poison:0,burn:0,curse:game.heroId==="necromancer"?8:0,break:0,breakMax:minion?65:base.zone==="BOSS"?160:100,brokenUntil:0,breakEncounter:game.combat?.encounter||0};
 }
 function resetBreakState(enemy){if(!enemy)return;enemy.break=0;enemy.brokenUntil=0;enemy.stunned=0;enemy.breakEncounter=game.combat.encounter;}
@@ -145,7 +145,7 @@ function monsterMove(m){let moves=MONSTER_MODULES[m.index].moves;
   if(m.zone==="BOSS"&&m.phase===3)moves=m.index===19?["counter","charge","sweep"]:["nova","rage","drain"];
   return moves[m.rotation%moves.length];
 }
-function performMove(m,action){if(m.hp<=0||game.hp<=0)return;const attack=m.attack*(m.rage>0?1.3:1)*CombatCore.enemyPower(game.combat.pressure);
+function performMove(m,action){if(m.hp<=0||game.hp<=0)return;globalThis.playEnemySkill?.(action,m.zone);const attack=m.attack*(m.rage>0?1.3:1)*CombatCore.enemyPower(game.combat.pressure);
   if(action==="shield")m.shield=clamp(m.shield+m.max*.12,m.max);
   else if(action==="heal")m.hp=clamp(m.hp+m.max*.1,m.max);
   else if(action==="counter")m.counter=3;
@@ -163,7 +163,7 @@ function performMove(m,action){if(m.hp<=0||game.hp<=0)return;const attack=m.atta
   }
 }
 function enemyStep(m){if(m.hp<=0||m.stunned>0||game.clock<m.next)return;
-  if(m.telegraph){const action=m.telegraph;m.telegraph=null;combatEvent("intent_execute",{target:m.uid,action});performMove(m,action);m.rotation++;m.count++;m.next=game.clock+2200/(m.speed*CombatCore.enemySpeed(game.combat.pressure));}
+  if(m.telegraph){const action=m.telegraph;m.telegraph=null;combatEvent("intent_execute",{target:m.uid,action});performMove(m,action);m.rotation++;m.count++;m.next=game.clock+2050/(m.speed*CombatCore.enemySpeed(game.combat.pressure));}
   else{const action=monsterMove(m),intent=CombatCore.intent(action,game.combat.pressure);m.telegraph=action;m.intentStarted=game.clock;m.next=game.clock+intent.windup;combatEvent("intent",{target:m.uid,action,kind:intent.kind,duration:intent.windup});}
 }
 function step(ms){if(!game||game.phase!=="battle"||game.paused||archiveKind||game.finished)return;

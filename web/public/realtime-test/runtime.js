@@ -78,7 +78,7 @@ function makeEnemy(index,elite=false,minion=false){const base=ROSTER[index],d=di
   const max=Math.round(minion?base.hp*d.hp*(1+game.floor*.12)*.58:Math.max(base.hp*d.hp*healthScale,game.initialHp*1.32));
   return {uid:++game.nextEntity,index,name:base.name,elite,minion,zone:minion?"SUMMON":base.zone,max,hp:max,shield:0,
     attack:base.attack*d.attack*attackScale*(minion?.62:1),defense:(base.zone==="BOSS"?5:elite?4:0)+Math.floor(game.floor/3),speed:MONSTER_MODULES[index].speed*d.speed*(elite?1.08:1),
-    next:game.clock+(minion?2400:1200),count:0,rotation:0,phase:1,phaseMax:max,weakened:0,telegraph:null,intentStarted:0,stunned:0,counter:0,rage:0,poison:0,burn:0,curse:game.heroId==="necromancer"?8:0,break:0,breakMax:minion?65:base.zone==="BOSS"?160:100,brokenUntil:0,breakEncounter:game.combat?.encounter||0};
+    next:game.clock+(minion?2400:1200),count:0,rotation:0,phase:1,phaseMax:max,weakened:0,telegraph:null,intentStarted:0,stunned:0,counter:0,rage:0,poison:0,burn:0,curse:game.heroId==="necromancer"?8:0,arcaneMark:0,break:0,breakMax:minion?65:base.zone==="BOSS"?160:100,brokenUntil:0,breakEncounter:game.combat?.encounter||0};
 }
 function resetBreakState(enemy){if(!enemy)return;enemy.break=0;enemy.brokenUntil=0;enemy.stunned=0;enemy.breakEncounter=game.combat.encounter;}
 function beginBattle(plan,ambush=false){
@@ -119,12 +119,15 @@ function skillCooldown(index){const ms=hero().skills[index][2]*effects().cooldow
 function cast(index){if(game.phase!=="battle"||game.paused||archiveKind||!Number.isInteger(index)||index<0||index>3||game.cd[index]>game.clock)return false;
   if(!hero().skills[index])return false;
   const [, , ,type,value]=hero().skills[index],e=effects();game.cd[index]=game.clock+skillCooldown(index);game.stats.casts++;combatEvent("skill_cast",{index,type});globalThis.playCombatSkill?.(game.heroId,index,type);if(typeof pulseControl==="function")pulseControl(index);
-  const hit=(multiplier=1)=>{const foe=target(),hunt=1+(foe?.zone==="BOSS"?e.bossPower:0)+(foe?.elite?e.elitePower:0),critical=random()<e.crit,kind=({burn:"burn",soulfire:"burn",poison:"poison",arcane:"arcane",curse:"void"})[type]||"damage";return damageEnemy(e.attack*value*multiplier*e.power*hunt*(game.hp/game.max<.35?1+e.low:1)*(game.statuses.weak>0?.8:1)*(critical?1.5:1),true,true,kind,critical);};
-  const m=target();let dealt=0;
-  if(!["shield","rewind","purify","rewrite"].includes(type))dealt=hit(type==="finisher"&&m.hp/m.max<.35?2:1);
+  const hit=(multiplier=1)=>{const foe=target(),hunt=1+(foe?.zone==="BOSS"?e.bossPower:0)+(foe?.elite?e.elitePower:0),critical=random()<e.crit,kind=({burn:"burn",meteor:"burn",soulfire:"burn",poison:"poison",arcane:"arcane",arcane_bolt:"arcane",frost_nova:"arcane",curse:"void"})[type]||"damage";return damageEnemy(e.attack*value*multiplier*e.power*hunt*(game.hp/game.max<.35?1+e.low:1)*(game.statuses.weak>0?.8:1)*(critical?1.5:1),true,true,kind,critical);};
+  const m=target(),arcaneMarks=m.arcaneMark||0;let dealt=0;
+  if(!["shield","rewind","purify","rewrite"].includes(type))dealt=hit(type==="finisher"&&m.hp/m.max<.35?2:type==="meteor"?1+arcaneMarks*.28:1);
   if(type==="damage"&&game.heroId==="ranger"&&random()<.15)hit();
   if(type==="multi")hit();if(type==="rend")for(let n=0;n<4;n++)hit();
   if(type==="arcane"&&m.burn>0)damageEnemy(e.attack*.75*e.power,true,true,"arcane");
+  if(type==="arcane_bolt"&&m.hp>0)m.arcaneMark=Math.min(3,arcaneMarks+1);
+  if(type==="meteor"&&m.hp>0){m.arcaneMark=0;m.burn=Math.max(m.burn,5+arcaneMarks*.6);addBreak(m,8+arcaneMarks*4,"meteor");}
+  if(type==="frost_nova"&&m.hp>0){const interrupted=!!m.telegraph;m.arcaneMark=0;m.stunned=Math.max(m.stunned,1.1+arcaneMarks*.28);m.telegraph=null;m.next=Math.max(m.next,game.clock+1100+arcaneMarks*280);addBreak(m,18+arcaneMarks*8,"frost_nova");combatEvent("interrupt",{target:m.uid,success:interrupted});}
   if(type==="cleave"&&m.hp>0){m.curse=Math.max(m.curse,1.5);addBreak(m,12,"cleave");}
   if(type==="smite")addWard(7);
   if(type==="soulward")addWard(dealt*.45);
@@ -132,7 +135,7 @@ function cast(index){if(game.phase!=="battle"||game.paused||archiveKind||!Number
   if(type==="finisher"&&m.hp>0)addBreak(m,18,"heavy");
   if(type==="shield")addWard(value);
   if(type==="purify"){game.statuses={poison:0,burn:0,weak:0,sunder:0};addWard(value);}
-  if(type==="rewind")for(let i=0;i<3;i++)game.cd[i]=game.clock;
+  if(type==="rewind"){for(let i=0;i<3;i++)game.cd[i]=game.clock;addWard(value);}
   if(type==="rewrite"){m.shield=0;m.counter=0;m.rage=0;m.telegraph=null;for(let i=0;i<3;i++)game.cd[i]=game.clock;}
   if(type==="burn")m.burn=5;if(type==="soulfire")m.burn=Math.max(m.burn,3.5);if(type==="poison"||index===0&&e.poison)m.poison=6;
   if(type==="curse")m.curse=8;
@@ -145,13 +148,14 @@ function monsterMove(m){let moves=MONSTER_MODULES[m.index].moves;
   if(m.zone==="BOSS"&&m.phase===3)moves=m.index===19?["counter","charge","sweep"]:["nova","rage","drain"];
   return moves[m.rotation%moves.length];
 }
-function performMove(m,action){if(m.hp<=0||game.hp<=0)return;globalThis.playEnemySkill?.(action,m.zone);const attack=m.attack*(m.rage>0?1.3:1)*CombatCore.enemyPower(game.combat.pressure);
+function performMove(m,action){if(m.hp<=0||game.hp<=0)return;const attack=m.attack*(m.rage>0?1.3:1)*CombatCore.enemyPower(game.combat.pressure);
   if(action==="shield")m.shield=clamp(m.shield+m.max*.12,m.max);
   else if(action==="heal")m.hp=clamp(m.hp+m.max*.1,m.max);
   else if(action==="counter")m.counter=3;
   else if(action==="rage")m.rage=6;
   else if(action==="summon"){if(!m.minion)spawnSummon();else m.shield=clamp(m.shield+m.max*.1,m.max);}
   else{
+    globalThis.playEnemySkill?.(action,m.zone);
     if(action==="dispel")game.shield*=.25;
     const kind=action==="poison"?"poison":action==="burn"?"burn":action==="nova"||action==="curse"?"void":"damage",damage=damageHero(attack*(action==="charge"?1.9:action==="nova"?1.5:action==="double"?.7:1.15),true,false,m,kind);
     if(action==="double"&&game.hp>0)damageHero(attack*.7,true,false,m,"damage");
@@ -301,7 +305,7 @@ function validRun(s){
   if(Object.entries(s.killCounts).some(([name,n])=>!MONSTER_EN[name]||!Number.isInteger(n)||n<0||n>10000))return false;
   for(const key of ["damage","taken","healed","casts","kills"])if(!finite(s.stats[key],0,1e12))return false;
   for(const key of ["baseMax","initialHp","baseAttack","baseDefense","gold","potions","shield","rng","pulse","nextEntity","floorStart","revision","revives"])if(!finite(s[key],0,1e12))return false;
-  const validEnemy=m=>m&&Number.isInteger(m.index)&&ROSTER[m.index]&&m.name===ROSTER[m.index].name&&["hp","max","attack","defense","speed","next","count","rotation","phase","weakened","shield","stunned","counter","rage","poison","burn","curse"].every(k=>finite(m[k],0,1e12))&&m.max>0&&m.hp<=m.max&&m.speed>0&&["uid","count","rotation","phase","weakened"].every(k=>Number.isInteger(m[k]))&&m.phase>=1&&m.phase<=3&&(!m.telegraph||typeof m.telegraph==="string"&&Object.hasOwn(ACTION_NAMES,m.telegraph));
+  const validEnemy=m=>m&&Number.isInteger(m.index)&&ROSTER[m.index]&&m.name===ROSTER[m.index].name&&["hp","max","attack","defense","speed","next","count","rotation","phase","weakened","shield","stunned","counter","rage","poison","burn","curse","arcaneMark"].every(k=>finite(m[k],0,1e12))&&m.arcaneMark<=3&&m.max>0&&m.hp<=m.max&&m.speed>0&&["uid","count","rotation","phase","weakened","arcaneMark"].every(k=>Number.isInteger(m[k]))&&m.phase>=1&&m.phase<=3&&(!m.telegraph||typeof m.telegraph==="string"&&Object.hasOwn(ACTION_NAMES,m.telegraph));
   if(!validEnemy(s.enemy)||!Array.isArray(s.summons)||s.summons.length>2||s.summons.some(m=>!validEnemy(m)))return false;
   if(s.enemy.zone!==ROSTER[s.enemy.index].zone||s.enemy.minion!==false||s.summons.some(m=>m.zone!=="SUMMON"||m.minion!==true))return false;
   if(s.phase==="battle"&&s.enemy.hp<=0||s.rng<=0||!Number.isInteger(s.rng)||s.rng>4294967295)return false;
@@ -315,7 +319,7 @@ function validRun(s){
 }
 function saveEnvelope(){return {format:"abyss-beta",version:2,run:game,profile};}
 function saveRun(){if(!game?.heroId||game.finished)return;syncProfile();try{localStorage.setItem(BETA_RUN_KEY,JSON.stringify(saveEnvelope()));writeProfile();saveError="";}catch{saveError=tx("保存失败：请立即导出备份（浏览器存储不可用或已满）","Save failed: export a backup now (storage unavailable or full)");} }
-function migrateRunGear(run){if(!run||typeof run!=="object")return run;if(run.loadout&&typeof run.loadout==="object")for(const slot of ACCOUNT_SLOTS){const value=run.loadout[slot];if(typeof value==="string"){const item=legacyGear(value);run.loadout[slot]=item?.slot===slot?item:null;}}if(run.extractedItem!==undefined){run.extractedItems=[];delete run.extractedItem;}run.extractedItems??=[];run.storySeen=Array.isArray(run.storySeen)?[...new Set(run.storySeen.filter(n=>Number.isInteger(n)&&n>=0&&n<8))]:[];run.combat=run.combat&&["expedition","endless"].includes(run.combat.mode)?run.combat:CombatCore.create("expedition");run.combat.events=Array.isArray(run.combat.events)?run.combat.events:[];run.combat.guard=false;run.combat.guardTapUntil??=-1;run.combat.guardCooldownUntil??=0;run.combat.guardWardGranted=false;run.combat.encounter=Number.isInteger(run.combat.encounter)&&run.combat.encounter>0?run.combat.encounter:Math.max(1,(run.floor||0)+1);for(const m of [run.enemy,...(run.summons||[])])if(m){const legacyBreak=m.breakEncounter!==run.combat.encounter;m.breakMax??=m.minion?65:m.zone==="BOSS"?160:100;m.intentStarted??=0;if(legacyBreak){m.break=0;m.brokenUntil=0;m.stunned=0;}else{m.break??=0;m.brokenUntil??=0;}m.breakEncounter=run.combat.encounter;}return run;}
+function migrateRunGear(run){if(!run||typeof run!=="object")return run;if(run.loadout&&typeof run.loadout==="object")for(const slot of ACCOUNT_SLOTS){const value=run.loadout[slot];if(typeof value==="string"){const item=legacyGear(value);run.loadout[slot]=item?.slot===slot?item:null;}}if(run.extractedItem!==undefined){run.extractedItems=[];delete run.extractedItem;}run.extractedItems??=[];run.storySeen=Array.isArray(run.storySeen)?[...new Set(run.storySeen.filter(n=>Number.isInteger(n)&&n>=0&&n<8))]:[];run.combat=run.combat&&["expedition","endless"].includes(run.combat.mode)?run.combat:CombatCore.create("expedition");run.combat.events=Array.isArray(run.combat.events)?run.combat.events:[];run.combat.guard=false;run.combat.guardTapUntil??=-1;run.combat.guardCooldownUntil??=0;run.combat.guardWardGranted=false;run.combat.encounter=Number.isInteger(run.combat.encounter)&&run.combat.encounter>0?run.combat.encounter:Math.max(1,(run.floor||0)+1);for(const m of [run.enemy,...(run.summons||[])])if(m){const legacyBreak=m.breakEncounter!==run.combat.encounter;m.breakMax??=m.minion?65:m.zone==="BOSS"?160:100;m.intentStarted??=0;m.arcaneMark=Number.isInteger(m.arcaneMark)?Math.min(3,Math.max(0,m.arcaneMark)):0;if(legacyBreak){m.break=0;m.brokenUntil=0;m.stunned=0;}else{m.break??=0;m.brokenUntil??=0;}m.breakEncounter=run.combat.encounter;}return run;}
 function loadRun(text){const data=JSON.parse(text);if(data.format!=="abyss-beta"||data.version!==2)throw new Error("Incompatible or invalid Beta save");migrateRunGear(data.run);if(!validRun(data.run))throw new Error("Incompatible or invalid Beta save");return clone(data.run);}
 function restoreRun(text){try{const source=text||localStorage.getItem(BETA_RUN_KEY),parsed=JSON.parse(source),restored=loadRun(source),p=parsed.profile;
     profile.claims||={};profile.warehouse||=[];profile.equipped||={weapon:null,armor:null,charm:null};

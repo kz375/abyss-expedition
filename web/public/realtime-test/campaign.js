@@ -1,6 +1,6 @@
 "use strict";
 
-globalThis.ABYSS_BETA_BUILD = "2.5.3";
+globalThis.ABYSS_BETA_BUILD = "2.6.0";
 
 const HERO_ART = Object.freeze({
   warrior:"/assets/characters/warrior.png", mage:"/assets/characters/mage.png",
@@ -27,8 +27,8 @@ const HEROES = {
   warrior: {name:"战士", enName:"Warrior", key:"WARRIOR · IRON WILL", hp:220, attack:32, passive:"铁意：每场战斗开始时获得 70 护盾", enPassive:"Iron Will: gain 70 ward at each battle start", skills:[
     ["横扫","快速攻击并积累破势 · 0.72 秒",720,"cleave",1.1], ["破甲斩","打断意图并大量积累破势 · 3 秒",3000,"sunder",2.05], ["处决重斩","破势期间造成爆发伤害 · 5.2 秒",5200,"finisher",1.8]
   ]},
-  mage: {name:"法师", enName:"Mage", key:"MAGE · MANA FLOW", hp:188, attack:35, passive:"法力流：技能冷却缩短 15%", enPassive:"Mana Flow: skills recharge 15% faster", skills:[
-    ["奥术箭","95% 攻击；对灼烧目标额外爆发 · 0.58 秒",580,"arcane",.95], ["奥术爆发","250% 攻击并灼烧 · 2.7 秒",2700,"burn",2.5], ["秘法屏障","获得 34 护盾 · 5 秒",5000,"shield",34], ["时间回响","刷新前三个技能 · 11 秒",11000,"rewind",0]
+  mage: {name:"法师", enName:"Mage", key:"MAGE · ARCANE WEAVE", hp:188, attack:35, passive:"奥术编织：魔能飞弹叠加至多 3 层印记，强化陨星与霜环；技能冷却缩短 15%", enPassive:"Arcane Weave: Arcane Missile builds up to 3 marks that empower Meteor and Frost Ring; cooldowns recharge 15% faster", skills:[
+    ["魔能飞弹","80% 攻击并积累 1 层奥术印记 · 0.62 秒",620,"arcane_bolt",.8], ["陨星爆裂","175% 攻击，消耗印记增伤并灼烧 · 3.4 秒",3400,"meteor",1.75], ["霜环禁锢","90% 攻击，消耗印记延长控制并积累 Break · 4.8 秒",4800,"frost_nova",.9], ["时间回响","刷新前三个技能并获得 18 护盾 · 12 秒",12000,"rewind",18]
   ]},
   ranger: {name:"游侠", enName:"Ranger", key:"RANGER · HUNTER'S FOCUS", hp:214, attack:36, passive:"猎人专注：普通攻击有 15% 几率触发一次额外射击", enPassive:"Hunter's Focus: 15% chance for an extra basic shot", skills:[
     ["速射","100% 攻击 · 0.48 秒",480,"damage",1], ["双重射击","两箭各 140% 攻击 · 3 秒",3000,"multi",1.4], ["毒牙箭","110% 攻击 + 中毒 · 3 秒",3000,"poison",1.1], ["烟幕","获得 35 护盾 · 5 秒",5000,"shield",35]

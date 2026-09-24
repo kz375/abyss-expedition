@@ -36,6 +36,15 @@ function playCombatRig(name="idle"){
   if(!action.loop&&!action.hold)combatRigTimer=setTimeout(()=>playCombatRig("idle"),action.duration+180);return true;
 }
 function combatRigEffect(type,index=0){if(!combatRig)return;const fx=combatRig.host.querySelector(".combat-rig-fx");fx.replaceChildren();fx.dataset.type=type;fx.dataset.skill=String(index);for(let i=0;i<(index===2?9:6);i++){const spark=document.createElement("i");spark.style.setProperty("--i",i);spark.style.setProperty("--a",`${i*(360/(index===2?9:6))}deg`);fx.append(spark);}const wave=document.createElement("b");fx.append(wave);clearTimeout(fx._timer);fx._timer=setTimeout(()=>fx.replaceChildren(),700);}
+function combatGuardEffect(mode="start"){
+  const portrait=document.getElementById("player-card")?.querySelector(".portrait");if(!portrait)return;
+  let fx=portrait.querySelector(".combat-guard-fx");if(!fx){fx=document.createElement("span");fx.className="combat-guard-fx";fx.setAttribute("aria-hidden","true");portrait.append(fx);}
+  clearTimeout(fx._timer);fx.replaceChildren();fx.dataset.mode=mode;
+  if(mode==="end"){fx.remove();return;}
+  const dome=document.createElement("i");dome.className="guard-dome";fx.append(dome);const ring=document.createElement("b");ring.className="guard-ring";fx.append(ring);
+  for(let i=0;i<(mode==="perfect"?14:8);i++){const rune=document.createElement("em");rune.className="guard-rune";rune.textContent=i%2?"◇":"ᛉ";rune.style.setProperty("--i",i);rune.style.setProperty("--a",`${i*(360/(mode==="perfect"?14:8))}deg`);fx.append(rune);}
+  if(mode==="perfect"){const flash=document.createElement("strong");flash.className="perfect-guard-flash";fx.append(flash);const label=document.createElement("small");label.className="perfect-guard-label";label.textContent="PERFECT GUARD";fx.append(label);fx._timer=setTimeout(()=>fx.remove(),720);}
+}
 function combatEnemyEffect(type,index=0){
   const card=document.getElementById("enemy-card"),portrait=card?.querySelector(".portrait");if(!portrait||portrait.hidden)return;
   let fx=portrait.querySelector(".combat-contact-fx");if(!fx){fx=document.createElement("span");fx.className="combat-contact-fx";fx.setAttribute("aria-hidden","true");portrait.append(fx);}
@@ -47,4 +56,4 @@ function combatEnemyEffect(type,index=0){
   card.classList.remove("contact-hit");void card.offsetWidth;card.classList.add("contact-hit");clearTimeout(fx._timer);fx._timer=setTimeout(()=>{fx.replaceChildren();card.classList.remove("contact-hit");},760);
 }
 function playCombatSkill(heroId,index,type){const defensive=["shield","purify","rewind","rewrite"].includes(type),action=defensive?"guard":index===0?"attack_01":index===1?"attack_02":"break_strike";playCombatRig(action);combatRigEffect(type,index);clearTimeout(combatImpactTimer);if(!defensive){const authored=combatRig?.actions?.actions?.[action],impact=authored?.events?.find(event=>event.type==="impact")?.at??Math.min(360,(authored?.duration||520)*.52);combatImpactTimer=setTimeout(()=>combatEnemyEffect(type,index),impact);}}
-globalThis.mountCombatRig=mountCombatRig;globalThis.playCombatRig=playCombatRig;globalThis.playCombatSkill=playCombatSkill;globalThis.unmountCombatRig=unmountCombatRig;
+globalThis.mountCombatRig=mountCombatRig;globalThis.playCombatRig=playCombatRig;globalThis.playCombatSkill=playCombatSkill;globalThis.playCombatGuard=combatGuardEffect;globalThis.unmountCombatRig=unmountCombatRig;

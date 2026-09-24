@@ -80,6 +80,7 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId,portra
   $("enemy-card").classList.toggle("charging",!!m?.telegraph);$("player-card").classList.toggle("defeated",game.phase==="defeat");$("enemy-card").classList.toggle("defeated",!!m&&m.hp<=0);
   const intentEntity=[m,...(game.summons||[])].find(e=>e?.telegraph),intentLeft=intentEntity?Math.max(0,intentEntity.next-game.clock):0;$("intent-callout").classList.toggle("armed",!!intentEntity);$("intent-action").textContent=intentEntity?label(ACTION_NAMES[intentEntity.telegraph]):tx("观察敌方动作","READ THE ENEMY");$("intent-countdown").textContent=intentEntity?`${(intentLeft/1000).toFixed(2)}s`:"—";
   const pressure=active?game.combat.pressure:0,currentBreak=!!m&&m.breakEncounter===game.combat.encounter,broken=currentBreak&&m.brokenUntil>game.clock,breakRatio=active&&currentBreak?Math.max(0,Math.min(1,broken?1:(m.break||0)/(m.breakMax||100))):0;$("pressure-fill").style.transform=`scaleX(${pressure/100})`;$("pressure-text").textContent=active?`${Math.floor(pressure)}% · T${game.combat.tier}`:"0%";$("break-fill").style.transform="scaleX(1)";$("break-fill").style.width=`${breakRatio*100}%`;$("break-text").textContent=broken?tx("破势！爆发窗口","BROKEN · BURST NOW"):`${Math.floor(currentBreak?m.break||0:0)} / ${m?.breakMax||100}`;$("enemy-card").querySelector(".enemy-break").classList.toggle("broken",!!broken);if(active)document.body.dataset.pressure=game.combat.tier;
+  const breakFill=$("break-fill");breakFill.style.setProperty("--break-ratio",breakRatio);breakFill.style.transform=`scaleX(${breakRatio})`;breakFill.classList.toggle("empty",breakRatio===0);
   if(active){const e=effects();$("combat-stats").innerHTML=`<span>${tx("攻击","ATK")} <b>${Math.round(e.attack)}</b></span><span>${tx("防御","DEF")} <b>${Math.round(e.defense)}</b></span><span>${tx("暴击","CRIT")} <b>${Math.round(e.crit*100)}%</b></span><span>${tx("减伤","DR")} <b>${Math.round(e.damageReduction*100)}%</b></span>`;}else $("combat-stats").replaceChildren();
   $("gold").textContent=tx("金币 ","Gold ")+(game.gold||0);$("relics").textContent=tx("遗物 ","Relics ")+(game.relics?.length||0);
   $("pause").textContent=game.paused?tx("继续","Resume"):tx("暂停","Pause");$("pause").disabled=game.phase!=="battle"||!!archiveKind;
@@ -133,7 +134,7 @@ function renderTrial(){const t=game.trial,previous=trialViewState,changed=(type,
   bind("[data-dir]",b=>trialMove(...b.dataset.dir.split(",").map(Number)));$("trial-quit").onclick=()=>{if(confirm(tx("放弃将扣当前生命、金币和一件遗物，确定吗？","Forfeit loses current health, gold and one relic. Continue?"))){settleTrial(false);commit();}};
 }
 function init(){
-  if(globalThis.ABYSS_BETA_BUILD!=="2.4.3")throw new Error("Unified release files are from different versions; deploy the complete 2.4.3 asset set");
+  if(globalThis.ABYSS_BETA_BUILD!=="2.4.4")throw new Error("Unified release files are from different versions; deploy the complete 2.4.4 asset set");
   // A transformed/animated arena establishes its own fixed-position containing block.
   // Mount dialogs directly on body so all controls remain reachable on short screens.
   document.body.append($("overlay"));

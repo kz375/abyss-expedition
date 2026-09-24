@@ -1,5 +1,5 @@
 {
-  "id":"humanoid-combat-v2","fps":60,"transitionMs":90,
+  "id":"humanoid-combat-v2","fps":60,"transitionMs":110,
   "actions":{
     "idle":{"duration":2400,"loop":true,"poses":[
       {"at":0,"easing":"ease-in-out","root":{"y":0},"pelvis":{"r":-1},"torso":{"r":-2},"head":{"r":1},"upperArm_L":{"r":-3},"upperArm_R":{"r":4}},

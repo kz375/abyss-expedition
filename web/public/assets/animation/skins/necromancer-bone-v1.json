@@ -1,0 +1,1 @@
+{"id":"necromancer-bone-v1","type":"humanoid","displayName":{"zh":"死灵法师 · 白骨司祭","en":"Necromancer · Bone Prelate"},"portrait":"/assets/characters/necromancer.png","rigTexture":"/assets/characters/necromancer-rig-v1.png","rigTextureSize":[1086,1448],"rigTextureBinding":{"displaySize":[240,320],"offset":[-25,3]},"fx":"soul","attachments":{}}

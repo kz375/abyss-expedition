@@ -55,7 +55,7 @@ public final class WebTests {
             check(call("/", null).body().contains("ABYSS EXPEDITION · 2.0"), "unified 2.0 homepage delivered");
             check(call("/legacy/", null).body().contains("id=\"board\""), "legacy server-save game remains available");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("2.2.20-action-console"), "action-console page uses one cache-busted release");
+            check(betaPage.contains("2.3.0-character-rigs"), "character-rig page uses one cache-busted release");
             check(betaPage.contains("distant-castle") && !betaPage.contains("abyss-gate\"><i"), "castle horizon replaces the central abyss gate");
             check(betaPage.contains("battle-road"), "combat scene includes the shared battle road");
             check(betaPage.contains("abyss-scenery"), "authored abyss scenery layer is present");
@@ -70,7 +70,7 @@ public final class WebTests {
                 check(!asset.body().isBlank(), "beta script is not empty: " + script);
                 betaScriptCount++;
             }
-            check(betaScriptCount == 6, "all five battle modules plus the shared Art Lab actor catalog are referenced");
+            check(betaScriptCount == 7, "all six battle modules plus the shared Art Lab actor catalog are referenced");
             check(call("/assets/backgrounds/dark-theme-cc0.png", null).headers().firstValue("Content-Type").orElse("").equals("image/png"), "CC0 combat background delivered");
             for (String hero : List.of("warrior", "mage", "ranger", "paladin", "necromancer", "creator")) {
                 var art = call("/assets/characters/" + hero + ".png", null);
@@ -81,6 +81,10 @@ public final class WebTests {
             var warriorRigSkin = call("/assets/characters/warrior-rig-v1.png", null);
             check(warriorRigSkin.statusCode() == 200 && warriorRigSkin.headers().firstValue("Content-Type").orElse("").contains("image/png"), "production Warrior rig skin is served as PNG");
             check(call("/assets/characters/warrior-rig-v2.png", null).statusCode() == 200, "enemy-facing Warrior v2 skin is served");
+            for (String hero : List.of("mage", "ranger", "paladin", "necromancer")) {
+                check(call("/assets/characters/" + hero + "-rig-v1.png", null).statusCode() == 200, "replaceable combat rig skin is served: " + hero);
+                check(call("/assets/animation/characters/" + hero + "-v1.json", null).statusCode() == 200, "combat rig character config is served: " + hero);
+            }
             check(call("/assets/animation/skins/warrior-greatsword-v2.png", null).statusCode() == 200, "detachable Warrior greatsword is served");
             check(call("/assets/animation/skins/warrior-shield-v2.png", null).statusCode() == 200, "detachable Warrior shield is served");
             String artPage = call("/art-test/", null).body();

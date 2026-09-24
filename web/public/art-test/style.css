@@ -32,7 +32,7 @@
 .story-beta{margin-top:22px;padding:22px;border:1px solid #806c49;border-radius:13px;background:radial-gradient(circle at 85% 0,#70482624,transparent 35%),#0b120e}.story-beta-head p{margin:0;color:#c9a85f;font-size:9px;font-weight:800;letter-spacing:.2em}.story-beta-head h2{margin:6px 0;color:#ead08a;font:500 25px Georgia,"Songti SC",serif}.story-beta-head span{color:#909b8d;font-size:11px}.story-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:17px}.story-cards article{min-height:180px;padding:17px;border:1px solid #665b43;border-left:3px solid #c4a35a;border-radius:8px;background:linear-gradient(145deg,#211a10,#101711)}.story-cards small{color:#8f8266;font-size:8px;letter-spacing:.14em}.story-cards h3{margin:8px 0;color:#e7cc83;font:500 17px Georgia,"Songti SC",serif}.story-cards p{margin:0;color:#b8c0b4;font-size:11px;line-height:1.8}@media(max-width:800px){.story-cards{grid-template-columns:1fr}}
 
 /* Humanoid anatomy pass: uniform scale, longer legs, narrower armour and deeper joint overlaps. */
-.paper-rig{--rig-scale-x:1.08;--rig-scale-y:1.08;width:190px;height:320px;bottom:1px}
+.paper-rig{--rig-scale-x:1.18;--rig-scale-y:1.18;width:190px;height:320px;bottom:1px;perspective:700px;transform-style:preserve-3d}.rig-root{transform-style:preserve-3d;backface-visibility:hidden}
 .part-head{left:79px;top:22px;width:38px;height:46px;transform-origin:50% 78%}.part-head:after{left:8px;right:5px;top:22px;height:2px}
 .part-torso{left:64px;top:64px;width:66px;height:88px;transform-origin:50% 88%;clip-path:polygon(20% 0,80% 0,96% 60%,73% 100%,27% 100%,4% 60%)}
 .part-pelvis{left:73px;top:143px;width:49px;height:32px;transform-origin:50% 28%;border-radius:38% 38% 45% 45%}
@@ -47,4 +47,6 @@
 .part-upperArm_L:after,.part-upperArm_R:after,.part-lowerArm_L:after,.part-lowerArm_R:after,.part-thigh_L:after,.part-thigh_R:after,.part-shin_L:after,.part-shin_R:after{bottom:-16px;width:80%;height:30px}
 .part-torso:before{content:"";position:absolute;z-index:-2;left:-17px;right:-17px;top:3px;height:31px;border:1px solid #89764d;border-radius:45%;background:linear-gradient(90deg,#252b28,#606860 22% 78%,#252b28);box-shadow:inset 0 1px #fff2}.part-torso:after{content:"";position:absolute;z-index:-1;left:19%;right:19%;bottom:-12px;height:25px;border:1px solid #88764e;border-radius:38%;background:linear-gradient(90deg,#242a26,#596159,#202622)}
 .part-pelvis:before{content:"";position:absolute;z-index:-1;left:7%;right:7%;top:-12px;height:24px;border:1px solid #88764e;border-radius:45%;background:#303732}
-@media(max-width:700px){.paper-rig{--rig-scale-x:.94;--rig-scale-y:.94}}
+.paper-rig[data-action="guard"] .part-shield,.paper-rig[data-action="perfect_guard"] .part-shield{z-index:12;filter:brightness(1.16) drop-shadow(0 0 8px #85d8ea88)}.paper-rig[data-action="guard"] .part-weapon,.paper-rig[data-action="perfect_guard"] .part-weapon{z-index:2;filter:brightness(.7)}
+.paper-rig[data-action="attack_01"] .part-weapon,.paper-rig[data-action="attack_02"] .part-weapon,.paper-rig[data-action="break_strike"] .part-weapon{z-index:12}.paper-rig[data-action="attack_01"] .part-shield,.paper-rig[data-action="attack_02"] .part-shield,.paper-rig[data-action="break_strike"] .part-shield{z-index:2;filter:brightness(.78)}
+@media(max-width:700px){.paper-rig{--rig-scale-x:1.03;--rig-scale-y:1.03}}

@@ -1,0 +1,32 @@
+"use strict";
+// Production enemy adapter. Enemy skin, motion and effects stay independent so
+// a future segmented/mesh skin can replace today's flattened PNG without rules changes.
+const ENEMY_COMBAT_TYPES=Object.freeze({bat:"flying",assassin:"humanoid",golem:"heavy",boss:"boss"});
+const ENEMY_SELF_ACTIONS=new Set(["shield","heal","counter","rage","summon"]);
+const ENEMY_RANGED_ACTIONS=new Set(["poison","burn","weak","dispel","curse","nova","drain"]);
+let enemyCombatRig=null,enemyCombatTimer=0;
+function enemyCombatFrames(name,type){
+  const heavy=type==="heavy"||type==="boss",flying=type==="flying";
+  if(name==="idle")return [{offset:0,transform:"translate(0,0) rotate(0)"},{offset:.5,transform:`translate(0,${flying?-5:-2}px) rotate(${flying?-.8:-.25}deg)`},{offset:1,transform:"translate(0,0) rotate(0)"}];
+  if(name==="windup")return [{offset:0,transform:"translate(0,0)"},{offset:.55,transform:`translate(${heavy?5:9}px,${heavy?5:2}px) rotate(${heavy?2:4}deg)`},{offset:1,transform:`translate(${heavy?8:13}px,${heavy?7:3}px) rotate(${heavy?3:5}deg)`}];
+  if(name==="attack")return [{offset:0,transform:"translate(10px,3px) rotate(4deg)"},{offset:.18,transform:"translate(15px,5px) rotate(5deg)"},{offset:.5,transform:`translate(${heavy?-54:-78}px,-2px) rotate(${heavy?-4:-7}deg)`},{offset:.7,transform:`translate(${heavy?-48:-67}px,1px) rotate(-3deg)`},{offset:1,transform:"translate(0,0) rotate(0)"}];
+  if(name==="cast")return [{offset:0,transform:"translate(4px,2px) scale(1)"},{offset:.3,transform:`translate(8px,6px) scale(${heavy?1.04:.96})`},{offset:.62,transform:`translate(-8px,${flying?-8:-3}px) scale(${heavy?1.08:1.04})`},{offset:1,transform:"translate(0,0) scale(1)"}];
+  if(name==="self")return [{offset:0,transform:"translate(0,0) scale(1)"},{offset:.3,transform:"translate(0,5px) scale(.97)"},{offset:.62,transform:`translate(0,${flying?-9:-4}px) scale(${heavy?1.09:1.05})`},{offset:1,transform:"translate(0,0) scale(1)"}];
+  if(name==="hit")return [{offset:0,transform:"translate(0,0) rotate(0)",filter:"brightness(1)"},{offset:.16,transform:"translate(-19px,-1px) rotate(-4deg)",filter:"brightness(2.15) saturate(.4)"},{offset:.48,transform:"translate(-27px,3px) rotate(-6deg)",filter:"brightness(1.2)"},{offset:1,transform:"translate(0,0) rotate(0)",filter:"brightness(1)"}];
+  if(name==="break")return [{offset:0,transform:"translate(0,0) rotate(0)"},{offset:.3,transform:"translate(-8px,13px) rotate(-5deg)"},{offset:.72,transform:"translate(-18px,31px) rotate(-11deg) scale(.95)"},{offset:1,transform:"translate(-20px,35px) rotate(-12deg) scale(.94)"}];
+  return [{offset:0,transform:"translate(0,0) rotate(0)",opacity:1},{offset:.3,transform:"translate(-10px,15px) rotate(-13deg)",opacity:1},{offset:.72,transform:"translate(-39px,61px) rotate(-57deg)",opacity:.88},{offset:1,transform:"translate(-52px,82px) rotate(-76deg)",opacity:.7}];
+}
+function mountEnemyCombatRig(kind,portrait,src){
+  if(!portrait||!src)return false;const type=ENEMY_COMBAT_TYPES[kind]||"humanoid";
+  if(enemyCombatRig?.kind===kind&&enemyCombatRig.host?.isConnected){portrait.querySelectorAll(":scope > img").forEach(node=>node.remove());if(enemyCombatRig.image.src!==new URL(src,document.baseURI).href)enemyCombatRig.image.src=src;return true;}
+  clearTimeout(enemyCombatTimer);portrait.querySelectorAll(":scope > img,:scope > .enemy-combat-rig").forEach(node=>node.remove());
+  const host=document.createElement("span"),image=document.createElement("img"),aura=document.createElement("span");host.className=`enemy-combat-rig enemy-combat-${type}`;host.dataset.kind=kind;host.dataset.action="idle";image.className="enemy-combat-skin";image.src=src;image.alt="";aura.className="enemy-self-fx";host.append(image,aura);portrait.append(host);enemyCombatRig={kind,type,host,image,aura};globalThis.enemyCombatRig=enemyCombatRig;playEnemyCombatRig("idle");return true;
+}
+function playEnemyCombatRig(name="idle"){
+  if(!enemyCombatRig)return false;clearTimeout(enemyCombatTimer);const {host,image,type}=enemyCombatRig,duration={idle:2400,windup:620,attack:920,cast:1100,self:1150,hit:620,break:1250,death:1650}[name]||920,hold=name==="windup"||name==="break"||name==="death",loop=name==="idle",options={duration,iterations:loop?Infinity:1,fill:"forwards",easing:"cubic-bezier(.22,.68,.18,1)"};host.getAnimations().forEach(a=>a.cancel());image.getAnimations().forEach(a=>a.cancel());host.dataset.action=name;host.animate(enemyCombatFrames(name,type),options);const local=type==="flying"?[{offset:0,transform:"scale(1)"},{offset:.5,transform:"scale(1.04,.94) rotate(-1deg)"},{offset:1,transform:"scale(1)"}]:type==="heavy"||type==="boss"?[{offset:0,transform:"scale(1)"},{offset:.5,transform:"scale(1.045,.96)"},{offset:1,transform:"scale(1)"}]:[{offset:0,transform:"rotate(0)"},{offset:.5,transform:"rotate(-2deg)"},{offset:1,transform:"rotate(0)"}];image.animate(local,options);if(!loop&&!hold)enemyCombatTimer=setTimeout(()=>playEnemyCombatRig("idle"),duration+120);return true;
+}
+function enemySelfFx(action){if(!enemyCombatRig)return false;const {aura,host}=enemyCombatRig;aura.replaceChildren();aura.dataset.action=action;for(let i=0;i<14;i++){const mote=document.createElement("i");mote.style.setProperty("--a",`${i*360/14}deg`);aura.append(mote);}const core=document.createElement("b");aura.append(core);const ring=document.createElement("em");aura.append(ring);if(action==="shield"){const dome=document.createElement("strong");aura.append(dome);}host.dataset.selfFx=action;clearTimeout(aura._timer);aura._timer=setTimeout(()=>{aura.replaceChildren();delete host.dataset.selfFx;},1250);return true;}
+function playEnemyIntent(action){if(!enemyCombatRig)return false;playEnemyCombatRig("windup");enemyCombatRig.host.dataset.intent=action;return true;}
+function playEnemyCombatAction(action){if(!enemyCombatRig)return false;delete enemyCombatRig.host.dataset.intent;const self=ENEMY_SELF_ACTIONS.has(action),ranged=ENEMY_RANGED_ACTIONS.has(action);playEnemyCombatRig(self?"self":ranged?"cast":"attack");if(self)enemySelfFx(action);return true;}
+function playEnemyCombatReaction(name){if(!enemyCombatRig)return false;return playEnemyCombatRig(name);}
+globalThis.mountEnemyCombatRig=mountEnemyCombatRig;globalThis.playEnemyIntent=playEnemyIntent;globalThis.playEnemyCombatAction=playEnemyCombatAction;globalThis.playEnemyCombatReaction=playEnemyCombatReaction;globalThis.ENEMY_SELF_ACTIONS=ENEMY_SELF_ACTIONS;globalThis.ENEMY_RANGED_ACTIONS=ENEMY_RANGED_ACTIONS;

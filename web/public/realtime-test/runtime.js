@@ -90,7 +90,7 @@ function beginBattle(plan,ambush=false){
 function spawnSummon(){if(game.summons.length>=2)return;const index=Math.floor(random()*ROSTER.length);game.summons.push(makeEnemy(index,random()<.05,true));}
 function target(){return game.summons[0]||game.enemy;}
 function combatEvent(type,payload={}){return CombatCore.emit(game.combat,type,{time:game.clock,...payload});}
-function addBreak(m,amount,source="hit"){if(!m||m.hp<=0)return 0;if(m.breakEncounter!==game.combat.encounter)resetBreakState(m);if(m.brokenUntil>game.clock)return 0;const gain=Math.max(0,amount)*CombatCore.PLAYER_BREAK_GAIN*CombatCore.breakPower(game.combat.pressure);m.break=Math.min(m.breakMax,m.break+gain);combatEvent("break_gain",{target:m.uid,amount:gain,source});if(m.break>=m.breakMax){m.break=0;m.brokenUntil=game.clock+CombatCore.BROKEN_MS;m.stunned=Math.max(m.stunned,CombatCore.BROKEN_MS/1000);m.telegraph=null;m.next=m.brokenUntil;combatEvent("broken",{target:m.uid,duration:CombatCore.BROKEN_MS});}return gain;}
+function addBreak(m,amount,source="hit"){if(!m||m.hp<=0)return 0;if(m.breakEncounter!==game.combat.encounter)resetBreakState(m);if(m.brokenUntil>game.clock)return 0;const gain=Math.max(0,amount)*CombatCore.PLAYER_BREAK_GAIN*CombatCore.breakPower(game.combat.pressure);m.break=Math.min(m.breakMax,m.break+gain);combatEvent("break_gain",{target:m.uid,amount:gain,source});if(m.break>=m.breakMax){m.break=0;m.brokenUntil=game.clock+CombatCore.BROKEN_MS;m.stunned=Math.max(m.stunned,CombatCore.BROKEN_MS/1000);m.telegraph=null;m.next=m.brokenUntil;combatEvent("broken",{target:m.uid,duration:CombatCore.BROKEN_MS});if(!m.minion)globalThis.playEnemyCombatReaction?.("break");}return gain;}
 function setGuard(active){
   if(!game||game.phase!=="battle"||game.paused||archiveKind||game.heroId!=="warrior")return false;const c=game.combat;
   if(active&&!c.guard){if(c.guardCooldownUntil>game.clock)return false;c.guard=true;c.guardStarted=game.clock;c.guardWardGranted=false;combatEvent("guard_start");globalThis.playCombatRig?.("guard");globalThis.playCombatGuard?.("start");}
@@ -118,9 +118,9 @@ function advanceBoss(m){const phase=m.hp/m.max<=.33?3:m.hp/m.max<=.66?2:1;while(
 function skillCooldown(index){const ms=hero().skills[index][2]*effects().cooldown;return index===1&&game.heroId==="paladin"?Math.max(2800,ms):ms;}
 function cast(index){if(game.phase!=="battle"||game.paused||archiveKind||!Number.isInteger(index)||index<0||index>3||game.cd[index]>game.clock)return false;
   if(!hero().skills[index])return false;
-  const [, , ,type,value]=hero().skills[index],e=effects();game.cd[index]=game.clock+skillCooldown(index);game.stats.casts++;combatEvent("skill_cast",{index,type});globalThis.playCombatSkill?.(game.heroId,index,type);if(typeof pulseControl==="function")pulseControl(index);
+  const [, , ,type,value]=hero().skills[index],e=effects(),m=target();game.cd[index]=game.clock+skillCooldown(index);game.stats.casts++;combatEvent("skill_cast",{index,type});globalThis.playCombatSkill?.(game.heroId,index,type,m===game.enemy);if(typeof pulseControl==="function")pulseControl(index);
   const hit=(multiplier=1)=>{const foe=target(),hunt=1+(foe?.zone==="BOSS"?e.bossPower:0)+(foe?.elite?e.elitePower:0),critical=random()<e.crit,kind=({burn:"burn",meteor:"burn",soulfire:"burn",poison:"poison",arcane:"arcane",arcane_bolt:"arcane",frost_nova:"arcane",curse:"void"})[type]||"damage";return damageEnemy(e.attack*value*multiplier*e.power*hunt*(game.hp/game.max<.35?1+e.low:1)*(game.statuses.weak>0?.8:1)*(critical?1.5:1),true,true,kind,critical);};
-  const m=target(),arcaneMarks=m.arcaneMark||0;let dealt=0;
+  const arcaneMarks=m.arcaneMark||0;let dealt=0;
   if(!["shield","rewind","purify","rewrite"].includes(type))dealt=hit(type==="finisher"&&m.hp/m.max<.35?2:type==="meteor"?1+arcaneMarks*.28:1);
   if(type==="damage"&&game.heroId==="ranger"&&random()<.15)hit();
   if(type==="multi")hit();if(type==="rend")for(let n=0;n<4;n++)hit();
@@ -149,13 +149,13 @@ function monsterMove(m){let moves=MONSTER_MODULES[m.index].moves;
   return moves[m.rotation%moves.length];
 }
 function performMove(m,action){if(m.hp<=0||game.hp<=0)return;const attack=m.attack*(m.rage>0?1.3:1)*CombatCore.enemyPower(game.combat.pressure);
-  if(action==="shield")m.shield=clamp(m.shield+m.max*.12,m.max);
-  else if(action==="heal")m.hp=clamp(m.hp+m.max*.1,m.max);
-  else if(action==="counter")m.counter=3;
-  else if(action==="rage")m.rage=6;
-  else if(action==="summon"){if(!m.minion)spawnSummon();else m.shield=clamp(m.shield+m.max*.1,m.max);}
+  if(action==="shield"){m.shield=clamp(m.shield+m.max*.12,m.max);if(!m.minion)globalThis.playEnemyCombatAction?.(action);}
+  else if(action==="heal"){m.hp=clamp(m.hp+m.max*.1,m.max);if(!m.minion)globalThis.playEnemyCombatAction?.(action);}
+  else if(action==="counter"){m.counter=3;if(!m.minion)globalThis.playEnemyCombatAction?.(action);}
+  else if(action==="rage"){m.rage=6;if(!m.minion)globalThis.playEnemyCombatAction?.(action);}
+  else if(action==="summon"){if(!m.minion)spawnSummon();else m.shield=clamp(m.shield+m.max*.1,m.max);if(!m.minion)globalThis.playEnemyCombatAction?.(action);}
   else{
-    globalThis.playEnemySkill?.(action,m.zone);
+    globalThis.playEnemySkill?.(action,m.zone,m.minion);
     if(action==="dispel")game.shield*=.25;
     const kind=action==="poison"?"poison":action==="burn"?"burn":action==="nova"||action==="curse"?"void":"damage",damage=damageHero(attack*(action==="charge"?1.9:action==="nova"?1.5:action==="double"?.7:1.15),true,false,m,kind);
     if(action==="double"&&game.hp>0)damageHero(attack*.7,true,false,m,"damage");
@@ -168,7 +168,7 @@ function performMove(m,action){if(m.hp<=0||game.hp<=0)return;const attack=m.atta
 }
 function enemyStep(m){if(m.hp<=0||m.stunned>0||game.clock<m.next)return;
   if(m.telegraph){const action=m.telegraph;m.telegraph=null;combatEvent("intent_execute",{target:m.uid,action});performMove(m,action);m.rotation++;m.count++;m.next=game.clock+2050/(m.speed*CombatCore.enemySpeed(game.combat.pressure));}
-  else{const action=monsterMove(m),intent=CombatCore.intent(action,game.combat.pressure);m.telegraph=action;m.intentStarted=game.clock;m.next=game.clock+intent.windup;combatEvent("intent",{target:m.uid,action,kind:intent.kind,duration:intent.windup});}
+  else{const action=monsterMove(m),intent=CombatCore.intent(action,game.combat.pressure);m.telegraph=action;m.intentStarted=game.clock;m.next=game.clock+intent.windup;combatEvent("intent",{target:m.uid,action,kind:intent.kind,duration:intent.windup});if(!m.minion)globalThis.playEnemyIntent?.(action);}
 }
 function step(ms){if(!game||game.phase!=="battle"||game.paused||archiveKind||game.finished)return;
   // Slow the shared simulation during telegraphs: player input remains immediate.
@@ -197,7 +197,7 @@ function syncProfile(){
 }
 function checkEnd(){if(game.phase!=="battle")return;
   if(game.hp<=0){game.hp=0;finish(false);return;}
-  if(game.enemy.hp<=0){game.enemy.hp=0;recordKill(game.enemy);gainGold(18+game.floor*7+(game.enemy.elite?18:0));
+  if(game.enemy.hp<=0){game.enemy.hp=0;globalThis.playEnemyCombatReaction?.("death");globalThis.playCombatRig?.("victory");recordKill(game.enemy);gainGold(18+game.floor*7+(game.enemy.elite?18:0));
     if(game.combat.mode==="endless"){game.combat.wave++;game.combat.encounter=(game.combat.encounter||0)+1;combatEvent("wave_clear",{wave:game.combat.wave-1});const index=Math.floor(random()*ROSTER.length),elite=game.combat.wave%4===0;game.enemy=makeEnemy(index,elite);resetBreakState(game.enemy);const scale=1+(game.combat.wave-1)*.09;game.enemy.max*=scale;game.enemy.hp=game.enemy.max;game.enemy.attack*=1+(game.combat.wave-1)*.055;game.summons=[];game.floorStart=game.clock;commit();return;}
     if(!game.returnFromBattle)game.stats.floors.push({floor:game.floor+1,ms:game.clock-game.floorStart});
     game.rewardReturn=game.returnFromBattle?"advance":game.floor===7?"victory":"events";openReward();commit();
@@ -247,7 +247,7 @@ function selectEventOption(i){if(game.phase!=="event")return;const option=eventO
 function shopDescription(id){const stat=game.difficulty==="ultra"?6:game.difficulty==="nightmare"?4:2;return {potion:["药瓶 +1","Healing bottle +1"],weapon:[`攻击 +${stat}`,`Attack +${stat}`],armor:[`防御 +${stat}`,`Defense +${stat}`],ward:["护盾 +25","Ward +25"],tonic:["生命上限 +12，恢复 20","Max health +12; heal 20"],smoke:["药瓶 +1，护盾 +12","Bottle +1; ward +12"]}[id];}
 function buy(id){if(game.phase!=="shop"||!game.shopStock.includes(id)||game.bought.includes(id))return;const item=SHOP.find(s=>s.id===id);if(!spendGold(item.price))return;const stat=game.difficulty==="ultra"?6:game.difficulty==="nightmare"?4:2;
   if(id==="potion"||id==="smoke")game.potions++;if(id==="weapon")game.baseAttack+=stat;if(id==="armor")game.baseDefense+=stat;if(id==="ward")addWard(25);if(id==="smoke")addWard(12);if(id==="tonic"){game.baseMax+=12;reconcile();heal(20)}game.bought.push(id);commit();}
-function usePotion(){if(game.phase!=="battle"||game.paused||archiveKind||game.potions<1||game.hp>=game.max)return;game.potions--;heal(game.max*.3*effects().potion);commit();}
+function usePotion(){if(game.phase!=="battle"||game.paused||archiveKind||game.potions<1||game.hp>=game.max)return;game.potions--;globalThis.playCombatRig?.("channel");heal(game.max*.3*effects().potion);commit();}
 // Twin Cores matches the Java board's push rules; rotations/mirrors preserve a
 // known solution so random layouts do not require lucky edge teleports to win.
 function startTrial(){if(game.trialUsed)return;game.trialUsed=true;game.trial=generateTrial();game.phase="trial";

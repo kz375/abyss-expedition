@@ -55,7 +55,7 @@ public final class WebTests {
             check(call("/", null).body().contains("ABYSS EXPEDITION · 2.0"), "unified 2.0 homepage delivered");
             check(call("/legacy/", null).body().contains("id=\"board\""), "legacy server-save game remains available");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("2.8.0-motion-balance"), "motion-balance release uses one cache-busted build");
+            check(betaPage.contains("2.10.0-enemy-rigs"), "enemy-rig release uses one cache-busted build");
             check(betaPage.contains("distant-castle") && !betaPage.contains("abyss-gate\"><i"), "castle horizon replaces the central abyss gate");
             check(betaPage.contains("battle-road"), "combat scene includes the shared battle road");
             check(betaPage.contains("abyss-scenery"), "authored abyss scenery layer is present");
@@ -70,7 +70,7 @@ public final class WebTests {
                 check(!asset.body().isBlank(), "beta script is not empty: " + script);
                 betaScriptCount++;
             }
-            check(betaScriptCount == 7, "all six battle modules plus the shared Art Lab actor catalog are referenced");
+            check(betaScriptCount == 8, "all seven battle modules plus the shared Art Lab actor catalog are referenced");
             check(call("/assets/backgrounds/dark-theme-cc0.png", null).headers().firstValue("Content-Type").orElse("").equals("image/png"), "CC0 combat background delivered");
             for (String hero : List.of("warrior", "mage", "ranger", "paladin", "necromancer", "creator")) {
                 var art = call("/assets/characters/" + hero + ".png", null);
@@ -97,6 +97,7 @@ public final class WebTests {
             check(call("/art-test/actors.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "separate character catalog MIME type");
             check(call("/art-test/rig.js?v=0.7.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "reusable rig runtime MIME type");
             check(call("/art-test/enemy-rig.js?v=0.20.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "enemy rig laboratory runtime MIME type");
+            check(call("/realtime-test/enemy-combat-rig.js?v=2.10.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "formal enemy combat rig runtime MIME type");
             check(call("/art-test/lab.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "art lab action engine MIME type");
             for (String rigAsset : List.of(
                     "assets/animation/characters/warrior-v1.json",

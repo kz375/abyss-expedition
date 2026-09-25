@@ -15,7 +15,7 @@ public final class WebServer implements AutoCloseable {
     private static final String COOKIE = "abyss_player";
     private static final Set<String> ASSETS = Set.of("index.html", "app.js", "styles.css", "shield-bars.css", "mark.svg", "assets/abyss-gateway-v1.png", "realtime-test/index.html", "realtime-test/style.css", "realtime-test/campaign.js",
             "realtime-test/content.js", "realtime-test/combat-core.js", "realtime-test/character-rig.js", "realtime-test/runtime.js", "realtime-test/interface.js",
-            "art-test/index.html", "art-test/style.css", "art-test/actors.js", "art-test/rig.js", "art-test/lab.js",
+            "art-test/index.html", "art-test/style.css", "art-test/actors.js", "art-test/rig.js", "art-test/enemy-rig.js", "art-test/lab.js",
             "assets/characters/warrior.png", "assets/characters/warrior-rig-v1.png", "assets/characters/warrior-rig-v2.png", "assets/characters/mage.png", "assets/characters/mage-rig-v1.png", "assets/characters/ranger.png", "assets/characters/ranger-rig-v1.png",
             "assets/characters/paladin.png", "assets/characters/paladin-rig-v1.png", "assets/characters/necromancer.png", "assets/characters/necromancer-rig-v1.png", "assets/characters/creator.png",
             "assets/enemies/iron-golem-test.png", "assets/enemies/cave-bat-v1.png", "assets/enemies/shadow-assassin-v1.png", "assets/enemies/abyss-lord-v1.png", "assets/backgrounds/dark-theme-cc0.png",

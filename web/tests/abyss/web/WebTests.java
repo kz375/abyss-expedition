@@ -96,6 +96,7 @@ public final class WebTests {
             check(call("/art-test/style.css?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("text/css"), "art lab stylesheet MIME type");
             check(call("/art-test/actors.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "separate character catalog MIME type");
             check(call("/art-test/rig.js?v=0.7.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "reusable rig runtime MIME type");
+            check(call("/art-test/enemy-rig.js?v=0.20.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "enemy rig laboratory runtime MIME type");
             check(call("/art-test/lab.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "art lab action engine MIME type");
             for (String rigAsset : List.of(
                     "assets/animation/characters/warrior-v1.json",

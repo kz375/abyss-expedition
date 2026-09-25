@@ -20,9 +20,9 @@ globalThis.ART_TEST_ACTORS = Object.freeze({
     creator:Object.freeze({zh:"造物主 · 现实编织者",en:"Creator · Reality Weaver",role:"HUMANOID · REALITY",character:"creator-v1",fx:"reality",kind:"creator",scale:1.04,anchor:"50% 100%"})
   }),
   targets:Object.freeze({
-    golem:Object.freeze({zh:"钢铁魔像 · 实装素材",en:"Iron Golem · Production Art",kind:"golem",art:"/assets/enemies/iron-golem-test.png",scale:1.08,anchor:"50% 100%"}),
-    bat:Object.freeze({zh:"洞窟蝙蝠 · 实装素材",en:"Cave Bat · Production Art",kind:"bat",art:"/assets/enemies/cave-bat-v1.png",scale:1.04,anchor:"50% 100%"}),
-    assassin:Object.freeze({zh:"暗影刺客 · 实装素材",en:"Shadow Assassin · Production Art",kind:"assassin",art:"/assets/enemies/shadow-assassin-v1.png",scale:1.02,anchor:"50% 100%"}),
-    boss:Object.freeze({zh:"深渊领主 · 实装素材",en:"Abyss Lord · Production Art",kind:"boss",art:"/assets/enemies/abyss-lord-v1.png",scale:1.1,anchor:"50% 100%"})
+    golem:Object.freeze({zh:"钢铁魔像 · Heavy 骨骼",en:"Iron Golem · Heavy Rig",kind:"golem",rig:"heavy",art:"/assets/enemies/iron-golem-test.png",scale:1.08,anchor:"50% 100%"}),
+    bat:Object.freeze({zh:"洞窟蝙蝠 · Flying 骨骼",en:"Cave Bat · Flying Rig",kind:"bat",rig:"flying",art:"/assets/enemies/cave-bat-v1.png",scale:1.04,anchor:"50% 100%"}),
+    assassin:Object.freeze({zh:"暗影刺客 · Humanoid 骨骼",en:"Shadow Assassin · Humanoid Rig",kind:"assassin",rig:"humanoid",art:"/assets/enemies/shadow-assassin-v1.png",scale:1.02,anchor:"50% 100%"}),
+    boss:Object.freeze({zh:"深渊领主 · Boss 骨骼",en:"Abyss Lord · Boss Rig",kind:"boss",rig:"boss",art:"/assets/enemies/abyss-lord-v1.png",scale:1.1,anchor:"50% 100%"})
   })
 });

@@ -86,29 +86,29 @@ const GEAR_AFFIXES={
 };
 // Each species has its own rotation, tempo and counterplay, also used by summons.
 const MONSTER_MODULES = [
-  {moves:["bite","double"],speed:1.15,weakness:["蓄力时眩晕","Stun during wind-up"]},
-  {moves:["rage","bite"],speed:1.05,weakness:["狂暴时用护盾","Ward through frenzy"]},
-  {moves:["sunder","charge"],speed:.8,weakness:["打断重击","Interrupt the heavy strike"]},
-  {moves:["poison","shield"],speed:.8,weakness:["净化毒素","Cleanse poison"]},
-  {moves:["double","poison"],speed:1.25,weakness:["低血量时爆发","Burst before poison stacks"]},
-  {moves:["counter","double"],speed:1.2,weakness:["反击姿态时停止直伤","Avoid direct hits during counter stance"]},
-  {moves:["weak","dispel"],speed:.9,weakness:["驱散后再加盾","Ward after its dispel"]},
-  {moves:["burn","heal"],speed:.85,weakness:["打断治疗","Interrupt healing"]},
-  {moves:["drain","poison"],speed:.9,weakness:["护盾阻止吸血","Ward prevents life steal"]},
-  {moves:["counter","shield"],speed:1,weakness:["用持续伤害绕过反击","Damage over time bypasses counters"]},
-  {moves:["dispel","charge"],speed:1.15,weakness:["留眩晕阻止蓄力","Save a stun for the charge"]},
-  {moves:["sweep","double"],speed:.95,weakness:["横扫前减伤","Defend before its sweep"]},
-  {moves:["weak","curse"],speed:1.1,weakness:["保留净化","Save a cleanse"]},
-  {moves:["poison","burn"],speed:.9,weakness:["连续净化与治疗","Cleanse and sustain"]},
-  {moves:["shield","sunder"],speed:.7,weakness:["护盾衰减后爆发","Burst after ward decay"]},
-  {moves:["burn","rage","charge"],speed:1.05,weakness:["打断狂暴蓄力","Interrupt the enraged charge"]},
-  {moves:["summon","curse","dispel"],speed:.85,weakness:["先清理召唤物","Clear summoned enemies first"]},
-  {moves:["poison","drain","double"],speed:1.2,weakness:["净化后压制治疗","Cleanse and deny healing"]},
-  {moves:["heal","sweep","rage"],speed:.75,weakness:["打断自疗","Interrupt self-healing"]},
-  {moves:["shield","charge"],speed:.85,weakness:["优先清护卫，打断蓄力","Clear guardians, then interrupt charges"]},
-  {moves:["burn","nova"],speed:1,weakness:["为第三阶段保留净化","Save cleansing for phase three"]}
+  {moves:["bite","pounce","double"],speed:1.15,weakness:["扑击前精准防御","Perfect Guard the pounce"]},
+  {moves:["rage","pounce","bleed"],speed:1.05,weakness:["狂暴后防住裂伤","Ward through the frenzy bleed"]},
+  {moves:["sunder","charge","quake"],speed:.8,weakness:["打断重击或震地","Interrupt the crush or quake"]},
+  {moves:["poison","shield","hexburst"],speed:.8,weakness:["净化后阻止咒爆","Cleanse before the hex burst"]},
+  {moves:["double","bleed","pounce"],speed:1.25,weakness:["精准格挡快速连段","Perfect Guard its quick chain"]},
+  {moves:["counter","shadowstep","barrage"],speed:1.2,weakness:["反击姿态时停止直伤","Avoid direct hits during counter stance"]},
+  {moves:["weak","dispel","hexburst"],speed:.9,weakness:["驱散后保留净化","Save cleansing after its dispel"]},
+  {moves:["burn","heal","fortify"],speed:.85,weakness:["打断治疗与堡垒","Interrupt recovery and fortify"]},
+  {moves:["drain","bleed","poison"],speed:.9,weakness:["护盾阻止汲取与裂伤","Ward prevents drain and bleed"]},
+  {moves:["counter","shadowstep","shield"],speed:1,weakness:["用持续伤害绕过反击","Damage over time bypasses counters"]},
+  {moves:["dispel","shadowstep","charge"],speed:1.15,weakness:["识破暗影步后打断蓄力","Read the step, then interrupt charge"]},
+  {moves:["sweep","barrage","bleed"],speed:.95,weakness:["横扫前减伤","Defend before its sweep"]},
+  {moves:["weak","curse","hexburst"],speed:1.1,weakness:["咒爆前清除异常","Cleanse before hex burst"]},
+  {moves:["poison","burn","barrage"],speed:.9,weakness:["连续净化并防住爆发","Cleanse and guard the burst"]},
+  {moves:["fortify","sunder","quake"],speed:.7,weakness:["打断堡垒后的震地","Interrupt the post-fortify quake"]},
+  {moves:["burn","rage","pounce","charge"],speed:1.05,weakness:["打断狂暴蓄力","Interrupt the enraged charge"]},
+  {moves:["summon","curse","hexburst","dispel"],speed:.85,weakness:["先清理召唤物","Clear summoned enemies first"]},
+  {moves:["poison","drain","barrage","bleed"],speed:1.2,weakness:["净化后压制汲取","Cleanse and deny drain"]},
+  {moves:["heal","quake","fortify","rage"],speed:.75,weakness:["打断自疗与震地","Interrupt recovery and quake"]},
+  {moves:["fortify","charge","barrage"],speed:.85,weakness:["优先清护卫，打断蓄力","Clear guardians, then interrupt charges"]},
+  {moves:["burn","hexburst","nova"],speed:1,weakness:["为第三阶段保留净化","Save cleansing for phase three"]}
 ];
-const ACTION_NAMES={bite:["撕咬","Bite"],double:["连击","Combo"],rage:["狂暴","Frenzy"],sunder:["破甲","Sunder"],charge:["蓄力重击","Charged Strike"],poison:["毒雾","Venom"],shield:["屏障","Barrier"],counter:["反击姿态","Counter Stance"],weak:["虚弱诅咒","Weakening Hex"],dispel:["驱散","Dispel"],burn:["烈焰","Flame"],heal:["复苏","Recovery"],drain:["汲取","Drain"],sweep:["横扫","Sweep"],curse:["侵蚀","Corruption"],summon:["召唤","Summon"],nova:["深渊新星","Abyssal Nova"]};
+const ACTION_NAMES={bite:["撕咬","Bite"],double:["连击","Combo"],rage:["狂暴","Frenzy"],sunder:["破甲","Sunder"],charge:["蓄力重击","Charged Strike"],poison:["毒雾","Venom"],shield:["屏障","Barrier"],counter:["反击姿态","Counter Stance"],weak:["虚弱诅咒","Weakening Hex"],dispel:["驱散","Dispel"],burn:["烈焰","Flame"],heal:["复苏","Recovery"],drain:["汲取","Drain"],sweep:["横扫","Sweep"],curse:["侵蚀","Corruption"],summon:["召唤","Summon"],nova:["深渊新星","Abyssal Nova"],pounce:["扑袭","Pounce"],barrage:["碎骨连射","Bone Barrage"],bleed:["裂伤","Rending Wound"],fortify:["深渊堡垒","Abyssal Fortify"],quake:["震地冲击","Seismic Crash"],shadowstep:["暗影步","Shadowstep"],hexburst:["咒印爆发","Hexburst"]};
 const EVENT_CATALOG=[
   ["camp","篝火","Campfire"],["shop","商店","Merchant"],["shrine","古老神龛","Ancient Shrine"],["chest","上锁宝箱","Locked Chest"],
   ["healer","流浪医师","Wandering Healer"],["spring","神秘清泉","Mystic Spring"],["adventurer","受困冒险者","Trapped Adventurer"],

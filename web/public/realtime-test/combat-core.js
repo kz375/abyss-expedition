@@ -14,7 +14,9 @@ globalThis.CombatCore=Object.freeze({
     drain:{windup:1200,kind:"heavy"},curse:{windup:1050,kind:"special"},sweep:{windup:1250,kind:"heavy"},
     shield:{windup:700,kind:"defend"},heal:{windup:900,kind:"defend"},counter:{windup:750,kind:"defend"},
     rage:{windup:750,kind:"defend"},summon:{windup:1100,kind:"special"},dispel:{windup:950,kind:"special"},
-    charge:{windup:1400,kind:"heavy"},nova:{windup:1500,kind:"ultimate"}
+    charge:{windup:1400,kind:"heavy"},nova:{windup:1500,kind:"ultimate"},
+    pounce:{windup:720,kind:"attack"},barrage:{windup:1050,kind:"combo"},bleed:{windup:900,kind:"special"},
+    fortify:{windup:820,kind:"defend"},quake:{windup:1350,kind:"heavy"},shadowstep:{windup:680,kind:"attack"},hexburst:{windup:1250,kind:"special"}
   }),
   create(mode="expedition"){return {mode,pressure:0,tier:0,encounter:0,guard:false,guardStarted:-1,guardTapUntil:-1,guardCooldownUntil:0,guardWardGranted:false,wave:1,events:[],sequence:0,phantomAt:7000};},
   pressure(deltaMs,mode){return deltaMs/(mode==="endless"?760:380);},

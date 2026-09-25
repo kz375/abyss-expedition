@@ -1,6 +1,6 @@
 "use strict";
 
-globalThis.ABYSS_BETA_BUILD = "2.11.0";
+globalThis.ABYSS_BETA_BUILD = "2.12.0";
 
 const HERO_ART = Object.freeze({
   warrior:"/assets/characters/warrior.png", mage:"/assets/characters/mage.png",
@@ -31,16 +31,16 @@ const HEROES = {
     ["魔能飞弹","80% 攻击并积累 1 层奥术印记 · 0.62 秒",620,"arcane_bolt",.8], ["陨星爆裂","175% 攻击，消耗印记增伤并灼烧 · 3.4 秒",3400,"meteor",1.75], ["霜环禁锢","90% 攻击，消耗印记延长控制并积累 Break · 4.8 秒",4800,"frost_nova",.9], ["时间回响","刷新前三个技能并获得 18 护盾 · 12 秒",12000,"rewind",18]
   ]},
   ranger: {name:"游侠", enName:"Ranger", key:"RANGER · HUNTER'S FOCUS", hp:214, attack:36, passive:"猎人专注：普通攻击有 15% 几率触发一次额外射击", enPassive:"Hunter's Focus: 15% chance for an extra basic shot", skills:[
-    ["速射","100% 攻击 · 0.48 秒",480,"damage",1], ["双重射击","两箭各 140% 攻击 · 3 秒",3000,"multi",1.4], ["毒牙箭","110% 攻击 + 中毒 · 3 秒",3000,"poison",1.1], ["烟幕","获得 35 护盾 · 5 秒",5000,"shield",35]
+    ["速射","100% 攻击；命中弱点积累少量 Break · 0.48 秒",480,"damage",1], ["双重射击","两箭各 140% 攻击；第二箭强化 Break · 3 秒",3000,"multi",1.4], ["毒牙箭","110% 攻击 + 中毒；毒素持续侵蚀 Break · 3 秒",3000,"poison",1.1], ["烟幕","获得 35 护盾；敌人蓄力时额外削减 Break · 5 秒",5000,"shield",35]
   ]},
   paladin: {name:"圣骑士", enName:"Paladin", key:"PALADIN · DIVINE AEGIS", hp:226, attack:31, passive:"神圣壁垒：每 4 秒获得 10 护盾", enPassive:"Divine Aegis: gain 10 ward every 4 seconds", skills:[
-    ["圣光挥击","95% 攻击并获得 7 护盾 · 0.72 秒",720,"smite",.95], ["神圣审判","220% 攻击并打断 · 3.8 秒",3800,"judgment",2.2], ["守护祷言","获得 55 护盾 · 6 秒",6000,"shield",55], ["圣光净化","清除异常并获得 32 护盾 · 7 秒",7000,"purify",32]
+    ["圣光挥击","95% 攻击并获得 7 护盾；有护盾时积累 Break · 0.72 秒",720,"smite",.95], ["神圣审判","220% 攻击；打断时大量积累 Break · 3.8 秒",3800,"judgment",2.2], ["守护祷言","获得 55 护盾；敌人已破防时延长窗口 · 6 秒",6000,"shield",55], ["圣光净化","清除异常并获得 32 护盾；净化转化为 Break · 7 秒",7000,"purify",32]
   ]},
   necromancer: {name:"死灵法师", enName:"Necromancer", key:"NECROMANCER · CURSE", hp:200, attack:32, passive:"诅咒：敌人开场 8 秒内承受伤害 +25%", enPassive:"Curse: enemy takes 25% more damage for 8 seconds", skills:[
-    ["灵魂火","90% 攻击并灼烧 · 0.68 秒",680,"soulfire",.9], ["灵魂汲取","190% 攻击；伤害转为灵魂护盾 · 3.5 秒",3500,"soulward",1.9], ["骸骨护甲","获得 46 护盾 · 5.5 秒",5500,"shield",46], ["枯萎","80% 攻击并施加诅咒 · 5 秒",5000,"curse",.8]
+    ["灵魂火","90% 攻击并灼烧；灼烧侵蚀 Break · 0.68 秒",680,"soulfire",.9], ["灵魂汲取","190% 攻击；伤害转为灵魂护盾并抽取 Break · 3.5 秒",3500,"soulward",1.9], ["骸骨护甲","获得 46 护盾；破防窗口内追加灵魂延迟 · 5.5 秒",5500,"shield",46], ["枯萎","80% 攻击并施加诅咒；诅咒放大后续 Break · 5 秒",5000,"curse",.8]
   ]},
   creator: {name:"造物主", enName:"Creator", key:"CREATOR · EXECUTION", hp:180, attack:31, passive:"执行：敌人低于 10% 最大生命时直接抹除", enPassive:"Execution: erase enemies below 10% maximum health", hidden:true, skills:[
-    ["现实切割","100% 攻击 · 0.58 秒",580,"damage",1], ["现实撕裂","五次 100% 攻击 · 4 秒",4000,"rend",1], ["造物屏障","获得 44 护盾 · 5 秒",5000,"shield",44], ["规则重写","清除敌方强化并刷新前三个技能 · 9 秒",9000,"rewrite",0]
+    ["现实切割","100% 攻击；Break 越高伤害越强 · 0.58 秒",580,"damage",1], ["现实撕裂","五次 100% 攻击并撕开 Break · 4 秒",4000,"rend",1], ["造物屏障","获得 44 护盾；破防时冻结窗口 · 5 秒",5000,"shield",44], ["规则重写","清除强化、刷新技能并重写 Break · 9 秒",9000,"rewrite",0]
   ]}
 };
 

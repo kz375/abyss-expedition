@@ -13,14 +13,20 @@ Skin JSON → Skeleton JSON → Animation Set JSON
 - Skeleton: `assets/animation/skeletons/humanoid-v1.json`
 - Skin: `assets/animation/skins/warrior-iron-vow-v1.json`
 - Binding: `assets/animation/characters/warrior-v1.json`
-- Actions: `assets/animation/actions/humanoid-combat-v1.json`
+- Base actions: `assets/animation/actions/humanoid-combat-v2.json`
+- Shared utility actions: `assets/animation/actions/humanoid-utility-v1.json`
+- Optional class packs: for example `assets/animation/actions/paladin-shield-v1.json`
 
 The Humanoid skeleton uses `root → pelvis → torso`, two three-bone arms, two three-bone legs, and head. Attachments do not belong to the body skin:
 
 - `hand_R → weapon_socket → weapon`
 - `hand_L → shield_socket → shield`
 
-The first reusable action set contains `idle`, `attack_01`, `attack_02`, `break_strike`, `guard`, `perfect_guard`, `hit`, `break`, and `death`.
+The reusable base set contains `idle`, `attack_01`, `attack_02`, `break_strike`, `guard`, `perfect_guard`, `hit`, `break`, and `death`. Character bindings may add any number of `actionPacks`; packs merge only action timelines, lower-body profiles, and stage travel, never skin pixels.
+
+The shared Humanoid skeleton publishes joint rotation limits and a continuity contract. Runtime solvers clamp unsafe rotations while preserving hand sockets, so a replacement skin can keep weapons, shields, feet, and limb connections stable during large motions.
+
+Paladin currently adds four replaceable actions through `paladin-shield-v1`: `shield_bash`, `radiant_charge`, `consecration`, and `judgment_recover`. A future Paladin skin only needs to bind to `humanoid-v1`; it does not need these actions remade.
 
 ## Planned families
 

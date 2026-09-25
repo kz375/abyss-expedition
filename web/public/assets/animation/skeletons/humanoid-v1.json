@@ -20,5 +20,13 @@
     {"id":"shin_R","parent":"thigh_R","pivot":[355,755]},
     {"id":"foot_R","parent":"shin_R","pivot":[365,845]}
   ],
-  "sockets":{"weapon_socket":"hand_R","shield_socket":"hand_L","back_socket":"torso","head_fx_socket":"head"}
+  "sockets":{"weapon_socket":"hand_R","shield_socket":"hand_L","back_socket":"torso","head_fx_socket":"head"},
+  "limits":{
+    "pelvis":[-38,38],"torso":[-58,58],"head":[-42,42],
+    "upperArm_L":[-190,190],"lowerArm_L":[-138,138],"hand_L":[-95,95],
+    "upperArm_R":[-190,190],"lowerArm_R":[-138,138],"hand_R":[-95,95],
+    "thigh_L":[-95,95],"shin_L":[-96,96],"foot_L":[-48,48],
+    "thigh_R":[-95,95],"shin_R":[-96,96],"foot_R":[-48,48]
+  },
+  "continuity":{"jointOverlap":1.08,"rootBlendMs":95,"footPlantTolerance":4,"preserveSockets":true}
 }

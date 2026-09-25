@@ -1,0 +1,51 @@
+{
+  "id":"paladin-shield-v1","family":"humanoid","fps":60,"transitionMs":95,
+  "actions":{
+    "shield_bash":{"duration":720,"events":[{"at":110,"type":"plant"},{"at":390,"type":"impact"},{"at":590,"type":"recover"}],"poses":[
+      {"at":0,"root":{"x":0,"y":0},"pelvis":{"r":0},"torso":{"r":0}},
+      {"at":110,"root":{"x":-8,"y":7},"pelvis":{"r":-9},"torso":{"r":-15},"head":{"r":6},"upperArm_L":{"r":-48},"lowerArm_L":{"r":-18},"upperArm_R":{"r":-35},"lowerArm_R":{"r":-22}},
+      {"at":245,"root":{"x":13,"y":-2},"pelvis":{"r":7},"torso":{"r":13},"head":{"r":-5},"upperArm_L":{"r":-21},"lowerArm_L":{"r":-10},"upperArm_R":{"r":18}},
+      {"at":390,"root":{"x":56,"y":-4},"pelvis":{"r":16},"torso":{"r":28},"head":{"r":-11},"upperArm_L":{"r":18},"lowerArm_L":{"r":-8},"upperArm_R":{"r":55},"lowerArm_R":{"r":21}},
+      {"at":505,"root":{"x":47,"y":1},"pelvis":{"r":11},"torso":{"r":20},"upperArm_L":{"r":7},"upperArm_R":{"r":36}},
+      {"at":590,"root":{"x":19,"y":2},"pelvis":{"r":4},"torso":{"r":8},"upperArm_L":{"r":-24},"upperArm_R":{"r":16}},
+      {"at":720,"root":{"x":0,"y":0},"pelvis":{"r":0},"torso":{"r":0},"head":{"r":0},"upperArm_L":{"r":0},"lowerArm_L":{"r":0},"upperArm_R":{"r":0},"lowerArm_R":{"r":0}}
+    ]},
+    "radiant_charge":{"duration":1080,"events":[{"at":160,"type":"windup"},{"at":480,"type":"launch"},{"at":710,"type":"impact"},{"at":910,"type":"recover"}],"poses":[
+      {"at":0,"root":{"x":0,"y":0},"pelvis":{"r":0},"torso":{"r":0}},
+      {"at":160,"root":{"x":-13,"y":10},"pelvis":{"r":-12},"torso":{"r":-20},"head":{"r":8},"upperArm_L":{"r":-57},"lowerArm_L":{"r":-25},"upperArm_R":{"r":-72},"lowerArm_R":{"r":-44}},
+      {"at":330,"root":{"x":-21,"y":16},"pelvis":{"r":-17},"torso":{"r":-29},"head":{"r":12},"upperArm_L":{"r":-66},"lowerArm_L":{"r":-31},"upperArm_R":{"r":-112},"lowerArm_R":{"r":-61}},
+      {"at":480,"root":{"x":12,"y":-7},"pelvis":{"r":8},"torso":{"r":15},"head":{"r":-7},"upperArm_L":{"r":-25},"upperArm_R":{"r":4},"lowerArm_R":{"r":10}},
+      {"at":710,"root":{"x":91,"y":-3},"pelvis":{"r":19},"torso":{"r":34},"head":{"r":-14},"upperArm_L":{"r":12},"lowerArm_L":{"r":-5},"upperArm_R":{"r":132},"lowerArm_R":{"r":49}},
+      {"at":910,"root":{"x":55,"y":5},"pelvis":{"r":10},"torso":{"r":19},"upperArm_L":{"r":-19},"upperArm_R":{"r":71},"lowerArm_R":{"r":22}},
+      {"at":1080,"root":{"x":0,"y":0},"pelvis":{"r":0},"torso":{"r":0},"head":{"r":0},"upperArm_L":{"r":0},"lowerArm_L":{"r":0},"upperArm_R":{"r":0},"lowerArm_R":{"r":0}}
+    ]},
+    "consecration":{"duration":1260,"events":[{"at":190,"type":"kneel"},{"at":610,"type":"channel"},{"at":850,"type":"release"}],"poses":[
+      {"at":0,"root":{"y":0},"pelvis":{"r":0},"torso":{"r":0}},
+      {"at":190,"root":{"x":-3,"y":10},"pelvis":{"r":-5},"torso":{"r":-9},"head":{"r":5},"upperArm_L":{"r":-39},"lowerArm_L":{"r":23},"upperArm_R":{"r":-36},"lowerArm_R":{"r":31}},
+      {"at":420,"root":{"x":1,"y":20},"pelvis":{"r":4},"torso":{"r":8},"head":{"r":-6},"upperArm_L":{"r":-65},"lowerArm_L":{"r":42},"upperArm_R":{"r":-61},"lowerArm_R":{"r":48}},
+      {"at":610,"root":{"x":3,"y":13},"pelvis":{"r":6},"torso":{"r":13},"head":{"r":-9},"upperArm_L":{"r":-82},"lowerArm_L":{"r":55},"upperArm_R":{"r":-80},"lowerArm_R":{"r":59}},
+      {"at":850,"root":{"x":5,"y":-7},"pelvis":{"r":3},"torso":{"r":9},"head":{"r":-10},"upperArm_L":{"r":-112},"lowerArm_L":{"r":69},"upperArm_R":{"r":-108},"lowerArm_R":{"r":72}},
+      {"at":1050,"root":{"x":2,"y":-2},"pelvis":{"r":1},"torso":{"r":4},"upperArm_L":{"r":-46},"upperArm_R":{"r":-43}},
+      {"at":1260,"root":{"x":0,"y":0},"pelvis":{"r":0},"torso":{"r":0},"head":{"r":0},"upperArm_L":{"r":0},"lowerArm_L":{"r":0},"upperArm_R":{"r":0},"lowerArm_R":{"r":0}}
+    ]},
+    "judgment_recover":{"duration":780,"events":[{"at":120,"type":"brace"},{"at":470,"type":"ready"}],"poses":[
+      {"at":0,"root":{"x":31,"y":4},"pelvis":{"r":15},"torso":{"r":28},"head":{"r":-12},"upperArm_L":{"r":13},"upperArm_R":{"r":145},"lowerArm_R":{"r":48}},
+      {"at":120,"root":{"x":23,"y":9},"pelvis":{"r":10},"torso":{"r":19},"head":{"r":-8},"upperArm_L":{"r":-18},"upperArm_R":{"r":91},"lowerArm_R":{"r":28}},
+      {"at":300,"root":{"x":-14,"y":4},"pelvis":{"r":-7},"torso":{"r":-13},"head":{"r":5},"upperArm_L":{"r":-43},"lowerArm_L":{"r":21},"upperArm_R":{"r":42},"lowerArm_R":{"r":7}},
+      {"at":470,"root":{"x":-6,"y":1},"pelvis":{"r":3},"torso":{"r":7},"head":{"r":-3},"upperArm_L":{"r":-36},"upperArm_R":{"r":24}},
+      {"at":780,"root":{"x":0,"y":0},"pelvis":{"r":0},"torso":{"r":0},"head":{"r":0},"upperArm_L":{"r":0},"lowerArm_L":{"r":0},"upperArm_R":{"r":0},"lowerArm_R":{"r":0}}
+    ]}
+  },
+  "profiles":{
+    "shield_bash":[{}, {"thigh_L":{"r":-15},"shin_L":{"r":27},"thigh_R":{"r":17},"shin_R":{"r":-29}}, {"thigh_L":{"r":-27},"shin_L":{"r":39},"thigh_R":{"r":29},"shin_R":{"r":-37}}, {"thigh_L":{"r":-39},"shin_L":{"r":46},"foot_L":{"r":-13},"thigh_R":{"r":38},"shin_R":{"r":-29}}, {"thigh_L":{"r":-29},"shin_L":{"r":36},"thigh_R":{"r":28},"shin_R":{"r":-24}}, {"thigh_L":{"r":-12},"shin_L":{"r":17},"thigh_R":{"r":12},"shin_R":{"r":-13}}, {}],
+    "radiant_charge":[{}, {"thigh_L":{"r":-17},"shin_L":{"r":31},"thigh_R":{"r":19},"shin_R":{"r":-33}}, {"thigh_L":{"r":-30},"shin_L":{"r":49},"thigh_R":{"r":33},"shin_R":{"r":-51}}, {"thigh_L":{"r":-43},"shin_L":{"r":54},"thigh_R":{"r":42},"shin_R":{"r":-35}}, {"thigh_L":{"r":-51},"shin_L":{"r":59},"foot_L":{"r":-17},"thigh_R":{"r":48},"shin_R":{"r":-37}}, {"thigh_L":{"r":-28},"shin_L":{"r":36},"thigh_R":{"r":27},"shin_R":{"r":-23}}, {}],
+    "consecration":[{}, {"thigh_L":{"r":-12},"shin_L":{"r":25},"thigh_R":{"r":13},"shin_R":{"r":-24}}, {"thigh_L":{"r":-21},"shin_L":{"r":48},"foot_L":{"r":-14},"thigh_R":{"r":15},"shin_R":{"r":-29}}, {"thigh_L":{"r":-24},"shin_L":{"r":57},"foot_L":{"r":-17},"thigh_R":{"r":17},"shin_R":{"r":-31}}, {"thigh_L":{"r":-18},"shin_L":{"r":38},"thigh_R":{"r":19},"shin_R":{"r":-34}}, {"thigh_L":{"r":-9},"shin_L":{"r":16},"thigh_R":{"r":10},"shin_R":{"r":-17}}, {}],
+    "judgment_recover":[{}, {"thigh_L":{"r":14},"shin_L":{"r":-25},"thigh_R":{"r":-13},"shin_R":{"r":23}}, {"thigh_L":{"r":24},"shin_L":{"r":-38},"thigh_R":{"r":-22},"shin_R":{"r":36}}, {"thigh_L":{"r":11},"shin_L":{"r":-20},"thigh_R":{"r":-10},"shin_R":{"r":18}}, {}]
+  },
+  "stage":{
+    "shield_bash":[{}, {"x":-11,"y":6,"yaw":-17}, {"x":37,"y":-3,"yaw":8}, {"x":148,"y":-4,"yaw":28}, {"x":156,"yaw":32}, {"x":78,"yaw":13}, {}],
+    "radiant_charge":[{}, {"x":-18,"y":9,"yaw":-18}, {"x":-31,"y":14,"yaw":-27}, {"x":48,"y":-8,"yaw":5}, {"x":202,"y":-4,"yaw":31}, {"x":122,"y":4,"yaw":17}, {}],
+    "consecration":[{}, {"x":-5,"y":7,"yaw":-7}, {"x":1,"y":15,"yaw":0}, {"x":4,"y":9,"yaw":5}, {"x":7,"y":-8,"yaw":9}, {"x":3,"y":-2,"yaw":3}, {}],
+    "judgment_recover":[{"x":42,"y":3,"yaw":23}, {"x":31,"y":7,"yaw":15}, {"x":-36,"y":3,"yaw":-19}, {"x":-14,"yaw":-8}, {}]
+  }
+}

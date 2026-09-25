@@ -55,7 +55,7 @@ public final class WebTests {
             check(call("/", null).body().contains("ABYSS EXPEDITION · 2.0"), "unified 2.0 homepage delivered");
             check(call("/legacy/", null).body().contains("id=\"board\""), "legacy server-save game remains available");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("2.12.0-skill-break"), "skill-break release uses one cache-busted build");
+            check(betaPage.contains("2.13.0-paladin-rig"), "paladin-rig release uses one cache-busted build");
             check(betaPage.contains("distant-castle") && !betaPage.contains("abyss-gate\"><i"), "castle horizon replaces the central abyss gate");
             check(betaPage.contains("battle-road"), "combat scene includes the shared battle road");
             check(betaPage.contains("abyss-scenery"), "authored abyss scenery layer is present");
@@ -106,7 +106,8 @@ public final class WebTests {
                     "assets/animation/actions/humanoid-combat-v1.json",
                     "assets/animation/actions/humanoid-combat-v2.json",
                     "assets/animation/actions/humanoid-locomotion-v1.json",
-                    "assets/animation/actions/humanoid-utility-v1.json")) {
+                    "assets/animation/actions/humanoid-utility-v1.json",
+                    "assets/animation/actions/paladin-shield-v1.json")) {
                 var response = call("/" + rigAsset, null);
                 check(response.statusCode() == 200, "active humanoid rig asset delivered: " + rigAsset);
                 check(response.headers().firstValue("Content-Type").orElse("").contains("application/json"), "active humanoid rig asset MIME type: " + rigAsset);
@@ -116,6 +117,8 @@ public final class WebTests {
             check(call("/assets/animation/characters/warrior-v1.json", null).body().contains("humanoid-locomotion-v1"), "Warrior binds an independent lower-body locomotion set");
             check(call("/assets/animation/characters/warrior-v1.json", null).body().contains("humanoid-utility-v1"), "Warrior binds the replaceable shared utility action set");
             check(call("/assets/animation/actions/humanoid-utility-v1.json", null).body().contains("\"dodge_back\""), "utility action set includes reusable movement and stance actions");
+            check(call("/assets/animation/characters/paladin-v1.json", null).body().contains("paladin-shield-v1"), "Paladin binds its replaceable shield action pack");
+            check(call("/assets/animation/skeletons/humanoid-v1.json", null).body().contains("\"continuity\""), "shared Humanoid skeleton publishes joint continuity constraints");
             check(call("/assets/animation/skins/warrior-iron-vow-v1.json", null).body().contains("warrior-rig-v2.png"), "Warrior skin binds the enemy-facing production texture");
             check(call("/assets/animation/skeletons/humanoid-heavy.json", null).headers().firstValue("Content-Type").orElse("").contains("application/json"), "skeleton model delivered as JSON");
             check(call("/assets/animation/actions/greatsword-v1.json", null).body().contains("\"heavy\""), "greatsword action set includes heavy attack");

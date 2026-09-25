@@ -7,6 +7,7 @@ globalThis.CombatCore=Object.freeze({
   HOLD_WARD:12,
   GUARD_COOLDOWN_MS:1400,
   BROKEN_MS:3600,
+  PLAYER_BREAK_GAIN:.72,
   intents:Object.freeze({
     bite:{windup:850,kind:"attack"},sunder:{windup:1150,kind:"heavy"},poison:{windup:1000,kind:"special"},
     double:{windup:900,kind:"combo"},weak:{windup:1050,kind:"special"},burn:{windup:1050,kind:"special"},

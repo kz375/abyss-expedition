@@ -48,7 +48,7 @@
 .part-torso:before{content:"";position:absolute;z-index:-2;left:-17px;right:-17px;top:3px;height:31px;border:1px solid #89764d;border-radius:45%;background:linear-gradient(90deg,#252b28,#606860 22% 78%,#252b28);box-shadow:inset 0 1px #fff2}.part-torso:after{content:"";position:absolute;z-index:-1;left:19%;right:19%;bottom:-12px;height:25px;border:1px solid #88764e;border-radius:38%;background:linear-gradient(90deg,#242a26,#596159,#202622)}
 .part-pelvis:before{content:"";position:absolute;z-index:-1;left:7%;right:7%;top:-12px;height:24px;border:1px solid #88764e;border-radius:45%;background:#303732}
 .paper-rig[data-action="guard"] .part-shield{z-index:14;translate:45px -24px;scale:1.08;filter:brightness(1.16) drop-shadow(0 0 8px #85d8ea88)}.paper-rig[data-action="perfect_guard"] .part-shield{z-index:14;translate:52px -29px;scale:1.12;filter:brightness(1.2) drop-shadow(0 0 10px #85d8eaaa)}.paper-rig[data-action="guard"] .part-weapon,.paper-rig[data-action="perfect_guard"] .part-weapon{z-index:11;filter:brightness(.86) drop-shadow(0 4px 4px #000c)}
-.paper-rig[data-action="attack_01"] .part-weapon,.paper-rig[data-action="attack_02"] .part-weapon,.paper-rig[data-action="break_strike"] .part-weapon{z-index:12}.paper-rig[data-action="attack_01"] .part-shield,.paper-rig[data-action="attack_02"] .part-shield,.paper-rig[data-action="break_strike"] .part-shield{z-index:2;filter:brightness(.78)}
+.paper-rig[data-action^="attack"] .part-weapon,.paper-rig[data-action="break_strike"] .part-weapon{z-index:12}.paper-rig[data-action^="attack"] .part-shield,.paper-rig[data-action="break_strike"] .part-shield{z-index:2;filter:brightness(.78)}
 @media(max-width:700px){.paper-rig{--rig-scale-x:1.03;--rig-scale-y:1.03}}
 
 /* Warrior production skin: one texture is clipped by reusable Humanoid bones; equipment remains socketed. */
@@ -67,7 +67,7 @@
 .production-skin .part-shield{left:14px;top:100px;width:62px;height:84px;border:0;clip-path:none;border-radius:0;background:var(--shield-texture) center/contain no-repeat;box-shadow:none;transform-origin:72% 35%;filter:drop-shadow(0 5px 5px #000c)}
 
 /* Action-aware depth keeps the active limb in front of the chest instead of vanishing behind it. */
-.production-skin[data-action="attack_01"] :is(.part-upperArm_R,.part-lowerArm_R,.part-hand_R),.production-skin[data-action="attack_02"] :is(.part-upperArm_R,.part-lowerArm_R,.part-hand_R),.production-skin[data-action="break_strike"] :is(.part-upperArm_R,.part-lowerArm_R,.part-hand_R){z-index:11!important}
+.production-skin[data-action^="attack"] :is(.part-upperArm_R,.part-lowerArm_R,.part-hand_R),.production-skin[data-action="break_strike"] :is(.part-upperArm_R,.part-lowerArm_R,.part-hand_R){z-index:11!important}
 .production-skin[data-action="guard"] :is(.part-upperArm_L,.part-lowerArm_L,.part-hand_L),.production-skin[data-action="perfect_guard"] :is(.part-upperArm_L,.part-lowerArm_L,.part-hand_L){z-index:11!important}
 .production-skin[data-action="hit"] :is(.part-upperArm_L,.part-lowerArm_L,.part-hand_L,.part-upperArm_R,.part-lowerArm_R,.part-hand_R),.production-skin[data-action="break"] :is(.part-upperArm_L,.part-lowerArm_L,.part-hand_L,.part-upperArm_R,.part-lowerArm_R,.part-hand_R){z-index:7!important}
 .production-skin .rig-part{opacity:1;visibility:visible;backface-visibility:visible}

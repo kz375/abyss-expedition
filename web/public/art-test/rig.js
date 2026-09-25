@@ -11,8 +11,8 @@ async function loadRig(heroId="warrior"){
   if(request!==rigRequest)return false;
   const host=document.getElementById("hero-rig");if(!host)return;
   clearTimeout(rigTimer);host.getAnimations().forEach(animation=>animation.cancel());host.className=`paper-rig rig-${heroId} rig-type-${skin.type||"humanoid"}`;for(const property of ["--rig-texture","--weapon-texture","--shield-texture"])host.style.removeProperty(property);
-  const continuitySkin=heroId!=="warrior"&&skin.rigTexture?`<img class="rig-skin-base" src="${skin.rigTexture}" alt="" aria-hidden="true">`:"";
-  host.innerHTML=`<b class="rig-root">${continuitySkin}${character.parts.map(id=>`<i class="rig-part part-${id.replaceAll(".","-")}" data-part="${id}"></i>`).join("")}</b>`;
+  const texturePreload=heroId!=="warrior"&&skin.rigTexture?`<img class="rig-skin-base rig-texture-preload" src="${skin.rigTexture}" alt="" aria-hidden="true" data-render-layer="preload">`:"";
+  host.innerHTML=`<b class="rig-root">${texturePreload}${character.parts.map(id=>`<i class="rig-part part-${id.replaceAll(".","-")}" data-part="${id}"></i>`).join("")}</b>`;
   bindRigTexture(host,skin);
   const continuityImage=host.querySelector(".rig-skin-base");if(continuityImage){try{await continuityImage.decode();}catch{if(!continuityImage.complete||!continuityImage.naturalWidth)throw Error(`Rig texture missing: ${skin.rigTexture}`);}if(request!==rigRequest)return false;}
   const bones=new Map(skeleton.bones.map(bone=>[bone.id,bone])),baseAngles=new Map(),joints=new Map([["root",{x:host.clientWidth/2,y:host.clientHeight}]]);

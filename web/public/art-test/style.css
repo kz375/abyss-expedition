@@ -90,7 +90,7 @@
 @keyframes status-body-pulse{0%{opacity:0;scale:.72}18%,68%{opacity:1;scale:1}to{opacity:0;scale:1.13}}@keyframes model-grounding{50%{translate:0 -1.5px}}
 
 /* Composite skins keep the complete painted silhouette while reusable bones animate above it. */
-.paper-rig .rig-skin-base{position:absolute!important;z-index:2;left:var(--rig-texture-x);top:var(--rig-texture-y);display:block!important;width:var(--rig-texture-w)!important;height:var(--rig-texture-h)!important;max-width:none!important;object-fit:fill!important;opacity:.9!important;visibility:visible!important;filter:none!important;pointer-events:none}
+.paper-rig .rig-skin-base{position:absolute!important;z-index:-1;left:0;top:0;display:block!important;width:1px!important;height:1px!important;max-width:none!important;opacity:0!important;visibility:hidden!important;clip-path:inset(50%)!important;pointer-events:none}
 
 /* Six production rigs share one gallery pipeline, including the hidden Creator. */
 .class-fx-controls>div:last-child{grid-template-columns:repeat(6,minmax(0,1fr))}.stage[data-hero="creator"]{--class-color:#ff4d70;--class-soft:#ffd0da}.paper-rig.rig-creator{--rig-scale-x:1.04;--rig-scale-y:1.06;filter:drop-shadow(0 0 16px #ff4d7066) drop-shadow(0 14px 11px #000c)}

@@ -247,7 +247,7 @@ function selectEventOption(i){if(game.phase!=="event")return;const option=eventO
 function shopDescription(id){const stat=game.difficulty==="ultra"?6:game.difficulty==="nightmare"?4:2;return {potion:["药瓶 +1","Healing bottle +1"],weapon:[`攻击 +${stat}`,`Attack +${stat}`],armor:[`防御 +${stat}`,`Defense +${stat}`],ward:["护盾 +25","Ward +25"],tonic:["生命上限 +12，恢复 20","Max health +12; heal 20"],smoke:["药瓶 +1，护盾 +12","Bottle +1; ward +12"]}[id];}
 function buy(id){if(game.phase!=="shop"||!game.shopStock.includes(id)||game.bought.includes(id))return;const item=SHOP.find(s=>s.id===id);if(!spendGold(item.price))return;const stat=game.difficulty==="ultra"?6:game.difficulty==="nightmare"?4:2;
   if(id==="potion"||id==="smoke")game.potions++;if(id==="weapon")game.baseAttack+=stat;if(id==="armor")game.baseDefense+=stat;if(id==="ward")addWard(25);if(id==="smoke")addWard(12);if(id==="tonic"){game.baseMax+=12;reconcile();heal(20)}game.bought.push(id);commit();}
-function usePotion(){if(game.phase!=="battle"||game.paused||archiveKind||game.potions<1||game.hp>=game.max)return;game.potions--;globalThis.playCombatRig?.("channel");heal(game.max*.3*effects().potion);commit();}
+function usePotion(){if(game.phase!=="battle"||game.paused||archiveKind||game.potions<1||game.hp>=game.max)return;game.potions--;globalThis.playCombatRig?.("potion_use");globalThis.playCombatUtilityFx?.("potion_use");heal(game.max*.3*effects().potion);commit();}
 // Twin Cores matches the Java board's push rules; rotations/mirrors preserve a
 // known solution so random layouts do not require lucky edge teleports to win.
 function startTrial(){if(game.trialUsed)return;game.trialUsed=true;game.trial=generateTrial();game.phase="trial";

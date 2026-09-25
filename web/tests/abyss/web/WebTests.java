@@ -55,7 +55,7 @@ public final class WebTests {
             check(call("/", null).body().contains("ABYSS EXPEDITION · 2.0"), "unified 2.0 homepage delivered");
             check(call("/legacy/", null).body().contains("id=\"board\""), "legacy server-save game remains available");
             String betaPage = call("/realtime-test/", null).body();
-            check(betaPage.contains("2.6.2-render-persistence"), "render-persistence release uses one cache-busted build");
+            check(betaPage.contains("2.7.0-all-rigs"), "all-rigs release uses one cache-busted build");
             check(betaPage.contains("distant-castle") && !betaPage.contains("abyss-gate\"><i"), "castle horizon replaces the central abyss gate");
             check(betaPage.contains("battle-road"), "combat scene includes the shared battle road");
             check(betaPage.contains("abyss-scenery"), "authored abyss scenery layer is present");
@@ -85,12 +85,14 @@ public final class WebTests {
                 check(call("/assets/characters/" + hero + "-rig-v1.png", null).statusCode() == 200, "replaceable combat rig skin is served: " + hero);
                 check(call("/assets/animation/characters/" + hero + "-v1.json", null).statusCode() == 200, "combat rig character config is served: " + hero);
             }
+            check(call("/assets/animation/characters/creator-v1.json", null).statusCode() == 200, "Creator combat rig character config is served");
+            check(call("/assets/animation/skins/creator-reality-v1.json", null).body().contains("creator.png"), "Creator skin reuses its replaceable production art");
             check(call("/assets/animation/skins/warrior-greatsword-v2.png", null).statusCode() == 200, "detachable Warrior greatsword is served");
             check(call("/assets/animation/skins/warrior-shield-v2.png", null).statusCode() == 200, "detachable Warrior shield is served");
             String artPage = call("/art-test/", null).body();
             check(artPage.contains("ART FX LAB"), "art and combat FX lab delivered");
             check(artPage.contains("id=\"story-beta\""), "story beta lives in the test gallery");
-            check(artPage.contains("id=\"hero-select\"") && artPage.contains("data-class-preset=\"necromancer\""), "multi-rig hero selector and class FX presets live in the art lab");
+            check(artPage.contains("id=\"hero-select\"") && artPage.contains("data-class-preset=\"necromancer\"") && artPage.contains("data-class-preset=\"creator\""), "all six rig selectors and class FX presets live in the art lab");
             check(call("/art-test/style.css?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("text/css"), "art lab stylesheet MIME type");
             check(call("/art-test/actors.js?v=0.5.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "separate character catalog MIME type");
             check(call("/art-test/rig.js?v=0.7.0", null).headers().firstValue("Content-Type").orElse("").contains("javascript"), "reusable rig runtime MIME type");

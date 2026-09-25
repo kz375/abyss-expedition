@@ -1,6 +1,6 @@
 "use strict";
 const RIG_ASSET_ROOT=new URL("../assets/animation/",document.currentScript.src);
-const RIG_CHARACTERS=globalThis.ART_TEST_ACTORS?.rigCharacters||Object.freeze({warrior:"warrior-v1",mage:"mage-v1",ranger:"ranger-v1",paladin:"paladin-v1",necromancer:"necromancer-v1"});
+const RIG_CHARACTERS=globalThis.ART_TEST_ACTORS?.rigCharacters||Object.freeze({warrior:"warrior-v1",mage:"mage-v1",ranger:"ranger-v1",paladin:"paladin-v1",necromancer:"necromancer-v1",creator:"creator-v1"});
 const rigAssetUrl=path=>new URL(path.replace(/^\/assets\/animation\//,""),RIG_ASSET_ROOT);
 let rigModel=null,rigTimer=null,pendingRigAction="idle",rigPlaybackRate=1,rigRequest=0;
 function bindRigTexture(host,skin){if(!skin.rigTexture)return;const binding=skin.rigTextureBinding||{},size=binding.displaySize||[240,320],offset=binding.offset||[-25,3];host.classList.add("production-skin");host.style.setProperty("--rig-texture",`url(${new URL(skin.rigTexture,document.baseURI)})`);host.style.setProperty("--rig-texture-w",`${size[0]}px`);host.style.setProperty("--rig-texture-h",`${size[1]}px`);host.style.setProperty("--rig-texture-x",`${offset[0]}px`);host.style.setProperty("--rig-texture-y",`${offset[1]}px`);if(skin.attachments?.weapon?.startsWith("/"))host.style.setProperty("--weapon-texture",`url(${new URL(skin.attachments.weapon,document.baseURI)})`);if(skin.attachments?.shield?.startsWith("/"))host.style.setProperty("--shield-texture",`url(${new URL(skin.attachments.shield,document.baseURI)})`);}
@@ -11,7 +11,7 @@ async function loadRig(heroId="warrior"){
   if(request!==rigRequest)return false;
   const host=document.getElementById("hero-rig");if(!host)return;
   clearTimeout(rigTimer);host.getAnimations().forEach(animation=>animation.cancel());host.className=`paper-rig rig-${heroId} rig-type-${skin.type||"humanoid"}`;for(const property of ["--rig-texture","--weapon-texture","--shield-texture"])host.style.removeProperty(property);
-  const continuitySkin=skin.renderMode==="composite"?`<img class="rig-skin-base" src="${skin.rigTexture}" alt="" aria-hidden="true">`:"";
+  const continuitySkin=heroId!=="warrior"&&skin.rigTexture?`<img class="rig-skin-base" src="${skin.rigTexture}" alt="" aria-hidden="true">`:"";
   host.innerHTML=`<b class="rig-root">${continuitySkin}${character.parts.map(id=>`<i class="rig-part part-${id.replaceAll(".","-")}" data-part="${id}"></i>`).join("")}</b>`;
   bindRigTexture(host,skin);
   const continuityImage=host.querySelector(".rig-skin-base");if(continuityImage){try{await continuityImage.decode();}catch{if(!continuityImage.complete||!continuityImage.naturalWidth)throw Error(`Rig texture missing: ${skin.rigTexture}`);}if(request!==rigRequest)return false;}
@@ -40,6 +40,7 @@ function modelPose(name,pose){
   if(hero==="ranger"){adjust("pelvis",{r:3,y:2});adjust("torso",{r:5,y:1});adjust("head",{r:-3});if(name!=="idle"){adjust("thigh_L",{r:-5});adjust("thigh_R",{r:6});}}
   if(hero==="paladin"){for(const part of ["pelvis","torso","head","upperArm_L","upperArm_R","thigh_L","thigh_R"])if(out[part]?.r)out[part].r*=.78;adjust("pelvis",{y:1});}
   if(hero==="necromancer"){adjust("torso",{r:-5});adjust("head",{r:5});if(name.startsWith("attack")||name==="break_strike"){adjust("upperArm_L",{r:-9});adjust("upperArm_R",{r:10});}}
+  if(hero==="creator"){adjust("torso",{r:3});adjust("head",{r:-3});if(name.startsWith("attack")||name==="break_strike"){adjust("upperArm_L",{r:-12});adjust("upperArm_R",{r:12});}}
   return out;
 }
 function playRigAction(name){

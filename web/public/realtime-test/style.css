@@ -783,3 +783,66 @@ body:after{background:radial-gradient(ellipse 42% 26% at 68% 6%,#93a9c714,transp
 @keyframes stat-pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}35%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-58%) scale(1)}}
 
 @media(prefers-reduced-motion:reduce){.event-card,.decision-card,.relic-card{transition:none}.event-card:hover,.decision-card:hover,.relic-card:hover{transform:none}.relic-stage-stars,.rarity-epic .relic-icon,.rarity-legendary .relic-icon{animation:none}}
+
+/* ============ 2.24.0: 大升级 ============ */
+
+/* ---- 符印系统：几何符号 + 渐变 + 光晕 ---- */
+.sigil{display:inline-block;font-size:1em;line-height:1;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 8px #0008)}
+.sigil-steel{background-image:linear-gradient(135deg,#c9d4e0,#7a8ba0)}
+.sigil-life{background-image:linear-gradient(135deg,#7dffab,#2ea86a)}
+.sigil-moon{background-image:linear-gradient(135deg,#e8d8ff,#8b4dff)}
+.sigil-storm{background-image:linear-gradient(135deg,#a8e6ff,#4d8dff)}
+.sigil-fire{background-image:linear-gradient(135deg,#ffb84d,#ff4d2e)}
+.sigil-gold{background-image:linear-gradient(135deg,#ffe9a8,#d4a017)}
+.sigil-thorn{background-image:linear-gradient(135deg,#a8d48b,#4d7a3a)}
+.sigil-resolve{background-image:linear-gradient(135deg,#e8e0ff,#6a5acd)}
+.sigil-time{background-image:linear-gradient(135deg,#d8c8ff,#6a4dff)}
+.sigil-blood{background-image:linear-gradient(135deg,#ff8a8a,#b91c1c)}
+.sigil-arcane{background-image:linear-gradient(135deg,#d8a8ff,#7a2eaa)}
+.sigil-shadow{background-image:linear-gradient(135deg,#8a8aa0,#2a2a3a)}
+.relic-sigil .sigil{font-size:52px;filter:drop-shadow(0 4px 16px #000a)}
+.rarity-epic .relic-sigil .sigil,.rarity-legendary .relic-sigil .sigil{animation:sigil-pulse 2s ease-in-out infinite}
+@keyframes sigil-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.shop-sigil .sigil{font-size:36px}
+
+/* ---- 商店大升级 ---- */
+.shop-modal .modal{max-width:700px}
+.shop-stage{position:relative;border-radius:14px;overflow:hidden;border:1px solid #ffffff14}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:6px 18px 16px;position:relative;z-index:1}
+.shop-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 14px;text-align:center;transition:transform .25s,box-shadow .25s,border-color .25s}
+.shop-card:hover:not(:disabled){transform:translateY(-5px);border-color:#e9d08b88;box-shadow:0 10px 28px #000a,0 0 20px #e9d08b22}
+.shop-card:hover:not(:disabled) .shop-sigil{transform:scale(1.15)}
+.shop-sigil{transition:transform .25s}
+.shop-body strong{display:block;font-size:14px;margin-bottom:6px}
+.shop-body small{font-size:11px;color:var(--muted);line-height:1.5}
+.shop-price{font-size:15px;font-weight:700;color:#e9d08b;font-variant-numeric:tabular-nums}
+.shop-price.cant{color:#f17d6a}
+.shop-card.sold{opacity:.45}
+.sold-tag{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:.15em;color:var(--muted);border:1px solid #ffffff22;padding:2px 8px;border-radius:10px;font-style:normal}
+.shop-leave{margin:0 18px 18px;position:relative;z-index:1}
+
+/* ---- 结算页大视觉 ---- */
+.result-stage{position:relative;border-radius:14px;overflow:hidden;border:1px solid #ffffff14;padding:0}
+.result-hero{display:flex;align-items:center;gap:18px;padding:28px 24px 16px;position:relative;z-index:1}
+.result-hero-icon{font-size:64px;filter:drop-shadow(0 4px 20px #000c);animation:hero-in .6s cubic-bezier(.2,1.4,.4,1)}
+@keyframes hero-in{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+.result-hero-text b{display:block;font-size:24px;letter-spacing:.1em;margin-bottom:6px}
+.result-desc{padding:0 24px 16px;font-size:14px;color:#c9c2b4;font-style:italic;position:relative;z-index:1}
+.result-loot{display:flex;flex-wrap:wrap;gap:12px;padding:0 24px 20px;justify-content:center;position:relative;z-index:1}
+.result-loot.empty{color:var(--muted);font-size:13px}
+.result-item{display:flex;align-items:center;gap:12px;min-width:150px;padding:14px 18px;border-radius:12px;border:1px solid;opacity:0;transform:translateY(20px) scale(.9);animation:result-pop .5s cubic-bezier(.2,1.4,.4,1) forwards}
+.result-item:nth-child(1){animation-delay:.15s}.result-item:nth-child(2){animation-delay:.3s}.result-item:nth-child(3){animation-delay:.45s}.result-item:nth-child(4){animation-delay:.6s}.result-item:nth-child(5){animation-delay:.75s}
+.result-item.gain{border-color:#63e69a66;background:linear-gradient(135deg,#63e69a1a,#63e69a08);box-shadow:0 4px 20px #63e69a22}
+.result-item.loss{border-color:#f17d6a66;background:linear-gradient(135deg,#f17d6a1a,#f17d6a08);box-shadow:0 4px 20px #f17d6a22}
+.result-icon{font-size:32px;filter:drop-shadow(0 2px 8px #0008)}
+.result-info b{display:block;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.1}
+.result-item.gain .result-info b{color:#7dffab;text-shadow:0 0 12px #63e69a88}
+.result-item.loss .result-info b{color:#ff9d8a;text-shadow:0 0 12px #f17d6a88}
+.result-info em{font-style:normal;font-size:12px;color:var(--muted)}
+.result-info small{display:block;font-size:11px;color:#e9d08b;margin-top:2px}
+@keyframes result-pop{to{opacity:1;transform:translateY(0) scale(1)}}
+.result-continue{margin:0 24px 24px;position:relative;z-index:1;font-size:15px;padding:14px}
+/* 中央大字弹窗升级 */
+.stat-popup{font-size:36px}
+
+@media(prefers-reduced-motion:reduce){.result-hero-icon,.result-item{animation:none;opacity:1;transform:none}.rarity-epic .relic-sigil .sigil{animation:none}}

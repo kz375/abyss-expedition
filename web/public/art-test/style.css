@@ -154,3 +154,60 @@
 @media(max-width:1040px){.lab-workspace{grid-template-columns:1fr}.lab-workspace>.stage{top:8px;min-height:min(470px,58vh);height:min(470px,58vh)}.lab-workspace .combatant{height:min(410px,51vh)}.lab-workspace .art{height:min(285px,39vh)}.lab-console{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.lab-workspace{display:block}.lab-workspace>.stage{position:relative;top:auto;height:auto;min-height:430px}.lab-workspace .combatant{height:370px;padding:8px}.lab-workspace .art{height:250px}.lab-console{display:grid;grid-template-columns:1fr;margin-top:10px}.lab-console .fx-controls>div,.lab-console .rig-controls>div:last-child,.lab-console .enemy-rig-controls>div:last-child{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .paladin-rig-controls{margin:14px 0;padding:15px 18px;border:1px solid #9a8148;border-radius:10px;background:radial-gradient(circle at 88% 0,#ffd66b20,transparent 42%),linear-gradient(135deg,#1d1b12,#0e100c);box-shadow:inset 0 1px #ffe6a02b,0 12px 30px #0008}.paladin-rig-controls>div:first-child{display:flex;align-items:baseline;justify-content:space-between;gap:14px}.paladin-rig-controls h2{margin:0;color:#ffe3a0;font:600 17px Georgia,"Songti SC",serif}.paladin-rig-controls small{color:#c4a963;font:800 8px ui-monospace,monospace;letter-spacing:.12em}.paladin-rig-controls p{margin:8px 0 12px;color:#b8ad8b;font-size:10px;line-height:1.55}.paladin-rig-controls>div:last-child{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.paladin-rig-controls button{min-height:40px;padding:8px;border:1px solid #8a713d;border-radius:5px;background:linear-gradient(#2b2819,#15160f);color:#ead6a1;font:700 9px ui-monospace,monospace;cursor:pointer}.paladin-rig-controls button:hover,.paladin-rig-controls button.selected{border-color:#ffe18a;color:#fff8d8;box-shadow:0 0 18px #f0be4c55}.paper-rig.rig-paladin[data-action="shield_bash"],.paper-rig.rig-paladin[data-action="radiant_charge"]{filter:brightness(1.3) drop-shadow(0 0 18px #ffd467) drop-shadow(0 14px 11px #000c)}.paper-rig.rig-paladin[data-action="consecration"]{filter:brightness(1.22) drop-shadow(0 0 23px #ffe69a) drop-shadow(0 14px 11px #000c)}.lab-console .paladin-rig-controls{min-width:0;margin:0;padding:13px}.lab-console .paladin-rig-controls>div:first-child{align-items:flex-start;flex-direction:column;gap:3px}@media(max-width:700px){.paladin-rig-controls>div:last-child{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ===== 0.24.0: moonlit lab stage — brighter, readable night scenery (overrides 0.23.0) ===== */
+.sc-moon{position:absolute;z-index:0;left:64%;top:8%;width:74px;height:74px;border-radius:50%;
+  background:radial-gradient(circle at 36% 32%, #f4f7fc 0 40%, #dbe3ee 66%, #b4c0d1 100%);
+  box-shadow:0 0 22px 6px #c3d2e633, 0 0 76px 24px #93a7c422;}
+.sc-moon:before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 62% 58%, #a9b4c636 0 8px, transparent 10px),
+             radial-gradient(circle at 42% 68%, #a9b4c62e 0 5px, transparent 7px);}
+.scene-crypt .stage-scenery{
+  background:
+    radial-gradient(circle at 12% 10%, #e8eef6 0 1px, transparent 2px),
+    radial-gradient(circle at 30% 22%, #ccd6e6 0 1px, transparent 2px),
+    radial-gradient(circle at 52% 8%, #e8eef6 0 1.3px, transparent 2.3px),
+    radial-gradient(circle at 78% 18%, #ccd6e6 0 1px, transparent 2px),
+    radial-gradient(circle at 90% 30%, #e8eef6 0 1px, transparent 2px),
+    linear-gradient(180deg, #0a1220 0%, #14202f 45%, #0d141f 100%);}
+.scene-rift .stage-scenery{
+  background:
+    radial-gradient(circle at 12% 10%, #e8eef6 0 1px, transparent 2px),
+    radial-gradient(circle at 48% 14%, #e8eef6 0 1.3px, transparent 2.3px),
+    radial-gradient(circle at 80% 24%, #ccd6e6 0 1px, transparent 2px),
+    linear-gradient(180deg, #120a1e 0%, #241433 45%, #160f22 100%);}
+.scene-forge .stage-scenery{
+  background:
+    radial-gradient(circle at 15% 12%, #e8eef6 0 1px, transparent 2px),
+    radial-gradient(circle at 55% 10%, #e8eef6 0 1.2px, transparent 2.2px),
+    radial-gradient(circle at 82% 26%, #ccd6e6 0 1px, transparent 2px),
+    linear-gradient(180deg, #1c0e08 0%, #33200f 45%, #1d130a 100%);}
+.sc-castle{filter:blur(1.2px) drop-shadow(0 14px 14px #000a) drop-shadow(6px 0 12px #8fa3c430);opacity:.95;}
+.sc-castle i{background:linear-gradient(90deg,#101828,#2c3c56 52%,#101828);box-shadow:inset 0 0 14px #000;}
+.sc-castle:before{content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 44% 38%, #ffdca6 0 2px, #ff9e4d99 3px, transparent 5px),
+    radial-gradient(circle at 50% 38%, #ffdca6 0 2px, #ff9e4d99 3px, transparent 5px),
+    radial-gradient(circle at 56% 38%, #ffdca6 0 2px, #ff9e4d99 3px, transparent 5px),
+    radial-gradient(circle at 47% 55%, #ffd2a0 0 2px, #ff9e4d88 3px, transparent 5px),
+    radial-gradient(circle at 53% 55%, #ffd2a0 0 2px, #ff9e4d88 3px, transparent 5px),
+    radial-gradient(circle at 30% 60%, #ffc98c 0 1.8px, #ff9e4d77 3px, transparent 4.6px),
+    radial-gradient(circle at 70% 60%, #ffc98c 0 1.8px, #ff9e4d77 3px, transparent 4.6px),
+    repeating-linear-gradient(90deg, transparent 0 34px, #8fa3bd14 35px 37px);}
+.scene-rift .sc-castle:before{background:
+    radial-gradient(circle at 47% 45%, #c9a6ff 0 2px, #8a4dff99 3px, transparent 5px),
+    radial-gradient(circle at 53% 45%, #c9a6ff 0 2px, #8a4dff99 3px, transparent 5px),
+    radial-gradient(circle at 50% 60%, #b98cff 0 2px, #8a4dff88 3px, transparent 5px);}
+.scene-forge .sc-castle:before{background:
+    radial-gradient(circle at 47% 45%, #ffc46b 0 2px, #ff7a1a99 3px, transparent 5px),
+    radial-gradient(circle at 53% 45%, #ffc46b 0 2px, #ff7a1a99 3px, transparent 5px),
+    radial-gradient(circle at 50% 60%, #ff9e4d 0 2px, #ff7a1a88 3px, transparent 5px);}
+.sc-pillar{background:linear-gradient(90deg,#0d1016,#2b3448 46%,#121722 74%,#0a0d13);
+  filter:drop-shadow(0 10px 14px #000) drop-shadow(3px 0 8px #8fa3c428);}
+.sc-fog{opacity:.5;filter:blur(13px);}
+.sc-fog.f-back{background:radial-gradient(ellipse,#93a7c22e,transparent 60%);}
+.sc-fog.f-front{background:radial-gradient(ellipse,#8aa0bb2a,transparent 60%);}
+@media(prefers-reduced-motion:reduce){
+  .sc-fog{animation:none;}
+  .sc-chain{animation:none;}
+}

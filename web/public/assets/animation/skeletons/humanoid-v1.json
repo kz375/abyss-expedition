@@ -1,5 +1,6 @@
 {
   "id":"humanoid-v1",
+  "version":"1.1.0",
   "canvas":[600,900],
   "origin":[300,850],
   "bones":[
@@ -20,7 +21,8 @@
     {"id":"shin_R","parent":"thigh_R","pivot":[355,755]},
     {"id":"foot_R","parent":"shin_R","pivot":[365,845]}
   ],
-  "sockets":{"weapon_socket":"hand_R","shield_socket":"hand_L","back_socket":"torso","head_fx_socket":"head"},
+  "sockets":{"weapon_socket":"hand_R","shield_socket":"hand_L","back_socket":"torso","head_fx_socket":"head",
+    "belt_socket":"pelvis","pauldron_L":"upperArm_L","pauldron_R":"upperArm_R"},
   "limits":{
     "pelvis":[-38,38],"torso":[-58,58],"head":[-42,42],
     "upperArm_L":[-190,190],"lowerArm_L":[-138,138],"hand_L":[-95,95],
@@ -28,5 +30,13 @@
     "thigh_L":[-95,95],"shin_L":[-96,96],"foot_L":[-48,48],
     "thigh_R":[-95,95],"shin_R":[-96,96],"foot_R":[-48,48]
   },
-  "continuity":{"jointOverlap":1.08,"rootBlendMs":95,"footPlantTolerance":4,"preserveSockets":true}
+  "continuity":{"jointOverlap":1.08,"rootBlendMs":95,"footPlantTolerance":4,"preserveSockets":true},
+  "meta":{
+    "mirror":[["upperArm_L","upperArm_R"],["lowerArm_L","lowerArm_R"],["hand_L","hand_R"],
+      ["thigh_L","thigh_R"],["shin_L","shin_R"],["foot_L","foot_R"]],
+    "lengths":{"root":0,"pelvis":200.0,"torso":180.0,"head":170.0,"upperArm_L":96.0,"lowerArm_L":134.2,"hand_L":120.9,"upperArm_R":96.0,"lowerArm_R":132.0,"hand_R":120.9,"thigh_L":40.0,"shin_L":105.5,"foot_L":90.1,"thigh_R":40.0,"shin_R":106.1,"foot_R":90.6},
+    "floorY":850,
+    "footRestY":845,
+    "facing":"front"
+  }
 }

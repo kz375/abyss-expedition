@@ -18,7 +18,7 @@ public final class WebServer implements AutoCloseable {
             "art-test/index.html", "art-test/style.css", "art-test/actors.js", "art-test/rig.js", "art-test/enemy-rig.js", "art-test/lab.js",
             "assets/characters/warrior.png", "assets/characters/warrior-rig-v1.png", "assets/characters/warrior-rig-v2.png", "assets/characters/mage.png", "assets/characters/mage-rig-v1.png", "assets/characters/ranger.png", "assets/characters/ranger-rig-v1.png",
             "assets/characters/paladin.png", "assets/characters/paladin-rig-v1.png", "assets/characters/necromancer.png", "assets/characters/necromancer-rig-v1.png", "assets/characters/creator.png",
-            "assets/enemies/iron-golem-test.png", "assets/enemies/cave-bat-v1.png", "assets/enemies/shadow-assassin-v1.png", "assets/enemies/abyss-lord-v1.png", "assets/backgrounds/dark-theme-cc0.png",
+            "assets/enemies/iron-golem-test.png", "assets/enemies/cave-bat-v1.png", "assets/enemies/shadow-assassin-v1.png", "assets/enemies/abyss-lord-v1.png", "assets/backgrounds/dark-theme-cc0.png", "assets/scenery/moonlit-castle-battle.png",
             "assets/animation/characters/warrior-v1.json", "assets/animation/characters/mage-v1.json", "assets/animation/characters/ranger-v1.json", "assets/animation/characters/paladin-v1.json", "assets/animation/characters/necromancer-v1.json", "assets/animation/characters/creator-v1.json",
             "assets/animation/skeletons/humanoid-v1.json",
             "assets/animation/skins/warrior-iron-vow-v1.json", "assets/animation/skins/mage-abyss-v1.json", "assets/animation/skins/ranger-shadow-v1.json", "assets/animation/skins/paladin-sun-v1.json", "assets/animation/skins/necromancer-bone-v1.json", "assets/animation/skins/creator-reality-v1.json", "assets/animation/skins/warrior-greatsword-v2.png", "assets/animation/skins/warrior-shield-v2.png",
@@ -86,9 +86,9 @@ public final class WebServer implements AutoCloseable {
             headers.set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
             headers.set("Cache-Control", "no-store");
             String path = exchange.getRequestURI().getPath(), method = exchange.getRequestMethod();
-            if (path.equals("/healthz") && method.equals("GET")) { send(exchange, 200, "application/json", "{\"ok\":true}"); return; }
+            if (path.equals("/healthz") && (method.equals("GET") || method.equals("HEAD"))) { send(exchange, 200, "application/json", "{\"ok\":true}"); return; }
             if (!path.startsWith("/api/")) {
-                if (!method.equals("GET")) { error(exchange, 405, "Method not allowed"); return; }
+                if (!method.equals("GET") && !method.equals("HEAD")) { error(exchange, 405, "Method not allowed"); return; }
                 String file = path.equals("/") || path.equals("/realtime-test/") ? "realtime-test/index.html" : path.equals("/legacy/") ? "index.html" : path.equals("/art-test/") ? "art-test/index.html" : path.substring(1);
                 if (!ASSETS.contains(file)) { error(exchange, 404, "Not found"); return; }
                 String type = file.endsWith(".js") ? "text/javascript" : file.endsWith(".css") ? "text/css" : file.endsWith(".json") ? "application/json" : file.endsWith(".svg") ? "image/svg+xml" : file.endsWith(".png") ? "image/png" : "text/html";
@@ -250,6 +250,12 @@ public final class WebServer implements AutoCloseable {
     }
     private static void send(HttpExchange e, int status, String type, byte[] content) throws IOException {
         e.getResponseHeaders().set("Content-Type", type + (type.startsWith("text/") || type.equals("application/json") ? "; charset=utf-8" : ""));
+        if ("HEAD".equalsIgnoreCase(e.getRequestMethod())) {
+            // HEAD: headers only, no body. Advertise the length a GET would return.
+            e.getResponseHeaders().set("Content-Length", Integer.toString(content.length));
+            e.sendResponseHeaders(status, -1);
+            return;
+        }
         e.sendResponseHeaders(status, content.length);
         e.getResponseBody().write(content);
     }

@@ -99,7 +99,7 @@ function renderScene(){if(!game)return;if(game.phase!=="trial")trialViewState=nu
     $("overlay").querySelector(".modal").classList.add("event-modal","shop-modal");
     bind("[data-buy]",b=>buy(b.dataset.buy));$("shop-leave").onclick=()=>{if(game.phase!=="shop")return;eventResult(["补给完成","Supplies secured"]);commit();};
   }else if(game.phase==="result"){
-    const p=eventPresentation(game.eventId);
+    const p=eventPresentation(game.eventId),cat=eventCategory(game.eventId);
     // 2.22.0: 奖励/惩罚可视化（CSP 安全：无 inline style，用 CSS nth-child 控制延迟）
     const diff=game.eventDiff||[];
     const diffHtml=diff.length?`<div class="result-loot">${diff.map(d=>{

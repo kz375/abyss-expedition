@@ -520,3 +520,19 @@ body:after{background:radial-gradient(ellipse 42% 26% at 68% 6%,#93a9c714,transp
 @media(prefers-reduced-motion:reduce){
   .abyss-scenery:before,.abyss-scenery:after{animation:none;}
 }
+/* ===== 2.16.2: reference image background (overrides 2.16.1 midnight fortress) =====
+   Uses the user-provided moonlit castle photograph as the battlefield backdrop.
+   All CSS-drawn scenery elements are hidden. */
+.abyss-scenery{
+  background:url("/assets/scenery/moonlit-castle-battle.png") center 38%/cover no-repeat,#04070d;
+}
+.abyss-scenery .moon,
+.abyss-scenery .far-mountains,
+.abyss-scenery .ruin,
+.abyss-scenery .distant-castle,
+.abyss-scenery .chain,
+.abyss-scenery .embers,
+.abyss-scenery .battle-road,
+.abyss-scenery .foreground-rocks{display:none!important;}
+.abyss-scenery:before,
+.abyss-scenery:after{opacity:.5;}

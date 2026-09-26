@@ -662,3 +662,23 @@ body:after{background:radial-gradient(ellipse 42% 26% at 68% 6%,#93a9c714,transp
   animation:none;
   pointer-events:none;
 }
+
+/* 2.20.0: Rig 冲击闪光层 - 增强打击感 */
+.rig-impact-flash{
+  position:absolute;left:50%;top:42%;width:90px;height:90px;
+  transform:translate(-50%,-50%) scale(.3);border-radius:50%;
+  pointer-events:none;opacity:0;
+  background:radial-gradient(circle,#fff 0%,#ffe9a8 25%,transparent 70%);
+  animation:rig-impact-flash .38s ease-out forwards;
+}
+.rig-impact-flash[data-family="fire"]{background:radial-gradient(circle,#fff 0%,#ffb347 30%,#ff6b35 55%,transparent 75%);}
+.rig-impact-flash[data-family="ice"]{background:radial-gradient(circle,#fff 0%,#a8e6ff 30%,#4da6ff 55%,transparent 75%);}
+.rig-impact-flash[data-family="poison"]{background:radial-gradient(circle,#eaffea 0%,#7dff8a 30%,#2d8a3e 55%,transparent 75%);}
+.rig-impact-flash[data-family="arcane"]{background:radial-gradient(circle,#fff 0%,#d8a8ff 30%,#8b4dff 55%,transparent 75%);}
+.rig-impact-flash[data-family="holy"]{background:radial-gradient(circle,#fff 0%,#fff3a8 30%,#ffd94d 55%,transparent 75%);}
+.rig-impact-flash[data-family="soul"]{background:radial-gradient(circle,#e8fff8 0%,#7dffd4 30%,#2d8a6e 55%,transparent 75%);}
+@keyframes rig-impact-flash{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.3);}
+  18%{opacity:1;transform:translate(-50%,-50%) scale(1.15);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.8);}
+}

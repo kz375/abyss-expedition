@@ -259,25 +259,14 @@ function openEvents(){game.phase="events";game.paused=true;game.eventUsed=false;
 }
 function chooseEvent(id){if(game.phase!=="events"||game.eventUsed||!game.eventOffers.includes(id))return;game.eventUsed=true;game.eventId=id;game.recentEvents=[id,...(game.recentEvents||[])].slice(0,3);game.phase=id==="shop"?"shop":"event";if(id==="shop"){game.shopStock=draw(SHOP.map(s=>s.id),3);game.bought=[];}commit();}
 function advanceFloor(){game.floor++;game.returnFromBattle=false;if(game.combat.mode!=="endless"){game.combat.pressure=0;game.combat.tier=0;combatEvent("pressure_reset",{floor:game.floor+1});}beginBattle(game.plan[game.floor]);}
-function eventResult(result,diff){game.result=result;game.eventDiff=diff||null;game.phase="result";if(game.hp<=0)finish(false);}
-function snapshotEventState(){return {gold:game.gold,hp:Math.round(game.hp),max:game.max,attack:game.baseAttack,defense:game.baseDefense,potions:game.potions,relics:game.relics.length,shield:Math.round(game.shield)};}
-function diffEventState(before){const after=snapshotEventState(),d=[];const push=(key,icon,labelZh,labelEn,val,good)=>{if(val!==0)d.push({key,icon,labelZh,labelEn,val,good});};
-  push("gold","🪙","金币","Gold",after.gold-before.gold,after.gold>=before.gold);
-  const hpD=after.hp-before.hp;if(hpD!==0)d.push({key:"hp",icon:hpD>0?"💚":"💔",labelZh:hpD>0?"恢复生命":"失去生命",labelEn:hpD>0?"Healed":"Lost HP",val:hpD,good:hpD>0});
-  push("max","❤️","生命上限","Max HP",after.max-before.max,true);
-  push("attack","⚔️","攻击","Attack",after.attack-before.attack,true);
-  push("defense","🛡️","防御","Defense",after.defense-before.defense,true);
-  push("potions","🧪","药瓶","Bottles",after.potions-before.potions,after.potions>=before.potions);
-  const relicD=after.relics-before.relics;if(relicD>0){const names=game.relics.slice(before.relics).map(id=>{const r=(typeof RELICS!=="undefined"?RELICS:[]).find(r=>r.id===id);return r?(r.name?.[0]||r.name||id):id;});d.push({key:"relic",icon:"✨",labelZh:"获得遗物",labelEn:"Relic",val:relicD,good:true,detail:names.join("、")});}
-  push("shield","🔷","护盾","Ward",after.shield-before.shield,true);
-  return d;}
+function eventResult(result){game.result=result;game.phase="result";if(game.hp<=0)finish(false);}
 function eventBattle(){const pool=ROSTER.map((m,i)=>({m,i})).filter(({m})=>m.zone===["EARLY","EARLY","MID","MID","LATE","LATE","DEEP","BOSS"][game.floor]);beginBattle({index:choice(pool).i,elite:true},true);}
 function spendGold(cost){if(game.gold<cost)return false;game.gold-=cost;return true;}
 function spendHealth(cost){if(game.hp<=cost)return false;game.hp-=cost;game.stats.taken+=cost;return true;}
 function randomRelic(){const pool=RELICS.filter(r=>!game.relics.includes(r.id));if(pool.length)grantRelic(choice(pool).id);else gainGold(40);}
 function eventOptions(){const f=game.floor+1,g=game.gold;const leave={text:["离开","Leave"],run:()=>eventResult(["继续向深渊前进","Continue into the abyss"])};
-  const opt=(zh,en,run,enabled=true)=>({text:[zh,en],run,enabled});
-  const done=(run,text=["事件已结算","Event resolved"])=>()=>{const before=snapshotEventState();run();if(game.phase==="event")eventResult(text,diffEventState(before));};
+  const opt=(zh,en,run,enabled=true,meta={})=>({text:[zh,en],run,enabled,meta});
+  const done=(run,text=["事件已结算","Event resolved"])=>()=>{run();if(game.phase==="event")eventResult(text);};
   const stat=n=>game.baseAttack+=n;
   const setMods=m=>{game.battleMods={...(game.battleMods||{}),...m};};
   const pressureDelta=d=>{game.combat.pressure=Math.max(0,Math.min(100,game.combat.pressure+d));};
@@ -285,40 +274,40 @@ function eventOptions(){const f=game.floor+1,g=game.gold;const leave={text:["离
   /* 2.18.0: each event has 2+ distinct choices; high-risk options pay more;
      Pressure / Relic / Break / next-battle modifiers woven in. */
   const options={
-    camp:[opt("休息：恢复 35% 生命","Rest: heal 35%",done(()=>heal(game.max*.35))),
-      opt("训练：失去 12 生命，攻击 +2","Train: pay 12 health; attack +2",done(()=>{if(spendHealth(12))stat(2)}),game.hp>12),
-      opt("深渊调息：Pressure -15，下场战斗开局 +20 护盾","Attune: Pressure -15; next battle starts with +20 ward",done(()=>{pressureDelta(-15);setMods({ward:20});}))],
-    shrine:[opt("献祭 15 生命：攻击 +3","Offer 15 health: attack +3",done(()=>{if(spendHealth(15))stat(3)}),game.hp>15),
-      opt("祈祷：恢复 20 生命","Pray: heal 20",done(()=>heal(20))),
-      opt("深渊契约：Pressure +10，获得随机遗物","Abyss pact: Pressure +10; gain a random relic",done(()=>{pressureDelta(10);randomRelic();}))],
-    chest:[opt("开箱：70% 金币，30% 精英伏击（伏击胜利有额外奖励）","Open: 70% gold, 30% elite ambush (bonus loot if you win)",done(()=>{if(random()<.7)gainGold(25+f*8);else ambush();}))],
-    healer:[opt("12 金币：药瓶 +1","12 gold: +1 healing bottle",done(()=>{if(spendGold(12))game.potions++}),g>=12),
-      opt("25 金币：净化所有负面状态，恢复 30 生命","25 gold: cleanse all debuffs; heal 30",done(()=>{if(spendGold(25)){game.statuses={poison:0,burn:0,weak:0,sunder:0};heal(30);}}),g>=25),
-      opt("冒险祝福：防御或损失生命换金币","Risk blessing: defense or lose health for gold",done(()=>{if(random()<.5)game.baseDefense+=2;else{damageHero(18,false);gainGold(35);}}))],
-    spring:[opt("饮用：55% 增强生命，否则受到 16 伤害","Drink: 55% vitality, otherwise take 16 damage",done(()=>{if(random()<.55){game.baseMax+=5;reconcile();heal(40);}else damageHero(16,false);})),
-      opt("沐浴：Pressure -10，失去 10 金币","Bathe: Pressure -10; lose 10 gold",done(()=>{if(spendGold(10))pressureDelta(-10);}),g>=10)],
-    adventurer:[opt("救人：60% 金币与药瓶，否则精英伏击（伏击胜利有额外奖励）","Rescue: 60% gold and bottle, else elite ambush (bonus loot)",done(()=>{if(random()<.6){gainGold(30+f*6);game.potions++;}else ambush();}))],
+    camp:[opt("休息：恢复 35% 生命","Rest: heal 35%",done(()=>heal(game.max*.35)),true,{i:"♨",g:[["💚","+35%"]]}),
+      opt("训练：失去 12 生命，攻击 +2","Train: pay 12 health; attack +2",done(()=>{if(spendHealth(12))stat(2)}),game.hp>12,{i:"⚔",c:[["♥","-12"]],g:[["⚔","+2"]]}),
+      opt("深渊调息：Pressure -15，下场战斗开局 +20 护盾","Attune: Pressure -15; next battle starts with +20 ward",done(()=>{pressureDelta(-15);setMods({ward:20});}),true,{i:"🌑",g:[["🌑","-15"],["🛡","+20"]]})],
+    shrine:[opt("献祭 15 生命：攻击 +3","Offer 15 health: attack +3",done(()=>{if(spendHealth(15))stat(3)}),game.hp>15,{i:"🩸",c:[["♥","-15"]],g:[["⚔","+3"]]}),
+      opt("祈祷：恢复 20 生命","Pray: heal 20",done(()=>heal(20)),true,{i:"🙏",g:[["💚","+20"]]}),
+      opt("深渊契约：Pressure +10，获得随机遗物","Abyss pact: Pressure +10; gain a random relic",done(()=>{pressureDelta(10);randomRelic();}),true,{i:"📜",c:[["🌑","+10"]],g:[["✨","遗物"]],r:"unknown"})],
+    chest:[opt("开箱：70% 金币，30% 精英伏击（伏击胜利有额外奖励）","Open: 70% gold, 30% elite ambush (bonus loot if you win)",done(()=>{if(random()<.7)gainGold(25+f*8);else ambush();}),true,{i:"▣",g:[["🪙","+"+(25+f*8)]],r:"elite"})],
+    healer:[opt("12 金币：药瓶 +1","12 gold: +1 healing bottle",done(()=>{if(spendGold(12))game.potions++}),g>=12,{i:"🧪",c:[["🪙","-12"]],g:[["🧪","+1"]]}),
+      opt("25 金币：净化所有负面状态，恢复 30 生命","25 gold: cleanse all debuffs; heal 30",done(()=>{if(spendGold(25)){game.statuses={poison:0,burn:0,weak:0,sunder:0};heal(30);}}),g>=25,{i:"✨",c:[["🪙","-25"]],g:[["💚","+30"],["🧹","净化"]]}),
+      opt("冒险祝福：防御或损失生命换金币","Risk blessing: defense or lose health for gold",done(()=>{if(random()<.5)game.baseDefense+=2;else{damageHero(18,false);gainGold(35);}}),true,{i:"🎲",g:[["🛡","+2"],["🪙","+35"]],r:"unknown"})],
+    spring:[opt("饮用：55% 增强生命，否则受到 16 伤害","Drink: 55% vitality, otherwise take 16 damage",done(()=>{if(random()<.55){game.baseMax+=5;reconcile();heal(40);}else damageHero(16,false);}),true,{i:"≈",g:[["❤️","+5"],["💚","+40"]],r:"unknown"}),
+      opt("沐浴：Pressure -10，失去 10 金币","Bathe: Pressure -10; lose 10 gold",done(()=>{if(spendGold(10))pressureDelta(-10);}),g>=10,{i:"🛁",c:[["🪙","-10"]],g:[["🌑","-10"]]})],
+    adventurer:[opt("救人：60% 金币与药瓶，否则精英伏击（伏击胜利有额外奖励）","Rescue: 60% gold and bottle, else elite ambush (bonus loot)",done(()=>{if(random()<.6){gainGold(30+f*6);game.potions++;}else ambush();}),true,{i:"⚑",g:[["🪙","+"+(30+f*6)],["🧪","+1"]],r:"elite"})],
     gambler:[...[15,40,70].map(stake=>opt(`下注 ${stake} 金币`,`Bet ${stake} gold`,()=>{if(g<stake)return;const a=1+Math.floor(random()*6),b=1+Math.floor(random()*6);if(a>b)gainGold(stake);if(a<b)spendGold(stake);eventResult([`你 ${a} 点，对手 ${b} 点：${a>b?"获胜":a<b?"失败":"平局"}`,`You rolled ${a}, opponent ${b}: ${a>b?"win":a<b?"loss":"tie"}`]);},g>=stake)),
       opt("梭哈：下注全部金币，赢则翻倍","All in: bet all gold, double or nothing",done(()=>{if(g<10)return;const a=1+Math.floor(random()*6),b=1+Math.floor(random()*6);if(a>b)gainGold(g);else if(a<b)spendGold(g);}),g>=10)],
-    library:[opt("研读：攻击 +1","Study: attack +1",done(()=>stat(1))),
-      opt("冥想：防御 +1","Meditate: defense +1",done(()=>game.baseDefense++)),
-      opt("禁书研读：失去 10 生命，下场战斗 Break +30%","Forbidden tome: lose 10 health; next battle Break +30%",done(()=>{if(spendHealth(10))setMods({breakBonus:1.3});}),game.hp>10)],
-    well:[opt("投入 25 金币：随机祝福","Offer 25 gold: random blessing",done(()=>{if(!spendGold(25))return;const r=random();if(r<.45)randomRelic();else if(r<.7)stat(2);else if(r<.85)game.baseDefense+=2;else{game.baseMax+=20;reconcile();heal(20);}}),g>=25),
-      opt("献祭遗物：失去一件遗物，Pressure -20 并回满血","Sacrifice relic: lose a relic; Pressure -20 and full heal",done(()=>{if(!game.relics.length)return;const lost=choice(game.relics);game.relics=game.relics.filter(r=>r!==lost);reconcile();pressureDelta(-20);heal(game.max);}),game.relics.length>0)],
-    cards:[opt("25 金币抽牌：金币、补给或诅咒","Draw for 25 gold: coins, supplies or curse",done(()=>{if(!spendGold(25))return;const r=random();if(r<.45)gainGold(60);else if(r<.8){game.potions++;addWard(20);}else damageHero(14,false);}),g>=25)],
-    oracle:[...[1,2].map(n=>opt(`预见后 ${n} 层`,`See ${n} floor(s) ahead`,()=>{const p=game.plan[game.floor+n];const m=p?ROSTER[p.index]:null;eventResult(m?[`第 ${game.floor+n+1} 层：${m.name}${p.elite?"（精英）":""}`,`Floor ${game.floor+n+1}: ${MONSTER_EN[m.name]}${p.elite?" (Elite)":""}`]:["前方已是终点","No more floors lie ahead"]);})),
-      opt("深渊洞察：下场战斗开局 Pressure -10","Abyss insight: next battle starts with Pressure -10",done(()=>setMods({pressureDelta:-10})))],
+    library:[opt("研读：攻击 +1","Study: attack +1",done(()=>stat(1)),true,{i:"📖",g:[["⚔","+1"]]}),
+      opt("冥想：防御 +1","Meditate: defense +1",done(()=>game.baseDefense++),true,{i:"🧘",g:[["🛡","+1"]]}),
+      opt("禁书研读：失去 10 生命，下场战斗 Break +30%","Forbidden tome: lose 10 health; next battle Break +30%",done(()=>{if(spendHealth(10))setMods({breakBonus:1.3});}),game.hp>10,{i:"📕",c:[["♥","-10"]],g:[["💥","+30%"]]})],
+    well:[opt("投入 25 金币：随机祝福","Offer 25 gold: random blessing",done(()=>{if(!spendGold(25))return;const r=random();if(r<.45)randomRelic();else if(r<.7)stat(2);else if(r<.85)game.baseDefense+=2;else{game.baseMax+=20;reconcile();heal(20);}}),g>=25,{i:"◉",c:[["🪙","-25"]],g:[["🎁","随机"]],r:"unknown"}),
+      opt("献祭遗物：失去一件遗物，Pressure -20 并回满血","Sacrifice relic: lose a relic; Pressure -20 and full heal",done(()=>{if(!game.relics.length)return;const lost=choice(game.relics);game.relics=game.relics.filter(r=>r!==lost);reconcile();pressureDelta(-20);heal(game.max);}),game.relics.length>0,{i:"🕳",c:[["✨","-1"]],g:[["🌑","-20"],["💚","回满"]]})],
+    cards:[opt("25 金币抽牌：金币、补给或诅咒","Draw for 25 gold: coins, supplies or curse",done(()=>{if(!spendGold(25))return;const r=random();if(r<.45)gainGold(60);else if(r<.8){game.potions++;addWard(20);}else damageHero(14,false);}),g>=25,{i:"♠",c:[["🪙","-25"]],g:[["🎁","随机"]],r:"unknown"})],
+    oracle:[...[1,2].map(n=>opt(`预见后 ${n} 层`,`See ${n} floor(s) ahead`,()=>{const p=game.plan[game.floor+n];const m=p?ROSTER[p.index]:null;eventResult(m?[`第 ${game.floor+n+1} 层：${m.name}${p.elite?"（精英）":""}`,`Floor ${game.floor+n+1}: ${MONSTER_EN[m.name]}${p.elite?" (Elite)":""}`]:["前方已是终点","No more floors lie ahead"]);},true,{i:"👁",g:[["👁",n+"层"]]})),
+      opt("深渊洞察：下场战斗开局 Pressure -10","Abyss insight: next battle starts with Pressure -10",done(()=>setMods({pressureDelta:-10})),true,{i:"🌑",g:[["🌑","-10"]]})],
     curator:[opt(`${55+f*10} 金币：三选一遗物`,`${55+f*10} gold: choose one of three relics`,()=>{if(!spendGold(55+f*10))return;game.rewardReturn="advance";openReward();},g>=55+f*10&&game.relics.length<RELICS.length)],
-    rift:[opt("【高风险 / 高奖励】进入裂隙：挑战精英，胜利获得额外遗物与金币","[HIGH RISK / HIGH REWARD] Enter: challenge an elite for bonus relic and gold",ambush)],
-    forge:[opt("失去 12 生命：攻击 +4","Lose 12 health: attack +4",done(()=>{if(spendHealth(12))stat(4);}),game.hp>12),
-      opt("失去 12 生命：防御 +4","Lose 12 health: defense +4",done(()=>{if(spendHealth(12))game.baseDefense+=4;}),game.hp>12),
-      opt("失去 20 生命：下场战斗开局 +40 护盾，Break +20%","Lose 20 health: next battle +40 ward, Break +20%",done(()=>{if(spendHealth(20))setMods({ward:40,breakBonus:1.2});}),game.hp>20)],
-    altar:[opt("30 金币：生命上限 +14，恢复 20","30 gold: max health +14; heal 20",done(()=>{if(spendGold(30)){game.baseMax+=14;reconcile();heal(20);}}),g>=30),
-      opt("15 金币：Pressure -15","15 gold: Pressure -15",done(()=>{if(spendGold(15))pressureDelta(-15);}),g>=15),
-      opt(`获得 ${30+f*3} 护盾`,`Gain ${30+f*3} ward`,done(()=>addWard(30+f*3)))],
-    caravan:[opt(`${20+f*3} 金币：药瓶与护盾`,`${20+f*3} gold: bottle and ward`,done(()=>{if(spendGold(20+f*3)){game.potions++;addWard(18+f*3);}}),g>=20+f*3)],
-    idol:[opt(`献祭 10 生命：${45+f*5} 金币`,`Offer 10 health: ${45+f*5} gold`,done(()=>{if(spendHealth(10))gainGold(45+f*5);}),game.hp>10),
-      opt("献祭 20 生命：获得随机遗物","Offer 20 health: gain a random relic",done(()=>{if(spendHealth(20))randomRelic();}),game.hp>20)],
+    rift:[opt("进入裂隙：挑战精英","Enter: challenge an elite",ambush,true,{i:"⌁",g:[["✨","遗物"],["🪙","金币"]],r:"high"})],
+    forge:[opt("失去 12 生命：攻击 +4","Lose 12 health: attack +4",done(()=>{if(spendHealth(12))stat(4);}),game.hp>12,{i:"⚒",c:[["♥","-12"]],g:[["⚔","+4"]]}),
+      opt("失去 12 生命：防御 +4","Lose 12 health: defense +4",done(()=>{if(spendHealth(12))game.baseDefense+=4;}),game.hp>12,{i:"🛡",c:[["♥","-12"]],g:[["🛡","+4"]]}),
+      opt("失去 20 生命：下场战斗开局 +40 护盾，Break +20%","Lose 20 health: next battle +40 ward, Break +20%",done(()=>{if(spendHealth(20))setMods({ward:40,breakBonus:1.2});}),game.hp>20,{i:"🔥",c:[["♥","-20"]],g:[["🛡","+40"],["💥","+20%"]]})],
+    altar:[opt("30 金币：生命上限 +14，恢复 20","30 gold: max health +14; heal 20",done(()=>{if(spendGold(30)){game.baseMax+=14;reconcile();heal(20);}}),g>=30,{i:"△",c:[["🪙","-30"]],g:[["❤️","+14"],["💚","+20"]]}),
+      opt("15 金币：Pressure -15","15 gold: Pressure -15",done(()=>{if(spendGold(15))pressureDelta(-15);}),g>=15,{i:"🌑",c:[["🪙","-15"]],g:[["🌑","-15"]]}),
+      opt(`获得 ${30+f*3} 护盾`,`Gain ${30+f*3} ward`,done(()=>addWard(30+f*3)),true,{i:"🛡",g:[["🔷","+"+(30+f*3)]]})],
+    caravan:[opt(`${20+f*3} 金币：药瓶与护盾`,`${20+f*3} gold: bottle and ward`,done(()=>{if(spendGold(20+f*3)){game.potions++;addWard(18+f*3);}}),g>=20+f*3,{i:"✧",c:[["🪙","-"+(20+f*3)]],g:[["🧪","+1"],["🔷","+"+(18+f*3)]]})],
+    idol:[opt(`献祭 10 生命：${45+f*5} 金币`,`Offer 10 health: ${45+f*5} gold`,done(()=>{if(spendHealth(10))gainGold(45+f*5);}),game.hp>10,{i:"♜",c:[["♥","-10"]],g:[["🪙","+"+(45+f*5)]]}),
+      opt("献祭 20 生命：获得随机遗物","Offer 20 health: gain a random relic",done(()=>{if(spendHealth(20))randomRelic();}),game.hp>20,{i:"✨",c:[["♥","-20"]],g:[["✨","遗物"]]})],
     stalker:[opt("追踪神秘身影：双核试炼","Follow the shadow: Trial of Twin Cores",startTrial,!game.trialUsed)],
     trial:[opt("进入双核试炼：40 步，破坏两个核心","Enter Twin Cores: 40 moves, destroy two cores",startTrial,!game.trialUsed)]
   };return [...(options[game.eventId]||[]),leave];

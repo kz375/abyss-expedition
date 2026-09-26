@@ -663,45 +663,123 @@ body:after{background:radial-gradient(ellipse 42% 26% at 68% 6%,#93a9c714,transp
   pointer-events:none;
 }
 
-/* 2.22.0: 事件结算 UI 优化 */
-.event-outcome{margin:14px 0 8px;border-radius:12px;overflow:hidden}
-.event-outcome-head{display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,#ffffff08,#ffffff02);border:1px solid #ffffff14;border-radius:12px 12px 0 0}
-.event-outcome-icon{font-size:32px;filter:drop-shadow(0 2px 8px #000a)}
-.event-outcome-head b{display:block;font-size:14px;letter-spacing:.12em}
-.event-outcome-head small{color:var(--muted);font-size:11px;letter-spacing:.06em}
-/* tone 配色 */
-.event-outcome.tone-arcane .event-outcome-head{border-color:#8b4dff44;background:linear-gradient(135deg,#8b4dff18,#8b4dff06)}
-.event-outcome.tone-fire .event-outcome-head{border-color:#ff6b3544;background:linear-gradient(135deg,#ff6b3518,#ff6b3506)}
-.event-outcome.tone-holy .event-outcome-head{border-color:#ffd94d44;background:linear-gradient(135deg,#ffd94d18,#ffd94d06)}
-.event-outcome.tone-shadow .event-outcome-head{border-color:#4d5dff44;background:linear-gradient(135deg,#4d5dff18,#4d5dff06)}
-.event-outcome.tone-nature .event-outcome-head{border-color:#63e69a44;background:linear-gradient(135deg,#63e69a18,#63e69a06)}
+/* ============ 2.23.0: 事件 UI 重做 ============ */
 
-/* 奖励/惩罚：CSP 安全的 nth-child 延迟 */
-.event-loot{display:flex;flex-wrap:wrap;gap:10px;padding:14px;justify-content:center;background:#00000030;border:1px solid #ffffff0c;border-top:none;border-radius:0 0 12px 12px}
-.event-loot.empty{justify-content:center;color:var(--muted);font-size:12px}
-.loot-item{display:flex;align-items:center;gap:10px;min-width:128px;padding:10px 14px;border-radius:10px;border:1px solid;opacity:0;transform:translateY(14px) scale(.92);animation:loot-pop .45s cubic-bezier(.2,1.4,.4,1) forwards}
-.loot-item:nth-child(1){animation-delay:0ms}
-.loot-item:nth-child(2){animation-delay:90ms}
-.loot-item:nth-child(3){animation-delay:180ms}
-.loot-item:nth-child(4){animation-delay:270ms}
-.loot-item:nth-child(5){animation-delay:360ms}
-.loot-item:nth-child(6){animation-delay:450ms}
-.loot-item:nth-child(7){animation-delay:540ms}
-.loot-item:nth-child(8){animation-delay:630ms}
-.loot-item.gain{border-color:#63e69a55;background:linear-gradient(135deg,#63e69a15,#63e69a06);box-shadow:0 0 16px #63e69a1e}
-.loot-item.loss{border-color:#f17d6a55;background:linear-gradient(135deg,#f17d6a15,#f17d6a06);box-shadow:0 0 16px #f17d6a1e}
-.loot-icon{font-size:24px;filter:drop-shadow(0 2px 6px #0008)}
-.loot-item.gain .loot-icon{animation:loot-glow 1.4s ease-in-out infinite}
-.loot-info{display:flex;flex-direction:column;gap:2px}
-.loot-info b{font-size:17px;font-variant-numeric:tabular-nums;line-height:1}
-.loot-item.gain .loot-info b{color:#7dffab;text-shadow:0 0 10px #63e69a77}
-.loot-item.loss .loot-info b{color:#ff9d8a;text-shadow:0 0 10px #f17d6a77}
-.loot-info em{font-style:normal;font-size:11px;color:var(--muted)}
-.loot-info small{font-size:10px;color:#e9d08b;max-width:150px;line-height:1.4}
-@keyframes loot-pop{to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes loot-glow{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+/* ---- 场景背景：CSS 绘制的氛围场景 ---- */
+.event-scene-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:.55;filter:blur(2px) brightness(.7)}
+.event-card-bg{position:absolute;inset:0;opacity:.35;filter:blur(3px) brightness(.6);pointer-events:none;transition:opacity .3s}
+/* Oracle: 月光 + 紫雾 */
+.scene-oracle,.event-card .scene-oracle{background:radial-gradient(ellipse 60% 40% at 70% 20%,#e8d8ff33,transparent),radial-gradient(ellipse 80% 60% at 30% 80%,#8b4dff44,transparent),linear-gradient(180deg,#1a1033,#0d0818)}
+/* Merchant: 帐篷 + 灯笼暖光 */
+.scene-shop,.event-card .scene-shop{background:radial-gradient(ellipse 50% 35% at 50% 30%,#ffca7a55,transparent),radial-gradient(ellipse 70% 50% at 20% 80%,#8b5a2b33,transparent),linear-gradient(180deg,#2b1d0f,#120c06)}
+/* Locked Chest: 地牢 + 冷光 */
+.scene-chest,.event-card .scene-chest{background:radial-gradient(ellipse 40% 30% at 50% 60%,#6ab8ff22,transparent),linear-gradient(180deg,#0f1420,#05070c),repeating-linear-gradient(90deg,transparent,transparent 18px,#ffffff06 18px,#ffffff06 20px)}
+/* Healer: 篝火暖光 */
+.scene-healer,.event-card .scene-healer{background:radial-gradient(ellipse 55% 40% at 50% 70%,#ff8c4244,transparent),radial-gradient(ellipse 30% 25% at 50% 65%,#ffca7a66,transparent),linear-gradient(180deg,#241208,#0e0703)}
+/* Campfire */
+.scene-camp,.event-card .scene-camp{background:radial-gradient(ellipse 50% 35% at 50% 75%,#ff7a3c3d,transparent),linear-gradient(180deg,#1c1008,#0a0502)}
+/* Shrine: 神龛紫光 */
+.scene-shrine,.event-card .scene-shrine{background:radial-gradient(ellipse 45% 55% at 50% 40%,#b48cff2e,transparent),linear-gradient(180deg,#150f28,#080512)}
+/* Spring: 银泉 */
+.scene-spring,.event-card .scene-spring{background:radial-gradient(ellipse 60% 40% at 50% 60%,#a8e6ff2a,transparent),linear-gradient(180deg,#0c1a24,#050a10)}
+/* Library: 烛光书卷 */
+.scene-library,.event-card .scene-library{background:radial-gradient(ellipse 40% 30% at 30% 30%,#e9d08b2a,transparent),linear-gradient(180deg,#1d1608,#0b0803)}
+/* Well: 深井 */
+.scene-well,.event-card .scene-well{background:radial-gradient(ellipse 35% 45% at 50% 55%,#4d5dff2e,transparent),linear-gradient(180deg,#0a0e24,#04050e)}
+/* Altar: 祭坛 */
+.scene-altar,.event-card .scene-altar{background:radial-gradient(ellipse 50% 40% at 50% 50%,#d8a8ff28,transparent),linear-gradient(180deg,#180f2e,#080512)}
+/* Rift: 裂隙 */
+.scene-rift,.event-card .scene-rift{background:radial-gradient(ellipse 30% 60% at 50% 50%,#ff4d6d33,transparent),linear-gradient(180deg,#200a12,#0a0306)}
+/* Forge: 熔炉 */
+.scene-forge,.event-card .scene-forge{background:radial-gradient(ellipse 55% 40% at 50% 75%,#ff6b3538,transparent),linear-gradient(180deg,#241008,#0e0502)}
+/* 通用 fallback */
+.event-scene-bg:not([class*="scene-"]),.event-card-bg:not([class*="scene-"]){background:radial-gradient(ellipse 60% 50% at 50% 40%,#b48cff1e,transparent),linear-gradient(180deg,#12101c,#07060c)}
 
-/* 2.22.0: 战斗闪屏修复 - 降低冲击闪光亮度 */
-.rig-impact-flash{opacity:0}
-@keyframes rig-impact-flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}15%{opacity:.75;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
-@media(prefers-reduced-motion:reduce){.loot-item{animation:none;opacity:1;transform:none}.loot-item.gain .loot-icon{animation:none}}
+/* ---- 事件选择：2x2 网格 ---- */
+.event-select .modal{max-width:640px}
+.event-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.event-card{position:relative;overflow:hidden;text-align:center;padding:22px 16px 18px;min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:transform .25s ease,border-color .25s,box-shadow .25s}
+.event-card .event-icon{font-size:44px;line-height:1;transition:transform .25s ease;filter:drop-shadow(0 3px 10px #000a);z-index:1}
+.event-card strong{font-size:15px;z-index:1}
+.event-card small{font-size:11px;color:var(--muted);line-height:1.5;z-index:1;max-width:220px}
+.event-card .enter-hint{font-size:10px;letter-spacing:.18em;opacity:.45;transition:opacity .25s;z-index:1}
+.event-cat-tag{font-size:10px;letter-spacing:.1em;padding:3px 10px;border-radius:20px;border:1px solid;z-index:1}
+/* 分类颜色 */
+.cat-safe{--cat-c:#63e69a}.cat-trade{--cat-c:#e9d08b}.cat-arcane{--cat-c:#b48cff}.cat-risk{--cat-c:#f17d6a}.cat-trial{--cat-c:#6ab8ff}
+.event-cat-tag{border-color:var(--cat-c);color:var(--cat-c);background:color-mix(in srgb,var(--cat-c) 12%,transparent)}
+.event-card.cat-safe{border-color:#63e69a44}.event-card.cat-trade{border-color:#e9d08b44}.event-card.cat-arcane{border-color:#b48cff44}.event-card.cat-risk{border-color:#f17d6a44}.event-card.cat-trial{border-color:#6ab8ff44}
+/* Hover: 活起来 */
+.event-card:hover{transform:translateY(-5px);box-shadow:0 12px 32px #000a,0 0 24px color-mix(in srgb,var(--cat-c) 25%,transparent)}
+.event-card:hover .event-icon{transform:scale(1.18)}
+.event-card:hover .enter-hint{opacity:1;color:var(--cat-c)}
+.event-card:hover .event-card-bg{opacity:.55}
+/* 选中过渡：其他卡熄灭 */
+.event-card{transition:transform .25s,opacity .35s,filter .35s,border-color .25s,box-shadow .25s}
+.event-card.dimmed{opacity:.25;filter:grayscale(.7) brightness(.5);transform:scale(.96)}
+.event-card.selected{transform:scale(1.04);box-shadow:0 0 40px color-mix(in srgb,var(--cat-c) 40%,transparent)}
+
+/* ---- 事件详情：统一模板 ---- */
+.event-detail .modal{max-width:680px}
+.event-stage{position:relative;border-radius:14px;overflow:hidden;border:1px solid #ffffff14}
+.event-stage-head{display:flex;align-items:center;gap:14px;padding:16px 18px;position:relative;z-index:1;background:linear-gradient(180deg,#00000055,transparent)}
+.event-stage-icon{font-size:36px;filter:drop-shadow(0 3px 12px #000c)}
+.event-stage-title b{display:block;font-size:18px;letter-spacing:.06em}
+.event-stage-cat{font-size:10px;letter-spacing:.12em;opacity:.85}
+.event-stage-cat.cat-safe{color:#63e69a}.event-stage-cat.cat-trade{color:#e9d08b}.event-stage-cat.cat-arcane{color:#b48cff}.event-stage-cat.cat-risk{color:#f17d6a}.event-stage-cat.cat-trial{color:#6ab8ff}
+/* 资源 HUD */
+.event-hud{margin-left:auto;display:flex;gap:10px;font-size:11px;background:#00000066;border:1px solid #ffffff14;border-radius:8px;padding:6px 12px;white-space:nowrap}
+.event-hud span{font-variant-numeric:tabular-nums}
+/* 紧凑状态提示 */
+.event-stage-status{display:flex;align-items:center;gap:8px;padding:8px 18px;font-size:11px;color:var(--muted);border-top:1px solid #ffffff0a;position:relative;z-index:1}
+.event-stage-status em{font-style:normal;letter-spacing:.08em}
+.event-stage-desc{padding:10px 18px;font-size:13px;color:#c9c2b4;line-height:1.6;position:relative;z-index:1;font-style:italic}
+/* 决策卡 */
+.event-decisions{display:flex;flex-direction:column;gap:10px;padding:6px 18px 18px;position:relative;z-index:1}
+.decision-card{display:grid;grid-template-columns:36px 44px 1fr;gap:12px;align-items:start;text-align:left;padding:14px 16px;transition:transform .2s,border-color .2s,box-shadow .2s,opacity .3s}
+.decision-card:hover:not(:disabled){transform:translateX(4px);border-color:#e9d08b66;box-shadow:0 4px 20px #0008}
+.decision-card.confirming{border-color:#e9d08b;box-shadow:0 0 24px #e9d08b44;transform:scale(1.02)}
+.decision-num{font-size:11px;color:var(--muted);letter-spacing:.1em;padding-top:4px}
+.decision-icon{font-size:28px;line-height:1.2}
+.decision-body strong{display:block;font-size:14px;margin-bottom:8px;line-height:1.4}
+.decision-meta{display:flex;flex-wrap:wrap;gap:8px}
+.decision-cost,.decision-gain,.decision-risk{display:flex;align-items:center;gap:6px;font-size:11px}
+.decision-cost em,.decision-gain em{font-style:normal;font-size:9px;letter-spacing:.1em;color:var(--muted)}
+.decision-cost b{color:#ff9d8a}.decision-gain b{color:#7dffab}
+.decision-cost b i,.decision-gain b i{font-style:normal;margin-right:3px}
+.decision-risk{color:#f17d6a;font-size:11px;letter-spacing:.06em}
+.decision-risk em{font-style:normal;margin-right:4px}
+.decision-lock{grid-column:1/-1;font-size:11px;color:var(--muted)}
+
+/* ---- 遗物：高级三选一 ---- */
+.relic-modal .modal{max-width:720px;text-align:center}
+.relic-stage{position:relative;padding:10px 0}
+.relic-stage-stars{display:flex;justify-content:center;gap:24px;font-size:20px;color:#e9d08b;margin-bottom:16px;animation:relic-twinkle 2s ease-in-out infinite}
+@keyframes relic-twinkle{0%,100%{opacity:.6}50%{opacity:1}}
+.relic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.relic-card{padding:20px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .25s,box-shadow .25s}
+.relic-card:hover{transform:translateY(-6px)}
+.relic-icon{font-size:40px;filter:drop-shadow(0 4px 12px #000a)}
+.relic-card strong{font-size:14px}
+.relic-rarity{font-size:10px;letter-spacing:.2em;padding:2px 12px;border-radius:12px;border:1px solid}
+.relic-card small{font-size:11px;color:var(--muted);line-height:1.5}
+/* 稀有度颜色 */
+.rarity-common{border-color:#9aa3ad55}.rarity-common .relic-rarity{border-color:#9aa3ad88;color:#9aa3ad;background:#9aa3ad14}
+.rarity-common:hover{box-shadow:0 8px 24px #9aa3ad22}
+.rarity-rare{border-color:#6ab8ff66}.rarity-rare .relic-rarity{border-color:#6ab8ffaa;color:#6ab8ff;background:#6ab8ff14}
+.rarity-rare:hover{box-shadow:0 8px 28px #6ab8ff33}
+.rarity-rare .relic-icon{filter:drop-shadow(0 0 12px #6ab8ff66)}
+.rarity-epic{border-color:#b48cff77}.rarity-epic .relic-rarity{border-color:#b48cffcc;color:#b48cff;background:#b48cff18}
+.rarity-epic:hover{box-shadow:0 8px 32px #b48cff44}
+.rarity-epic .relic-icon{filter:drop-shadow(0 0 14px #b48cff88);animation:relic-glow 1.8s ease-in-out infinite}
+.rarity-legendary{border-color:#e9d08bcc}.rarity-legendary .relic-rarity{border-color:#e9d08b;color:#e9d08b;background:#e9d08b1c}
+.rarity-legendary:hover{box-shadow:0 8px 36px #e9d08b55}
+.rarity-legendary .relic-icon{filter:drop-shadow(0 0 16px #e9d08baa);animation:relic-glow 1.4s ease-in-out infinite}
+.rarity-abyss{border-color:#6a1fbbaa}.rarity-abyss .relic-rarity{border-color:#6a1fbb;color:#c9a8ff;background:#6a1fbb22}
+@keyframes relic-glow{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+/* ---- 结果页中央属性弹窗 ---- */
+.stat-popup{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%) scale(.7);font-size:28px;font-weight:700;letter-spacing:.08em;opacity:0;pointer-events:none;z-index:9999;text-shadow:0 2px 20px #000;animation:stat-pop 1.4s ease-out forwards}
+.stat-popup.gain{color:#7dffab}.stat-popup.loss{color:#ff9d8a}
+@keyframes stat-pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}35%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-58%) scale(1)}}
+
+@media(prefers-reduced-motion:reduce){.event-card,.decision-card,.relic-card{transition:none}.event-card:hover,.decision-card:hover,.relic-card:hover{transform:none}.relic-stage-stars,.rarity-epic .relic-icon,.rarity-legendary .relic-icon{animation:none}}

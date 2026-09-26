@@ -38,17 +38,54 @@ function menu(){
 }
 function eventTitle(id){const e=EVENT_CATALOG.find(e=>e.id===id);return e?e.name:["事件","Event"];}
 function eventPresentation(id){return EVENT_PRESENTATION[id]||{icon:"?",tone:"arcane",desc:["深渊向你提出一个选择。","The abyss offers you a choice."]};}
-function eventCards(ids){return ids.map(id=>{const p=eventPresentation(id);return `<button class="card event-card tone-${p.tone}" data-event="${id}"><span class="event-icon" aria-hidden="true">${p.icon}</span><strong>${esc(label(eventTitle(id)))}</strong><small>${esc(label(p.desc))}</small><em>${tx("进入事件","ENTER EVENT")} →</em></button>`}).join("");}
+
+// 2.23.0: 事件类别系统
+const EVENT_CATEGORIES={
+  safe:{icon:"🟢",zh:"安全",en:"SAFE",color:"#63e69a"},
+  trade:{icon:"🟡",zh:"交易",en:"TRADE",color:"#e9d08b"},
+  arcane:{icon:"🟣",zh:"奥秘",en:"MYSTERY",color:"#b48cff"},
+  risk:{icon:"🔴",zh:"风险",en:"RISK",color:"#f17d6a"},
+  trial:{icon:"🔵",zh:"试炼",en:"TRIAL",color:"#6ab8ff"}
+};
+function eventCategory(id){const e=(typeof EVENT_CATALOG!=="undefined"?EVENT_CATALOG:[]).find(e=>e.id===id);return EVENT_CATEGORIES[e?.category||"arcane"];}
+function eventSceneClass(id){return `scene-${id}`;}
+// 资源 HUD
+function eventResourceHUD(){const h=Math.round(game.hp),m=game.max;return `<div class="event-hud" aria-label="${tx("当前资源","Resources")}"><span title="${tx("生命","HP")}">♥ ${h}/${m}</span><span title="${tx("护盾","Ward")}">🛡 ${Math.round(game.shield||0)}</span><span title="${tx("金币","Gold")}">🪙 ${game.gold||0}</span><span title="${tx("药瓶","Bottles")}">🧪 ${game.potions||0}</span><span title="${tx("遗物","Relics")}">✨ ${game.relics?.length||0}</span><span title="Pressure">🌑 ${Math.floor(game.combat?.pressure||0)}%</span></div>`;}
+// 决策卡的 cost/reward 渲染
+function metaTags(meta){if(!meta)return "";let html="";
+  const render=(items,cls,label)=>{if(!items||!items.length)return "";return `<div class="decision-${cls}"><em>${label}</em><span>${items.map(([icon,val])=>`<b><i>${icon}</i>${esc(String(val))}</b>`).join("")}</span></div>`;};
+  html+=render(meta.c,"cost",tx("代价","COST"));
+  html+=render(meta.g,"gain",tx("获得","GAIN"));
+  if(meta.r){const riskLabel={high:tx("高风险","HIGH RISK"),elite:tx("精英遭遇","ELITE"),unknown:tx("未知风险","UNKNOWN RISK")}[meta.r]||meta.r;html+=`<div class="decision-risk"><em>⚠</em><span>${riskLabel}</span></div>`;}
+  return html?`<div class="decision-meta">${html}</div>`:"";}
+
+
+// 2.23.0: 遗物稀有度与图标
+const RELIC_STYLE={
+  blade:{i:"🗡",r:"rare"},vital:{i:"💎",r:"common"},moon:{i:"🌙",r:"epic"},haste:{i:"⚡",r:"rare"},
+  flame:{i:"🔥",r:"rare"},plunder:{i:"💰",r:"common"},thorns:{i:"🌵",r:"common"},resolve:{i:"🎖",r:"rare"},
+  sand:{i:"⏳",r:"epic"},healing:{i:"✚",r:"common"},ruby:{i:"♦",r:"common"},iron:{i:"🛡",r:"common"},
+  vial:{i:"🧪",r:"common"},fang:{i:"🦷",r:"epic"},mail:{i:"🥋",r:"rare"},clover:{i:"🍀",r:"rare"},
+  gold:{i:"🗿",r:"rare"},standard:{i:"🚩",r:"common"},chrono:{i:"⏱",r:"epic"}
+};
+const RARITY_LABEL={common:["普通","COMMON"],rare:["稀有","RARE"],epic:["史诗","EPIC"],legendary:["传说","LEGENDARY"],abyss:["深渊","ABYSS"]};
+function relicStyle(id){return RELIC_STYLE[id]||{i:"✦",r:"common"};}
+
+function eventCards(ids){return ids.map(id=>{const p=eventPresentation(id),cat=eventCategory(id);return `<button class="card event-card tone-${p.tone} cat-${p.tone}" data-event="${id}"><div class="event-card-bg ${eventSceneClass(id)}" aria-hidden="true"></div><span class="event-cat-tag">${cat.icon} ${esc(label([cat.zh,cat.en]))}</span><span class="event-icon" aria-hidden="true">${p.icon}</span><strong>${esc(label(eventTitle(id)))}</strong><small>${esc(label(p.desc))}</small><em class="enter-hint">${tx("进入事件","ENTER EVENT")} →</em></button>`}).join("");}
 function renderScene(){if(!game)return;if(game.phase!=="trial")trialViewState=null;$("archive-layer").hidden=!archiveKind;applyLocale();render();
   if(game.phase==="menu"){menu();return;}
   if(game.phase==="battle"){$("overlay").hidden=true;return;}
   if(game.phase==="reward"){
-    modal(["选择一件遗物","Choose one relic"],["奖励选项和当前阶段已经保存，刷新不会重新抽取","Offers and this reward stage are saved. Reloading does not reroll them"],`<div class="cards">${buttons(game.rewardOffers.map(id=>({id,name:RELIC_BY_ID[id].name,desc:RELIC_BY_ID[id].desc})),"data-relic")}</div>${!game.rewardOffers.length?`<button class="card" id="reward-continue">${tx("全部收集完成，继续","Collection complete — continue")}</button>`:""}`);
+    modal(["发现遗物","RELIC FOUND"],["在遗物的光芒中做出选择","Choose in the light of relics"],`<div class="relic-stage"><div class="relic-stage-stars" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span></div><div class="relic-grid">${game.rewardOffers.map(id=>{const r=RELIC_BY_ID[id],s=relicStyle(id),rl=RARITY_LABEL[s.r];return `<button class="card relic-card rarity-${s.r}" data-relic="${id}"><span class="relic-icon">${s.i}</span><strong>${esc(label(r.name))}</strong><span class="relic-rarity">${esc(label(rl))}</span><small>${esc(label(r.desc))}</small></button>`;}).join("")}</div>${!game.rewardOffers.length?`<button class="card" id="reward-continue">${tx("全部收集完成，继续","Collection complete — continue")}</button>`:""}</div>`);$("overlay").querySelector(".modal").classList.add("relic-modal");
     bind("[data-relic]",b=>selectRelic(b.dataset.relic));$("reward-continue")?.addEventListener("click",()=>{if(game.phase!=="reward")return;afterReward();commit();});
   }else if(game.phase==="events"){
-    modal(["前路出现四道回响","Four echoes answer ahead"],["选择一条道路；踏入之后，其余回响将永远熄灭","Choose one path. Once entered, the other echoes will fade forever"],`<div class="event-route"><span>${tx(`第 ${game.floor+1} 层已清理`,`Floor ${game.floor+1} cleared`)}</span><i></i><b>${tx("下一段旅程","NEXT PASSAGE")}</b></div><div class="cards event-grid">${eventCards(game.eventOffers)}</div>`);$("overlay").querySelector(".modal").classList.add("event-modal");bind("[data-event]",b=>chooseEvent(b.dataset.event));
+    modal(["四道回响","FOUR ECHOES AHEAD"],["选择一条道路；踏入之后，其余回响将永远熄灭","Choose one path. Once entered, the other echoes will fade forever"],`<div class="event-route"><span>${tx(`第 ${game.floor+1} 层已清理`,`Floor ${game.floor+1} cleared`)}</span></div><div class="event-grid">${eventCards(game.eventOffers)}</div>`);$("overlay").querySelector(".modal").classList.add("event-modal","event-select");bind("[data-event]",b=>{const btn=b;btn.classList.add("selected");document.querySelectorAll(".event-card").forEach(c=>{if(c!==btn)c.classList.add("dimmed");});setTimeout(()=>chooseEvent(btn.dataset.event),380);});
   }else if(game.phase==="event"){
-    const p=eventPresentation(game.eventId),options=eventOptions();modal(eventTitle(game.eventId),p.desc,`<div class="event-scene tone-${p.tone}"><span aria-hidden="true">${p.icon}</span><div><b>${tx("抉择时刻","A MOMENT OF CHOICE")}</b><small>${tx("代价会立即结算，无法撤回","Consequences resolve immediately and cannot be undone")}</small></div></div><div class="cards event-options">${options.map((o,i)=>`<button class="card" data-option="${i}" ${o.enabled===false?"disabled":""}><span class="choice-number">${String(i+1).padStart(2,"0")}</span><strong>${esc(label(o.text))}</strong><small>${o.enabled===false?tx("条件不足","Requirements not met"):tx("确认后立即生效","Resolve immediately")}</small></button>`).join("")}</div>`);$("overlay").querySelector(".modal").classList.add("event-modal",`event-${p.tone}`);bind("[data-option]",b=>selectEventOption(Number(b.dataset.option)));
+    const p=eventPresentation(game.eventId),options=eventOptions(),cat=eventCategory(game.eventId);
+    // 2.23.0: 统一事件模板 - 场景背景 + 紧凑头部 + HUD + 决策卡
+    modal(eventTitle(game.eventId),p.desc,`<div class="event-stage"><div class="event-scene-bg ${eventSceneClass(game.eventId)}" aria-hidden="true"></div><div class="event-stage-head"><span class="event-stage-icon">${p.icon}</span><div class="event-stage-title"><b>${esc(label(eventTitle(game.eventId)))}</b><span class="event-stage-cat cat-${p.tone}">${cat.icon} ${esc(label([cat.zh,cat.en]))} · ${tx("事件","EVENT")}</span></div>${eventResourceHUD()}</div><div class="event-stage-status"><span>☽</span><em>${tx("选择不可撤回","Choices are irreversible")}</em></div><p class="event-stage-desc">${esc(label(p.desc))}</p><div class="event-decisions">${options.map((o,i)=>{const m=o.meta||{};return `<button class="card decision-card ${o.enabled===false?"disabled":""}" data-option="${i}" ${o.enabled===false?"disabled":""}><span class="decision-num">${String(i+1).padStart(2,"0")}</span><span class="decision-icon">${m.i||"◇"}</span><div class="decision-body"><strong>${esc(label(o.text))}</strong>${metaTags(m)}</div>${o.enabled===false?`<small class="decision-lock">${tx("条件不足","Requirements not met")}</small>`:""}</button>`;}).join("")}</div></div>`);
+    $("overlay").querySelector(".modal").classList.add("event-modal",`event-${p.tone}`,"event-detail");
+    bind("[data-option]",b=>{b.classList.add("confirming");setTimeout(()=>selectEventOption(Number(b.dataset.option)),220);});
   }else if(game.phase==="shop"){
     modal(["商店","Merchant"],[`金币 ${game.gold} · 每件商品限购一次`,`Gold ${game.gold} · Each item can be bought once`],`<div class="cards">${buttons(game.shopStock.map(id=>{const s=SHOP.find(s=>s.id===id);return {id,name:s.name,desc:[`${s.price} 金币 · ${shopDescription(id)[0]}`,`${s.price} gold · ${shopDescription(id)[1]}`],disabled:game.bought.includes(id)||game.gold<s.price}}),"data-buy")}</div><button class="card compact" id="shop-leave">${tx("离开商店","Leave shop")}</button>`);bind("[data-buy]",b=>buy(b.dataset.buy));$("shop-leave").onclick=()=>{if(game.phase!=="shop")return;eventResult(["补给完成","Supplies secured"]);commit();};
   }else if(game.phase==="result"){
@@ -62,6 +99,8 @@ function renderScene(){if(!game)return;if(game.phase!=="trial")trialViewState=nu
     }).join("")}</div>`:`<div class="event-loot empty"><span>${tx("无明显变化","No visible change")}</span></div>`;
     // 2.22.0: 优化结算界面结构
     modal(["命运已经落定","The choice is sealed"],game.result,`<div class="event-outcome tone-${p.tone}"><div class="event-outcome-head"><span class="event-outcome-icon">${p.icon}</span><div><b>${tx("抉择已生效","RESOLVED")}</b><small>${tx("深渊记住了你的选择","THE ABYSS REMEMBERS")}</small></div></div>${diffHtml}</div><button class="card compact" id="next-floor">${tx("收起回响，进入下一层","Leave the echo and enter the next floor")} →</button>`);$("overlay").querySelector(".modal").classList.add("event-modal");$("next-floor").onclick=()=>{if(game.phase!=="result")return;advanceFloor();commit();};
+    // 2.23.0: 中央属性弹窗（最重要的一个变化）
+    if(diff.length){const top=diff.slice().sort((a,b)=>Math.abs(b.val)-Math.abs(a.val))[0];const pop=document.createElement("div");pop.className=`stat-popup ${top.good?"gain":"loss"}`;pop.textContent=`${top.icon} ${top.val>0?"+":""}${top.val} ${label([top.labelZh,top.labelEn]).toUpperCase()}`;document.body.append(pop);setTimeout(()=>pop.remove(),1450);}
   }else if(game.phase==="trial")renderTrial();
   else if(game.finished){
     const extracted=game.extractedItems||[],loot=extracted.length?`<div class="victory-loot">${extracted.map(item=>`<div class="loot-card quality-${item.quality}"><span>${esc(label(GEAR_QUALITIES[item.quality]))}</span><strong>${esc(label(GEAR_BASE_BY_ID[item.baseId].name))}</strong><small>${esc(gearDescription(item))}</small></div>`).join("")}</div>`:"";

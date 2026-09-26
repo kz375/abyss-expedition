@@ -202,6 +202,79 @@ body{background:linear-gradient(180deg,#030705d9,#050907f2),url("/assets/backgro
 /* Hit flash 2.2.10: flash the actor silhouette, never the combat HUD. */
 .fighter.hit-white,.fighter.hit-crit,.fighter.hit-shield{animation:none;filter:none}.fighter.hit-white .portrait{animation:portrait-white-flash .17s steps(2,end)}.fighter.hit-crit .portrait{animation:portrait-crit-flash .24s cubic-bezier(.2,.8,.3,1)}.fighter.hit-shield .portrait{animation:portrait-shield-flash .2s ease-out}.fighter.hit-white .portrait img,.fighter.hit-crit .portrait img,.fighter.hit-shield .portrait img{animation:none}
 .fighter.hit-white:before,.fighter.hit-crit:before,.fighter.hit-shield:before{content:"";position:absolute;z-index:4;top:20%;width:44%;height:58%;border-radius:50%;pointer-events:none;mix-blend-mode:screen;animation:contact-flash .2s ease-out forwards}.fighter.player.hit-white:before,.fighter.player.hit-crit:before,.fighter.player.hit-shield:before{right:2%}.fighter.enemy.hit-white:before,.fighter.enemy.hit-crit:before,.fighter.enemy.hit-shield:before{right:0}.fighter.hit-white:before{background:radial-gradient(ellipse,#fff9 0,#fff3 30%,transparent 69%)}.fighter.hit-crit:before{background:radial-gradient(ellipse,#fff 0,#ff5a4f70 28%,transparent 70%)}.fighter.hit-shield:before{background:radial-gradient(ellipse,#f6fdffcc 0,#8edcff4a 34%,transparent 72%)}
+/* ===== 2.17.0: Pressure-driven environment layers =====
+   Layer order: .abyss-scenery(z1) → darkness/vignette/fog/motes(z2) → fighters/UI(z3).
+   JS sets --p-* vars on .arena from game.combat.pressure. Fighters & UI never touched. */
+.arena{
+  --p-darkness:0;
+  --p-vignette:0;
+  --p-fog:0;
+  --p-motes:0;
+  --p-green:0;
+  --p-blur:0px;
+}
+.pressure-darkness,.pressure-vignette,.pressure-fog,.pressure-motes{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+}
+/* Darkness: dims background only, deep green-black tint grows with pressure */
+.pressure-darkness{
+  background:linear-gradient(180deg,rgba(2,6,5,var(--p-darkness)) 0%,rgba(1,4,3,calc(var(--p-darkness)*.85)) 55%,rgba(0,2,1,var(--p-darkness)) 100%);
+  opacity:1;
+  transition:background .8s linear;
+}
+/* Vignette: dark edges, clear center for combat readability */
+.pressure-vignette{
+  background:radial-gradient(ellipse at 50% 46%,transparent 42%,rgba(0,0,0,calc(var(--p-vignette)*.55)) 72%,rgba(0,0,0,var(--p-vignette)) 100%);
+  transition:background .8s linear;
+}
+/* Fog: pressure fog, thicker at top (far view), never covers fighters (z2 below z3) */
+.pressure-fog{
+  background:
+    linear-gradient(180deg,rgba(120,150,140,calc(var(--p-fog)*.5)) 0%,rgba(90,115,105,calc(var(--p-fog)*.32)) 30%,transparent 62%),
+    radial-gradient(ellipse at 22% 30%,rgba(140,170,160,calc(var(--p-fog)*.4)),transparent 55%),
+    radial-gradient(ellipse at 78% 22%,rgba(130,160,150,calc(var(--p-fog)*.36)),transparent 52%);
+  filter:blur(18px);
+  transition:background .8s linear;
+  animation:pressure-fog-drift 24s ease-in-out infinite alternate;
+}
+@keyframes pressure-fog-drift{
+  from{transform:translateX(-1.5%)}
+  to{transform:translateX(1.5%)}
+}
+/* Motes: faint abyss particles, subtle, below fighters */
+.pressure-motes{
+  background:
+    radial-gradient(circle at 15% 70%,rgba(120,200,170,calc(var(--p-motes)*.5)) 0 1px,transparent 2px),
+    radial-gradient(circle at 35% 40%,rgba(80,120,110,calc(var(--p-motes)*.4)) 0 1px,transparent 2px),
+    radial-gradient(circle at 60% 75%,rgba(140,210,180,calc(var(--p-motes)*.45)) 0 1px,transparent 2px),
+    radial-gradient(circle at 82% 55%,rgba(60,90,85,calc(var(--p-motes)*.4)) 0 1.5px,transparent 2.5px),
+    radial-gradient(circle at 48% 25%,rgba(100,160,140,calc(var(--p-motes)*.35)) 0 1px,transparent 2px);
+  background-size:220px 260px,180px 210px,240px 280px,200px 230px,260px 300px;
+  animation:motes-drift 18s linear infinite;
+  transition:opacity .8s linear;
+}
+@keyframes motes-drift{
+  to{transform:translateY(-40px);background-position:12px -30px,-15px -25px,10px -35px,-12px -28px,14px -32px}
+}
+/* Background reacts: extra blur + green shift at high pressure (scenery only) */
+.arena .abyss-scenery::before{
+  filter:blur(calc(10px + var(--p-blur))) brightness(calc(.68 - var(--p-darkness)*.35));
+}
+.arena .abyss-scenery{
+  filter:brightness(calc(.68 - var(--p-darkness)*.3)) saturate(calc(1 - var(--p-green)*.25)) hue-rotate(calc(var(--p-green)*-8deg));
+}
+/* Pressure bar tier colors: subtle shift, T3+ warmer */
+.pressure-dock i em{transition:background .6s linear}
+.pressure-dock[data-tier="0"] i em{background:linear-gradient(90deg,#3d6b52,#5a9a72)}
+.pressure-dock[data-tier="1"] i em{background:linear-gradient(90deg,#3d6b52,#6aa882)}
+.pressure-dock[data-tier="2"] i em{background:linear-gradient(90deg,#4a6b4d,#8aa86a)}
+.pressure-dock[data-tier="3"] i em{background:linear-gradient(90deg,#6b5a3d,#c08a4a)}
+.pressure-dock[data-tier="4"] i em{background:linear-gradient(90deg,#5a3d5e,#a05a8a)}
+/* Debug readout: tiny, unobtrusive */
+.pressure-debug{
+  display:block;font:10px/1.4 ui-monospace,monospace;color:#7a8a80;opacity:.75;
+  margin-top:4px;letter-spacing:.04em;
+}
 /* ===== 2.16.8: tone down hit flash (was blinding white) =====
    portrait-white-flash: brightness 4.8 → 2.3; crit 5.4 → 3.0 (keeps punch, less blind);
    contact-flash overlay opacity reduced. */

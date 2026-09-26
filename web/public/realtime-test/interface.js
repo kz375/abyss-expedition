@@ -79,7 +79,32 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId,portra
   $("flow-text").textContent=game.paused||game.phase!=="battle"?tx("已暂停","Paused"):warned?tx("危险预警 · 时间减速","Danger · Slow time"):tx("实时战斗","Real-time battle");$("flow").hidden=game.phase==="battle"&&!game.paused&&!warned;
   $("enemy-card").classList.toggle("charging",!!m?.telegraph);$("player-card").classList.toggle("defeated",game.phase==="defeat");$("enemy-card").classList.toggle("defeated",!!m&&m.hp<=0);
   const intentEntity=[m,...(game.summons||[])].find(e=>e?.telegraph),intentLeft=intentEntity?Math.max(0,intentEntity.next-game.clock):0;$("intent-callout").classList.toggle("armed",!!intentEntity);$("intent-callout").classList.toggle("urgent",!!intentEntity&&intentLeft<1200);$("intent-action").textContent=intentEntity?label(ACTION_NAMES[intentEntity.telegraph]):tx("观察敌方动作","READ THE ENEMY");$("intent-countdown").textContent=intentEntity?`${(intentLeft/1000).toFixed(2)}s`:"—";
-  const pressure=active?game.combat.pressure:0,currentBreak=!!m&&m.breakEncounter===game.combat.encounter,broken=currentBreak&&m.brokenUntil>game.clock,breakRatio=active&&currentBreak?Math.max(0,Math.min(1,broken?1:(m.break||0)/(m.breakMax||100))):0;$("pressure-fill").style.transform=`scaleX(${pressure/100})`;$("pressure-text").textContent=active?`${Math.floor(pressure)}% · T${game.combat.tier}`:"0%";$("break-fill").style.transform="scaleX(1)";$("break-fill").style.width=`${breakRatio*100}%`;$("break-text").textContent=broken?tx("破势！爆发窗口","BROKEN · BURST NOW"):`${Math.floor(currentBreak?m.break||0:0)} / ${m?.breakMax||100}`;$("enemy-card").querySelector(".enemy-break").classList.toggle("broken",!!broken);if(active)document.body.dataset.pressure=game.combat.tier;
+  const pressure=active?game.combat.pressure:0,currentBreak=!!m&&m.breakEncounter===game.combat.encounter,broken=currentBreak&&m.brokenUntil>game.clock,breakRatio=active&&currentBreak?Math.max(0,Math.min(1,broken?1:(m.break||0)/(m.breakMax||100))):0;$("pressure-fill").style.transform=`scaleX(${pressure/100})`;$("pressure-text").textContent=active?`${Math.floor(pressure)}% · T${game.combat.tier}`:"0%";
+  /* 2.17.0: Pressure → environment. Piecewise-linear stage mapping, smooth. */
+  (function(){
+    const p=Math.max(0,Math.min(100,pressure))/100;
+    const lerp=(a,b,t)=>a+(b-a)*t;
+    const seg=(x0,x1,y0,y1)=>p<=x0?y0:p>=x1?y1:lerp(y0,y1,(p-x0)/(x1-x0));
+    const stage=
+      p<.30?{d:seg(0,.30,0,.08),f:seg(0,.30,0,.12),v:seg(0,.30,0,.15),m:seg(0,.30,0,.10),g:seg(0,.30,0,.10),b:0,dt:0}:
+      p<.60?{d:seg(.30,.60,.08,.22),f:seg(.30,.60,.12,.30),v:seg(.30,.60,.15,.35),m:seg(.30,.60,.10,.25),g:seg(.30,.60,.10,.30),b:seg(.30,.60,0,1),dt:0}:
+      p<.80?{d:seg(.60,.80,.22,.40),f:seg(.60,.80,.30,.55),v:seg(.60,.80,.35,.55),m:seg(.60,.80,.25,.40),g:seg(.60,.80,.30,.55),b:seg(.60,.80,1,2),dt:0}:
+      p<.95?{d:seg(.80,.95,.40,.58),f:seg(.80,.95,.55,.75),v:seg(.80,.95,.55,.75),m:seg(.80,.95,.40,.55),g:seg(.80,.95,.55,.80),b:seg(.80,.95,2,4),dt:seg(.80,.95,0,.05)}:
+             {d:seg(.95,1,.58,.70),f:seg(.95,1,.75,.88),v:seg(.95,1,.75,.92),m:seg(.95,1,.55,.65),g:seg(.95,1,.80,1),b:seg(.95,1,4,6),dt:seg(.95,1,.05,.08)};
+    const arena=document.querySelector(".arena");
+    if(arena){const s=arena.style;
+      s.setProperty("--p-darkness",stage.d.toFixed(3));
+      s.setProperty("--p-fog",stage.f.toFixed(3));
+      s.setProperty("--p-vignette",stage.v.toFixed(3));
+      s.setProperty("--p-motes",stage.m.toFixed(3));
+      s.setProperty("--p-green",stage.g.toFixed(3));
+      s.setProperty("--p-blur",stage.b.toFixed(1)+"px");
+    }
+    const dock=document.querySelector(".pressure-dock");
+    if(dock)dock.dataset.tier=active?game.combat.tier:0;
+    const dbg=$("pressure-debug");
+    if(dbg)dbg.textContent=active?`P:${Math.floor(pressure)} T:${game.combat.tier} D:${stage.d.toFixed(2)} F:${stage.f.toFixed(2)} V:${stage.v.toFixed(2)} X:${stage.dt.toFixed(2)}`:"";
+  })();$("break-fill").style.transform="scaleX(1)";$("break-fill").style.width=`${breakRatio*100}%`;$("break-text").textContent=broken?tx("破势！爆发窗口","BROKEN · BURST NOW"):`${Math.floor(currentBreak?m.break||0:0)} / ${m?.breakMax||100}`;$("enemy-card").querySelector(".enemy-break").classList.toggle("broken",!!broken);if(active)document.body.dataset.pressure=game.combat.tier;
   const breakFill=$("break-fill");breakFill.style.setProperty("--break-ratio",breakRatio);breakFill.style.transform=`scaleX(${breakRatio})`;breakFill.classList.toggle("empty",breakRatio===0);
   if(active){const e=effects();$("combat-stats").innerHTML=`<span>${tx("攻击","ATK")} <b>${Math.round(e.attack)}</b></span><span>${tx("防御","DEF")} <b>${Math.round(e.defense)}</b></span><span>${tx("暴击","CRIT")} <b>${Math.round(e.crit*100)}%</b></span><span>${tx("减伤","DR")} <b>${Math.round(e.damageReduction*100)}%</b></span>`;}else $("combat-stats").replaceChildren();
   $("gold").textContent=tx("金币 ","Gold ")+(game.gold||0);$("relics").textContent=tx("遗物 ","Relics ")+(game.relics?.length||0);

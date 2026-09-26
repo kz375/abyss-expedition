@@ -37,128 +37,28 @@ function menu(){
   $("unlock-creator")?.addEventListener("click",()=>{if($("creator-code").value.trim().toLowerCase()==="kz"){creatorUnlocked=true;const seed=$("seed").value,d=$("difficulty").value;menu();$("seed").value=seed;$("difficulty").value=d;}});
 }
 function eventTitle(id){const e=EVENT_CATALOG.find(e=>e.id===id);return e?e.name:["事件","Event"];}
-function eventPresentation(id){return EVENT_PRESENTATION[id]||{icon:"?",tone:"arcane",desc:["深渊向你提出一个选择。","The abyss offers you a choice."]};}
-
-// 2.23.0: 事件类别系统
-const EVENT_CATEGORIES={
-  safe:{icon:"🟢",zh:"安全",en:"SAFE",color:"#63e69a"},
-  trade:{icon:"🟡",zh:"交易",en:"TRADE",color:"#e9d08b"},
-  arcane:{icon:"🟣",zh:"奥秘",en:"MYSTERY",color:"#b48cff"},
-  risk:{icon:"🔴",zh:"风险",en:"RISK",color:"#f17d6a"},
-  trial:{icon:"🔵",zh:"试炼",en:"TRIAL",color:"#6ab8ff"}
-};
-function eventCategory(id){const e=(typeof EVENT_CATALOG!=="undefined"?EVENT_CATALOG:[]).find(e=>e.id===id);return EVENT_CATEGORIES[e?.category||"arcane"];}
-// 2.27.0: SVG 场景库 - 每个事件有明确的视觉主体
-
-// 2.27.0: 结果氛围文案（替代"无变化"调试感）
-function resultFlavor(eventId){
-  const flavors = {
-    campfire: [["余烬在你身后渐渐熄灭","The embers fade behind you"]],
-    library: [["书页合上，寂静如初","The pages close; silence remains"]],
-    merchant: [["商人目送你离开","The merchant watches you leave"]],
-    shrine: [["神龛的光芒渐渐暗淡","The shrine's light dims"]],
-    chest: [["黑暗重新合拢","Darkness closes in again"]],
-    oracle: [["雾气散去，预言已说完","The mist parts; the prophecy is spoken"]],
-    healer: [["草药的香气渐渐散去","The scent of herbs fades"]],
-    spring: [["泉水恢复了平静","The spring grows still"]],
-  };
-  const list = flavors[eventId] || [["深渊静静注视着你","The abyss watches in silence"]];
-  return list[0];
-}
-
-function eventSceneSVG(id){
-  const S = {
-    // 篝火：火焰 + 木柴 + 火光
-    campfire: `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="fire-glow" cx="50%" cy="65%"><stop offset="0%" stop-color="#ff9a3c" stop-opacity=".55"/><stop offset="45%" stop-color="#ff6b2c" stop-opacity=".18"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient><linearGradient id="flame" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#ff3d00"/><stop offset="50%" stop-color="#ff9a3c"/><stop offset="100%" stop-color="#ffe08a"/></linearGradient></defs><rect width="400" height="300" fill="#0a0805"/><rect width="400" height="300" fill="url(#fire-glow)"/><ellipse cx="200" cy="245" rx="90" ry="18" fill="#000" opacity=".6"/><g stroke="#3a2415" stroke-width="10" stroke-linecap="round"><line x1="140" y1="240" x2="260" y2="228"/><line x1="260" y1="240" x2="140" y2="228"/></g><g><path d="M185 235 C175 210 185 195 175 175 C195 185 190 200 200 190 C210 200 205 185 225 175 C215 195 225 210 215 235 Z" fill="url(#flame)" opacity=".95"><animate attributeName="d" values="M185 235 C175 210 185 195 175 175 C195 185 190 200 200 190 C210 200 205 185 225 175 C215 195 225 210 215 235 Z;M185 235 C170 215 185 190 170 170 C195 180 190 205 200 185 C215 205 200 180 230 170 C220 195 230 215 215 235 Z;M185 235 C175 210 185 195 175 175 C195 185 190 200 200 190 C210 200 205 185 225 175 C215 195 225 210 215 235 Z" dur="1.6s" repeatCount="indefinite"/></path><circle cx="170" cy="150" r="2.5" fill="#ffb84d" opacity=".8"><animate attributeName="cy" values="150;80" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="2s" repeatCount="indefinite"/></circle><circle cx="230" cy="160" r="2" fill="#ff9a3c" opacity=".7"><animate attributeName="cy" values="160;70" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".7;0" dur="2.4s" repeatCount="indefinite"/></circle></g><path d="M120 260 q80 -15 160 0" stroke="#1a120a" stroke-width="24" fill="none" opacity=".5"/></svg>`,
-    
-    // 图书馆：书架 + 书籍 + 紫色氛围
-    library: `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="lib-glow" cx="50%" cy="30%"><stop offset="0%" stop-color="#7b5cff" stop-opacity=".25"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient></defs><rect width="400" height="300" fill="#0d0a14"/><rect width="400" height="300" fill="url(#lib-glow)"/><g><rect x="40" y="40" width="320" height="220" fill="#1a1428" stroke="#2d2340" stroke-width="3"/><g fill="#3d2f5c"><rect x="55" y="60" width="18" height="70"/><rect x="76" y="55" width="14" height="75" fill="#4d3a6e"/><rect x="93" y="62" width="20" height="68" fill="#342a4d"/><rect x="116" y="58" width="12" height="72"/><rect x="131" y="64" width="22" height="66" fill="#4d3a6e"/><rect x="160" y="56" width="16" height="74"/><rect x="179" y="62" width="14" height="68" fill="#342a4d"/><rect x="196" y="58" width="20" height="72" fill="#5c468a"/><rect x="219" y="64" width="12" height="66"/><rect x="234" y="56" width="18" height="74" fill="#4d3a6e"/><rect x="255" y="62" width="14" height="68"/><rect x="272" y="58" width="20" height="72" fill="#342a4d"/><rect x="295" y="64" width="16" height="66" fill="#5c468a"/><rect x="314" y="60" width="18" height="70"/></g><rect x="40" y="135" width="320" height="6" fill="#2d2340"/><g fill="#3d2f5c"><rect x="55" y="155" width="16" height="70"/><rect x="74" y="150" width="20" height="75" fill="#4d3a6e"/><rect x="97" y="158" width="14" height="67"/><rect x="114" y="152" width="18" height="73" fill="#342a4d"/><rect x="135" y="160" width="12" height="65"/><rect x="150" y="154" width="22" height="71" fill="#5c468a"/><rect x="175" y="158" width="14" height="67"/><rect x="192" y="150" width="18" height="75" fill="#4d3a6e"/><rect x="213" y="156" width="16" height="69"/><rect x="232" y="152" width="20" height="73" fill="#342a4d"/><rect x="255" y="160" width="12" height="65" fill="#5c468a"/><rect x="270" y="154" width="18" height="71"/><rect x="291" y="158" width="14" height="67" fill="#4d3a6e"/><rect x="308" y="152" width="20" height="73"/></g><rect x="40" y="230" width="320" height="6" fill="#2d2340"/></g><circle cx="200" cy="30" r="18" fill="#b48cff" opacity=".3"><animate attributeName="opacity" values=".3;.6;.3" dur="3s" repeatCount="indefinite"/></circle></svg>`,
-    
-    // 商人：灯笼 + 帐篷剪影
-    merchant: `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="lant-glow" cx="50%" cy="40%"><stop offset="0%" stop-color="#ffce6b" stop-opacity=".5"/><stop offset="50%" stop-color="#ff9a3c" stop-opacity=".15"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient></defs><rect width="400" height="300" fill="#0d0a06"/><rect width="400" height="300" fill="url(#lant-glow)"/><path d="M60 300 L60 120 L200 40 L340 120 L340 300 Z" fill="#141008" stroke="#2a2015" stroke-width="2"/><path d="M60 120 L200 40 L340 120" fill="none" stroke="#3a2d1a" stroke-width="3"/><g><line x1="140" y1="100" x2="140" y2="130" stroke="#3a2d1a" stroke-width="2"/><ellipse cx="140" cy="150" rx="22" ry="28" fill="#ff9a3c" opacity=".85"><animate attributeName="opacity" values=".85;.65;.85" dur="2.5s" repeatCount="indefinite"/></ellipse><ellipse cx="140" cy="150" rx="14" ry="18" fill="#ffce6b" opacity=".9"/><line x1="260" y1="100" x2="260" y2="130" stroke="#3a2d1a" stroke-width="2"/><ellipse cx="260" cy="150" rx="22" ry="28" fill="#ff9a3c" opacity=".85"><animate attributeName="opacity" values=".65;.85;.65" dur="2.5s" repeatCount="indefinite"/></ellipse><ellipse cx="260" cy="150" rx="14" ry="18" fill="#ffce6b" opacity=".9"/></g><g fill="#1e160c" stroke="#3a2d1a"><rect x="120" y="220" width="50" height="40" rx="4"/><rect x="180" y="215" width="60" height="45" rx="4"/><rect x="250" y="225" width="45" height="35" rx="4"/></g><ellipse cx="200" cy="265" rx="120" ry="12" fill="#000" opacity=".5"/></svg>`,
-    
-    // 神龛：祭坛 + 符文 + 光柱
-    shrine: `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#b48cff" stop-opacity=".4"/><stop offset="100%" stop-color="#b48cff" stop-opacity="0"/></linearGradient></defs><rect width="400" height="300" fill="#0c0a12"/><polygon points="170,0 230,0 250,300 150,300" fill="url(#beam)"/><ellipse cx="200" cy="250" rx="80" ry="16" fill="#1a1428" stroke="#4d3a6e" stroke-width="2"/><rect x="170" y="180" width="60" height="70" fill="#241c38" stroke="#5c468a" stroke-width="2"/><rect x="160" y="170" width="80" height="14" fill="#2d2340" stroke="#5c468a"/><circle cx="200" cy="155" r="10" fill="#b48cff"><animate attributeName="opacity" values="1;.5;1" dur="2s" repeatCount="indefinite"/></circle><g stroke="#7b5cff" stroke-width="1.5" opacity=".6" fill="none"><circle cx="200" cy="250" r="55"/><circle cx="200" cy="250" r="40"/><path d="M200 195 L200 205 M245 250 L235 250 M200 305 L200 295 M155 250 L165 250"/></g></svg>`,
-    
-    // 宝箱：宝箱主体 + 金光
-    chest: `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="chest-glow" cx="50%" cy="55%"><stop offset="0%" stop-color="#ffce6b" stop-opacity=".35"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient></defs><rect width="400" height="300" fill="#0a0805"/><rect width="400" height="300" fill="url(#chest-glow)"/><ellipse cx="200" cy="245" rx="100" ry="14" fill="#000" opacity=".6"/><g><rect x="130" y="150" width="140" height="90" rx="6" fill="#2a1d10" stroke="#5a4020" stroke-width="3"/><path d="M130 170 Q200 130 270 170 L270 150 Q200 110 130 150 Z" fill="#3a2815" stroke="#5a4020" stroke-width="3"/><rect x="185" y="165" width="30" height="36" rx="4" fill="#1a1208" stroke="#ffce6b" stroke-width="2"/><circle cx="200" cy="178" r="4" fill="#ffce6b"/><line x1="130" y1="195" x2="270" y2="195" stroke="#5a4020" stroke-width="2"/><polygon points="200,150 205,135 200,125 195,135" fill="#ffce6b" opacity=".9"><animate attributeName="opacity" values=".9;.3;.9" dur="1.8s" repeatCount="indefinite"/></polygon></g></svg>`,
-  };
-  
-  // 按事件映射到场景
-  const map = {
-    campfire:'campfire', healer:'campfire', spring:'campfire', well:'campfire',
-    library:'library', oracle:'library', cards:'library',
-    merchant:'merchant', caravan:'merchant', gambler:'merchant',
-    shrine:'shrine', altar:'shrine', idol:'shrine',
-    chest:'chest', rift:'chest', stalker:'chest',
-  };
-  const key = map[id] || 'campfire';
-  return S[key] || S.campfire;
-}
-
-function eventSceneClass(id){return `scene-${id}`;}
-// 资源 HUD
-function eventResourceHUD(){const h=Math.round(game.hp),m=game.max;return `<div class="event-hud" aria-label="${tx("当前资源","Resources")}"><span title="${tx("生命","HP")}">♥ ${h}/${m}</span><span title="${tx("护盾","Ward")}">🛡 ${Math.round(game.shield||0)}</span><span title="${tx("金币","Gold")}">🪙 ${game.gold||0}</span><span title="${tx("药瓶","Bottles")}">🧪 ${game.potions||0}</span><span title="${tx("遗物","Relics")}">✨ ${game.relics?.length||0}</span><span title="Pressure">🌑 ${Math.floor(game.combat?.pressure||0)}%</span></div>`;}
-// 决策卡的 cost/reward 渲染
-function metaTags(meta){if(!meta)return "";let html="";
-  const render=(items,cls,label)=>{if(!items||!items.length)return "";return `<div class="decision-${cls}"><em>${label}</em><span>${items.map(([icon,val])=>`<b><i>${icon}</i>${esc(String(val))}</b>`).join("")}</span></div>`;};
-  html+=render(meta.c,"cost",tx("代价","COST"));
-  html+=render(meta.g,"gain",tx("获得","GAIN"));
-  if(meta.r){const riskLabel={high:tx("高风险","HIGH RISK"),elite:tx("精英遭遇","ELITE"),unknown:tx("未知风险","UNKNOWN RISK")}[meta.r]||meta.r;html+=`<div class="decision-risk"><em>⚠</em><span>${riskLabel}</span></div>`;}
-  return html?`<div class="decision-meta">${html}</div>`:"";}
-
-
-// 2.24.0: 遗物符印系统 - 几何符印 + 渐变 + 光晕，替代 emoji
-const RELIC_SIGILS={
-  blade:{s:"◆",c:"steel"},vital:{s:"⬡",c:"life"},moon:{s:"☽",c:"moon"},haste:{s:"⚡",c:"storm"},
-  flame:{s:"❖",c:"fire"},plunder:{s:"◈",c:"gold"},thorns:{s:"✳",c:"thorn"},resolve:{s:"⬢",c:"resolve"},
-  sand:{s:"◉",c:"time"},healing:{s:"✚",c:"life"},ruby:{s:"♦",c:"blood"},iron:{s:"⬣",c:"steel"},
-  vial:{s:"◍",c:"moon"},fang:{s:"▽",c:"blood"},mail:{s:"⬔",c:"thorn"},clover:{s:"♧",c:"life"},
-  gold:{s:"◈",c:"gold"},standard:{s:"⚑",c:"fire"},chrono:{s:"◐",c:"time"}
-};
-const RELIC_RARITY={blade:"rare",vital:"common",moon:"epic",haste:"rare",flame:"rare",plunder:"common",thorns:"common",resolve:"rare",sand:"epic",healing:"common",ruby:"common",iron:"common",vial:"common",fang:"epic",mail:"rare",clover:"rare",gold:"rare",standard:"common",chrono:"epic"};
-const RARITY_LABEL={common:["普通","COMMON"],rare:["稀有","RARE"],epic:["史诗","EPIC"],legendary:["传说","LEGENDARY"],abyss:["深渊","ABYSS"]};
-function relicSigil(id){const s=RELIC_SIGILS[id]||{s:"✦",c:"arcane"};return `<span class="sigil sigil-${s.c}">${s.s}</span>`;}
-function relicRarity(id){return RELIC_RARITY[id]||"common";}
-
-// 2.24.0: 商店商品符印
-const SHOP_SIGILS={potion:{s:"◍",c:"life"},weapon:{s:"◆",c:"steel"},armor:{s:"⬣",c:"steel"},ward:{s:"⬢",c:"arcane"},tonic:{s:"❖",c:"fire"},smoke:{s:"◌",c:"shadow"}};
-function shopSigil(id){const s=SHOP_SIGILS[id]||{s:"◇",c:"arcane"};return `<span class="sigil sigil-${s.c}">${s.s}</span>`;}
-
-
-function eventCards(ids){return ids.map(id=>{const p=eventPresentation(id),cat=eventCategory(id);return `<button class="entrance-card cat-${p.tone}" data-event="${id}"><div class="entrance-scene" aria-hidden="true">${eventSceneSVG(id)}</div><div class="entrance-shade" aria-hidden="true"></div><span class="entrance-icon" aria-hidden="true">${p.icon}</span><strong>${esc(label(eventTitle(id)))}</strong><span class="entrance-cat">${esc(label([cat.zh,cat.en]))}</span></button>`}).join("");}
+function eventPresentation(id){return EVENT_PRESENTATION[id]||{icon:"?",tone:"arcane",scene:"rift",desc:["深渊向你提出一个选择。","The abyss offers you a choice."]};}
+const eventToneNames={safe:["安全","SAFE"],trade:["交易","TRADE"],arcane:["秘闻","MYSTERY"],risk:["危险","RISK"],trial:["试炼","TRIAL"]};
+function eventScene(p,extra=""){return `<div class="event-backdrop scene-${p.scene||"rift"} ${extra}" aria-hidden="true"><i class="scene-depth"></i><i class="scene-subject"></i><i class="scene-detail"></i><i class="scene-fog"></i></div>`;}
+function eventCards(ids){return ids.map(id=>{const p=eventPresentation(id);return `<button class="card event-card tone-${p.tone} scene-${p.scene}" data-event="${id}">${eventScene(p,"event-card-art")}<span class="event-card-caption"><span class="event-icon" aria-hidden="true">${p.icon}</span><strong>${esc(label(eventTitle(id)))}</strong><small>${esc(label(eventToneNames[p.tone]||eventToneNames.arcane))}</small></span></button>`}).join("");}
+function eventChoice(text){const value=label(text),tokens=value.match(/(?:HP|生命|生命上限|ATK|攻击|防御|Pressure|护盾|Ward|Break|金币|gold|瓶|bottle|遗物|relic)[^；;，,。]{0,24}/gi)||[];return {title:value.split(/[：:；;]/)[0],impact:[...new Set(tokens)].slice(0,3)};}
+function relicRarity(id){if(["phoenix","chrono","fang","mask"].includes(id))return ["传说","LEGENDARY","legendary"];if(["flame","thorns","resolve","serpent","gourd"].includes(id))return ["史诗","EPIC","epic"];return ["稀有","RARE","rare"];}
+function relicIcon(id){return ({phoenix:"♨",chrono:"⌛",fang:"◆",mask:"☽",flame:"✹",thorns:"✣",resolve:"◇",serpent:"∿",gourd:"♜"})[id]||"✦";}
+function relicCards(ids){return ids.map(id=>{const relic=RELIC_BY_ID[id],rarity=relicRarity(id);return `<button class="card relic-choice rarity-${rarity[2]}" data-relic="${esc(id)}"><span class="relic-icon" aria-hidden="true">${relicIcon(id)}</span><small>${esc(label([rarity[0],rarity[1]]))}</small><strong>${esc(label(relic.name))}</strong><em>${esc(label(relic.desc))}</em></button>`}).join("");}
 function renderScene(){if(!game)return;if(game.phase!=="trial")trialViewState=null;$("archive-layer").hidden=!archiveKind;applyLocale();render();
   if(game.phase==="menu"){menu();return;}
   if(game.phase==="battle"){$("overlay").hidden=true;return;}
   if(game.phase==="reward"){
-    modal(["发现遗物","RELIC FOUND"],["选择一件遗物","Choose a relic"],`<div class="relic-showcase"><div class="showcase-glow" aria-hidden="true"></div><div class="relic-row">${game.rewardOffers.map((id,idx)=>{const r=RELIC_BY_ID[id],rar=relicRarity(id),rl=RARITY_LABEL[rar];return `<button class="relic-item rarity-${rar}" data-relic="${id}"><span class="relic-big-icon">${relicSigil(id)}</span><b class="relic-name">${esc(label(r.name))}</b><span class="orb-rarity">${esc(label(rl))}</span><span class="relic-effect">${esc(label(r.desc))}</span></button>`;}).join("")}</div>${!game.rewardOffers.length?`<button class="card" id="reward-continue">${tx("全部收集完成，继续","Collection complete — continue")}</button>`:""}</div>`);$("overlay").querySelector(".modal").classList.add("relic-modal");
+    modal(["发现遗物","RELIC DISCOVERED"],["雾中的光只会回应一次。","The light in the fog will answer only once."],`${eventScene({scene:"altar"},"relic-altar-scene")}<div class="cards relic-grid">${relicCards(game.rewardOffers)}</div>${!game.rewardOffers.length?`<button class="card compact" id="reward-continue">${tx("继续深入","Continue deeper")}</button>`:""}`);$("overlay").querySelector(".modal").classList.add("relic-modal");
     bind("[data-relic]",b=>selectRelic(b.dataset.relic));$("reward-continue")?.addEventListener("click",()=>{if(game.phase!=="reward")return;afterReward();commit();});
   }else if(game.phase==="events"){
-    modal(["四道回响","FOUR ECHOES"],["选择一条道路；踏入之后，其余回响将永远熄灭","Choose one path. Once entered, the other echoes will fade forever"],`<div class="event-route"><span>${tx(`第 ${game.floor+1} 层已清理`,`Floor ${game.floor+1} cleared`)}</span></div><div class="event-grid">${eventCards(game.eventOffers)}</div>`);$("overlay").querySelector(".modal").classList.add("event-modal","event-select");bind("[data-event]",b=>{const btn=b;btn.classList.add("selected");document.querySelectorAll(".entrance-card").forEach(c=>{if(c!==btn)c.classList.add("dimmed");});setTimeout(()=>chooseEvent(btn.dataset.event),380);});
+    modal(["选择下一处回响","CHOOSE THE NEXT ECHO"],["雾中有四处地点回应了你。","Four places answer through the mist."],`<div class="event-route"><span>${tx(`第 ${game.floor+1} 层已清理`,`Floor ${game.floor+1} cleared`)}</span><i></i><b>${tx("选择地点","CHOOSE A PLACE")}</b></div><div class="cards event-grid">${eventCards(game.eventOffers)}</div>`);$("overlay").querySelector(".modal").classList.add("event-modal","event-route-modal");bind("[data-event]",b=>chooseEvent(b.dataset.event));
   }else if(game.phase==="event"){
-    const p=eventPresentation(game.eventId),options=eventOptions(),cat=eventCategory(game.eventId);
-    // 2.25.0: 场景优先 - 左38%场景 / 右62%决策条
-    modal(eventTitle(game.eventId),p.desc,`<div class="scene-hero">${eventSceneSVG(game.eventId)}<div class="scene-hero-overlay"><span class="scene-hero-icon">${p.icon}</span><div><b>${esc(label(eventTitle(game.eventId)))}</b><span class="event-stage-cat cat-${p.tone}">${cat.icon} ${esc(label([cat.zh,cat.en]))}</span></div></div><div class="event-hud-fixed">${eventResourceHUD()}</div></div><p class="scene-flavor">${esc(label(p.desc))}</p><div class="decision-list">${options.map((o,i)=>{const m=o.meta||{};return `<button class="decision-bar" data-option="${i}" ${o.enabled===false?"disabled":""}><span class="bar-num">${String(i+1).padStart(2,"0")}</span><span class="bar-icon">${m.i||"◇"}</span><span class="bar-title">${esc(label(o.text))}</span><span class="bar-meta">${metaTags(m)}</span></button>`;}).join("")}</div>`);
-    $("overlay").querySelector(".modal").classList.add("event-modal",`event-${p.tone}`,"event-detail");
-    bind("[data-option]",b=>{b.classList.add("confirming");setTimeout(()=>selectEventOption(Number(b.dataset.option)),220);});
+    const p=eventPresentation(game.eventId),options=eventOptions();modal(eventTitle(game.eventId),p.desc,`${eventScene(p,"event-detail-art")}<div class="event-decision-panel"><small class="decision-kicker">${p.icon} ${esc(label(eventToneNames[p.tone]||eventToneNames.arcane))}</small><div class="cards event-options">${options.map((o,i)=>{const choice=eventChoice(o.text);return `<button class="card event-choice" data-option="${i}" ${o.enabled===false?"disabled":""}><span class="choice-number">${String(i+1).padStart(2,"0")}</span><strong>${esc(choice.title)}</strong><span class="choice-impact">${choice.impact.length?choice.impact.map(v=>`<em>${esc(v)}</em>`).join(""):esc(label(o.text))}</span>${o.enabled===false?`<small>${tx("条件不足","Requirements not met")}</small>`:""}</button>`}).join("")}</div></div>`);$("overlay").querySelector(".modal").classList.add("event-modal","event-detail-modal",`event-${p.tone}`,`scene-${p.scene}`);bind("[data-option]",b=>selectEventOption(Number(b.dataset.option)));
   }else if(game.phase==="shop"){
-    // 2.24.0: 商店大升级 - 场景 + 决策卡 + HUD
-    modal(["商人","MERCHANT"],[tx("灯笼下，货物已经摆好","Wares laid out under the lantern")],`<div class="event-stage shop-stage"><div class="event-scene-bg scene-shop" aria-hidden="true"></div><div class="event-stage-head"><span class="event-stage-icon">⚖</span><div class="event-stage-title"><b>${tx("商人","MERCHANT")}</b><span class="event-stage-cat cat-trade">🟡 ${tx("交易","TRADE")} · ${tx("事件","EVENT")}</span></div>${eventResourceHUD()}</div><div class="shop-grid">${game.shopStock.map(id=>{const s=SHOP.find(s=>s.id===id),sold=game.bought.includes(id),cant=game.gold<s.price;return `<button class="card shop-card ${sold?"sold":""}" data-buy="${id}" ${sold||cant?"disabled":""}><span class="shop-sigil">${shopSigil(id)}</span><div class="shop-body"><strong>${esc(label(s.name))}</strong><small>${esc(label(shopDescription(id)))}</small></div><span class="shop-price ${cant&&!sold?"cant":""}">🪙 ${s.price}</span>${sold?`<em class="sold-tag">${tx("已售","SOLD")}</em>`:""}</button>`;}).join("")}</div><button class="card compact shop-leave" id="shop-leave">${tx("离开商店","Leave shop")} →</button></div>`);
-    $("overlay").querySelector(".modal").classList.add("event-modal","shop-modal");
-    bind("[data-buy]",b=>buy(b.dataset.buy));$("shop-leave").onclick=()=>{if(game.phase!=="shop")return;eventResult(["补给完成","Supplies secured"]);commit();};
+    const p=eventPresentation("shop");modal(["月下商人","MOONLIT MERCHANT"],[`金币 ${game.gold} · 灯熄之前完成交易`,`Gold ${game.gold} · Trade before the lantern dies`],`${eventScene(p,"event-detail-art")}<div class="event-decision-panel"><div class="cards event-options shop-options">${buttons(game.shopStock.map(id=>{const s=SHOP.find(s=>s.id===id);return {id,name:s.name,desc:[`${s.price} 金币 · ${shopDescription(id)[0]}`,`${s.price} gold · ${shopDescription(id)[1]}`],disabled:game.bought.includes(id)||game.gold<s.price}}),"data-buy")}</div><button class="card compact" id="shop-leave">${tx("离开灯火","Leave the lantern")}</button></div>`);$("overlay").querySelector(".modal").classList.add("event-modal","event-detail-modal","event-trade","scene-merchant");bind("[data-buy]",b=>buy(b.dataset.buy));$("shop-leave").onclick=()=>{if(game.phase!=="shop")return;eventResult(["补给完成","Supplies secured"]);commit();};
   }else if(game.phase==="result"){
-    const p=eventPresentation(game.eventId),cat=eventCategory(game.eventId);
-    // 2.22.0: 奖励/惩罚可视化（CSP 安全：无 inline style，用 CSS nth-child 控制延迟）
-    const diff=game.eventDiff||[];
-    const diffHtml=diff.length?`<div class="result-loot">${diff.map(d=>{
-      const valTxt=(d.val>0?"+":"")+d.val;
-      const detail=d.detail?`<small>${esc(d.detail)}</small>`:"";
-      return `<div class="result-item ${d.good?"gain":"loss"}"><span class="result-icon">${d.icon}</span><div class="result-info"><b>${valTxt}</b><em>${esc(label([d.labelZh,d.labelEn]))}</em>${detail}</div></div>`;
-    }).join("")}</div>`:`<div class="result-loot empty"><span>${tx("无明显变化","No visible change")}</span></div>`;
-    // 2.22.0: 优化结算界面结构
-    modal(["回响","ECHO"],game.result,`<div class="result-minimal"><div class="result-feedback"><span class="result-main">${esc(label(game.resultTitle||[game.eventId,""]))}</span>${(game.eventDiff||[]).length?`<div class="result-numbers">${game.eventDiff.map(d=>`<span class="rn ${d.good?"gain":"loss"}">${d.icon} ${(d.val>0?"+":"")+d.val}</span>`).join("")}</div>`:`<p class="result-flavor">${esc(resultFlavor(game.eventId))}</p>`}</div><button class="result-continue-btn" id="next-floor">${tx("继续","Continue")} →</button></div>`);$("overlay").querySelector(".modal").classList.add("event-modal");$("next-floor").onclick=()=>{if(game.phase!=="result")return;advanceFloor();commit();};
-    // 2.23.0: 中央属性弹窗（最重要的一个变化）
-    if(diff.length){const top=diff.slice().sort((a,b)=>Math.abs(b.val)-Math.abs(a.val))[0];const pop=document.createElement("div");pop.className=`stat-popup ${top.good?"gain":"loss"}`;pop.textContent=`${top.icon} ${top.val>0?"+":""}${top.val} ${label([top.labelZh,top.labelEn]).toUpperCase()}`;document.body.append(pop);setTimeout(()=>pop.remove(),1450);}
+    const p=eventPresentation(game.eventId),result=label(game.result),quiet=/No visible change|没有明显变化/i.test(result)?tx("回声渐渐散去","THE ECHO FADES"):result;modal(["回响落定","ECHO RESOLVED"],["雾重新合拢，道路继续向下。","The fog closes again. The road continues below."],`${eventScene({scene:"rift"},"result-abyss-scene")}<div class="event-result tone-${p.tone}"><span>${p.icon}</span><strong>${esc(quiet)}</strong><small>${tx("这段记忆已经成为远征的一部分。","This memory is now part of the expedition.")}</small></div><button class="card compact result-continue" id="next-floor">${tx("继续","CONTINUE")} →</button>`);$("overlay").querySelector(".modal").classList.add("event-modal","result-modal");$("next-floor").onclick=()=>{if(game.phase!=="result")return;advanceFloor();commit();};
   }else if(game.phase==="trial")renderTrial();
   else if(game.finished){
     const extracted=game.extractedItems||[],loot=extracted.length?`<div class="victory-loot">${extracted.map(item=>`<div class="loot-card quality-${item.quality}"><span>${esc(label(GEAR_QUALITIES[item.quality]))}</span><strong>${esc(label(GEAR_BASE_BY_ID[item.baseId].name))}</strong><small>${esc(gearDescription(item))}</small></div>`).join("")}</div>`:"";
@@ -185,7 +85,7 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId,portra
   $("flow-text").textContent=game.paused||game.phase!=="battle"?tx("已暂停","Paused"):warned?tx("危险预警 · 时间减速","Danger · Slow time"):tx("实时战斗","Real-time battle");$("flow").hidden=game.phase==="battle"&&!game.paused&&!warned;
   $("enemy-card").classList.toggle("charging",!!m?.telegraph);$("player-card").classList.toggle("defeated",game.phase==="defeat");$("enemy-card").classList.toggle("defeated",!!m&&m.hp<=0);
   const intentEntity=[m,...(game.summons||[])].find(e=>e?.telegraph),intentLeft=intentEntity?Math.max(0,intentEntity.next-game.clock):0;$("intent-callout").classList.toggle("armed",!!intentEntity);$("intent-callout").classList.toggle("urgent",!!intentEntity&&intentLeft<1200);$("intent-action").textContent=intentEntity?label(ACTION_NAMES[intentEntity.telegraph]):tx("观察敌方动作","READ THE ENEMY");$("intent-countdown").textContent=intentEntity?`${(intentLeft/1000).toFixed(2)}s`:"—";
-  const pressure=active?game.combat.pressure:0,currentBreak=!!m&&m.breakEncounter===game.combat.encounter,broken=currentBreak&&m.brokenUntil>game.clock,breakRatio=active&&currentBreak?Math.max(0,Math.min(1,broken?1:(m.break||0)/(m.breakMax||100))):0;$("pressure-fill").style.transform=`scaleX(${pressure/100})`;{const ptxt=active?`${Math.floor(pressure)}% · T${game.combat.tier}`:"0%";if($("pressure-text").dataset.v!==ptxt){$("pressure-text").dataset.v=ptxt;$("pressure-text").textContent=ptxt;}}
+  const pressure=active?game.combat.pressure:0,currentBreak=!!m&&m.breakEncounter===game.combat.encounter,broken=currentBreak&&m.brokenUntil>game.clock,breakRatio=active&&currentBreak?Math.max(0,Math.min(1,broken?1:(m.break||0)/(m.breakMax||100))):0;$("pressure-fill").style.transform=`scaleX(${pressure/100})`;$("pressure-text").textContent=active?`${Math.floor(pressure)}% · T${game.combat.tier}`:"0%";
   /* 2.17.0: Pressure → environment. Piecewise-linear stage mapping, smooth. */
   /* 2.17.2: only write CSS vars when values change (render runs at 60fps; */
   /* unconditional writes restart transitions → flicker). */
@@ -217,7 +117,7 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId,portra
     if(dbg)dbg.textContent=active?`P:${Math.floor(pressure)} T:${game.combat.tier} D:${stage.d.toFixed(2)} F:${stage.f.toFixed(2)} V:${stage.v.toFixed(2)} X:${stage.dt.toFixed(2)}`:"";
   })();$("break-fill").style.transform="scaleX(1)";$("break-fill").style.width=`${breakRatio*100}%`;$("break-text").textContent=broken?tx("破势！爆发窗口","BROKEN · BURST NOW"):`${Math.floor(currentBreak?m.break||0:0)} / ${m?.breakMax||100}`;$("enemy-card").querySelector(".enemy-break").classList.toggle("broken",!!broken);if(active)document.body.dataset.pressure=game.combat.tier;
   const breakFill=$("break-fill");breakFill.style.setProperty("--break-ratio",breakRatio);breakFill.style.transform=`scaleX(${breakRatio})`;breakFill.classList.toggle("empty",breakRatio===0);
-  if(active){const e=effects(),sk=`${Math.round(e.attack)}|${Math.round(e.defense)}|${Math.round(e.crit*100)}|${Math.round(e.damageReduction*100)}`;if($("combat-stats").dataset.sk!==sk){$("combat-stats").dataset.sk=sk;$("combat-stats").innerHTML=`<span>${tx("攻击","ATK")} <b>${Math.round(e.attack)}</b></span><span>${tx("防御","DEF")} <b>${Math.round(e.defense)}</b></span><span>${tx("暴击","CRIT")} <b>${Math.round(e.crit*100)}%</b></span><span>${tx("减伤","DR")} <b>${Math.round(e.damageReduction*100)}%</b></span>`;}}else if($("combat-stats").dataset.sk!==""){ $("combat-stats").dataset.sk="";$("combat-stats").replaceChildren();}
+  if(active){const e=effects();$("combat-stats").innerHTML=`<span>${tx("攻击","ATK")} <b>${Math.round(e.attack)}</b></span><span>${tx("防御","DEF")} <b>${Math.round(e.defense)}</b></span><span>${tx("暴击","CRIT")} <b>${Math.round(e.crit*100)}%</b></span><span>${tx("减伤","DR")} <b>${Math.round(e.damageReduction*100)}%</b></span>`;}else $("combat-stats").replaceChildren();
   $("gold").textContent=tx("金币 ","Gold ")+(game.gold||0);$("relics").textContent=tx("遗物 ","Relics ")+(game.relics?.length||0);
   $("pause").textContent=game.paused?tx("继续","Resume"):tx("暂停","Pause");$("pause").disabled=game.phase!=="battle"||!!archiveKind;
   $("potion").textContent=`${tx("药瓶","Healing Bottle")} (${game.potions||0})`;$("potion").disabled=game.phase!=="battle"||game.paused||!game.potions||!!archiveKind;
@@ -270,7 +170,7 @@ function renderTrial(){const t=game.trial,previous=trialViewState,changed=(type,
   bind("[data-dir]",b=>trialMove(...b.dataset.dir.split(",").map(Number)));$("trial-quit").onclick=()=>{if(confirm(tx("放弃将扣当前生命、金币和一件遗物，确定吗？","Forfeit loses current health, gold and one relic. Continue?"))){settleTrial(false);commit();}};
 }
 function init(){
-  if(globalThis.ABYSS_BETA_BUILD!=="2.13.0")throw new Error("Unified release files are from different versions; deploy the complete 2.13.0 asset set");
+  if(globalThis.ABYSS_BETA_BUILD!=="2.20.0")throw new Error("Unified release files are from different versions; deploy the complete 2.20.0 asset set");
   // A transformed/animated arena establishes its own fixed-position containing block.
   // Mount dialogs directly on body so all controls remain reachable on short screens.
   document.body.append($("overlay"));

@@ -538,3 +538,8 @@ body:after{background:radial-gradient(ellipse 42% 26% at 68% 6%,#93a9c714,transp
 .abyss-scenery:after{opacity:.5;}
 /* 2.16.2: remove fighter card backdrop blur (was creating a blurry square over the photo bg) */
 .fighter{backdrop-filter:none;}
+/* ===== 2.16.4: soften background photo so characters stand out (blur bg only, fighters are siblings) ===== */
+.abyss-scenery{
+  filter:blur(3px);
+  transform:scale(1.03);
+}

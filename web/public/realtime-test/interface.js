@@ -36,7 +36,7 @@ function menu(){
   $("resume-run")?.addEventListener("click",()=>restoreRun());$("import-menu").onclick=()=>$("import-file").click();
   $("unlock-creator")?.addEventListener("click",()=>{if($("creator-code").value.trim().toLowerCase()==="kz"){creatorUnlocked=true;const seed=$("seed").value,d=$("difficulty").value;menu();$("seed").value=seed;$("difficulty").value=d;}});
 }
-function eventTitle(id){const e=EVENT_CATALOG.find(e=>e[0]===id);return e?[e[1],e[2]]:["事件","Event"];}
+function eventTitle(id){const e=EVENT_CATALOG.find(e=>e.id===id);return e?e.name:["事件","Event"];}
 function eventPresentation(id){return EVENT_PRESENTATION[id]||{icon:"?",tone:"arcane",desc:["深渊向你提出一个选择。","The abyss offers you a choice."]};}
 function eventCards(ids){return ids.map(id=>{const p=eventPresentation(id);return `<button class="card event-card tone-${p.tone}" data-event="${id}"><span class="event-icon" aria-hidden="true">${p.icon}</span><strong>${esc(label(eventTitle(id)))}</strong><small>${esc(label(p.desc))}</small><em>${tx("进入事件","ENTER EVENT")} →</em></button>`}).join("");}
 function renderScene(){if(!game)return;if(game.phase!=="trial")trialViewState=null;$("archive-layer").hidden=!archiveKind;applyLocale();render();

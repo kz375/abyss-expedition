@@ -55,9 +55,9 @@ function newRun(id,seed,mode,runMode="expedition"){
     phase:"battle",paused:false,finished:false,clock:0,floor:0,plan:[],hp:initial,baseMax:initial,max:initial,initialHp:initial,
     baseAttack:Math.round(HEROES[id].attack*DIFFICULTIES[mode].hero),baseDefense:0,shield:0,cd:[0,0,0,0],pulse:4000,
     gold:35,potions:1,relics:[],statuses:{poison:0,burn:0,weak:0,sunder:0},enemy:null,summons:[],nextEntity:0,
-    floorStart:0,trialUsed:false,trial:null,returnFromBattle:false,rewardOffers:[],eventOffers:[],eventId:null,eventUsed:false,
+    floorStart:0,trialUsed:false,trial:null,returnFromBattle:false,rewardOffers:[],eventOffers:[],eventId:null,eventUsed:false,recentEvents:[],
     rewardReturn:"events",result:["",""],shopStock:[],bought:[],killCounts:{},revives:0,phoenixUsed:false,
-    loadout:accountLoadout(),extractedItems:[],storySeen:[],combat:CombatCore.create(runMode),
+    loadout:accountLoadout(),extractedItems:[],storySeen:[],combat:CombatCore.create(runMode),battleMods:null,
     stats:{damage:0,taken:0,healed:0,casts:0,kills:0,floors:[],phases:[],startedAt:Date.now()}};
   game.rng=hashSeed(game.seed);
   reconcile();game.hp=game.max;game.potions+=effects().startPotions;
@@ -85,12 +85,19 @@ function beginBattle(plan,ambush=false){
   game.combat.encounter=(game.combat.encounter||0)+1;game.enemy=makeEnemy(plan.index,plan.elite);resetBreakState(game.enemy);game.summons=[];game.phase="battle";game.paused=false;game.returnFromBattle=ambush;
   game.phoenixUsed=false;game.floorStart=game.clock;game.statuses={poison:0,burn:0,weak:0,sunder:0};
   if(effects().reset)game.cd=[0,0,0,0];game.pulse=game.clock+4000;addWard(effects().ward+(game.heroId==="warrior"?70:0));
+  /* 2.18.0: apply event-granted next-battle modifiers, then consume. */
+  if(game.battleMods){const bm=game.battleMods;
+    if(bm.ward)addWard(bm.ward);
+    if(bm.pressureDelta)game.combat.pressure=Math.max(0,Math.min(100,game.combat.pressure+bm.pressureDelta));
+    if(bm.breakBonus)game.combat.breakBonus=bm.breakBonus;
+    game.battleMods=null;
+  }else game.combat.breakBonus=1;
   game.result=[""," "];
 }
 function spawnSummon(){if(game.summons.length>=2)return;const index=Math.floor(random()*ROSTER.length);game.summons.push(makeEnemy(index,random()<.05,true));}
 function target(){return game.summons[0]||game.enemy;}
 function combatEvent(type,payload={}){return CombatCore.emit(game.combat,type,{time:game.clock,...payload});}
-function addBreak(m,amount,source="hit"){if(!m||m.hp<=0)return 0;if(m.breakEncounter!==game.combat.encounter)resetBreakState(m);if(m.brokenUntil>game.clock)return 0;const curseBreak=game.heroId==="necromancer"&&m.curse>0?1.2:1,gain=Math.max(0,amount)*curseBreak*CombatCore.PLAYER_BREAK_GAIN*CombatCore.breakPower(game.combat.pressure);m.break=Math.min(m.breakMax,m.break+gain);combatEvent("break_gain",{target:m.uid,amount:gain,source});if(m.break>=m.breakMax){m.break=0;m.brokenUntil=game.clock+CombatCore.BROKEN_MS;m.stunned=Math.max(m.stunned,CombatCore.BROKEN_MS/1000);m.telegraph=null;m.next=m.brokenUntil;combatEvent("broken",{target:m.uid,duration:CombatCore.BROKEN_MS});if(!m.minion)globalThis.playEnemyCombatReaction?.("break");}return gain;}
+function addBreak(m,amount,source="hit"){if(!m||m.hp<=0)return 0;if(m.breakEncounter!==game.combat.encounter)resetBreakState(m);if(m.brokenUntil>game.clock)return 0;const curseBreak=game.heroId==="necromancer"&&m.curse>0?1.2:1,gain=Math.max(0,amount)*curseBreak*CombatCore.PLAYER_BREAK_GAIN*CombatCore.breakPower(game.combat.pressure)*(game.combat.breakBonus||1);m.break=Math.min(m.breakMax,m.break+gain);combatEvent("break_gain",{target:m.uid,amount:gain,source});if(m.break>=m.breakMax){m.break=0;m.brokenUntil=game.clock+CombatCore.BROKEN_MS;m.stunned=Math.max(m.stunned,CombatCore.BROKEN_MS/1000);m.telegraph=null;m.next=m.brokenUntil;combatEvent("broken",{target:m.uid,duration:CombatCore.BROKEN_MS});if(!m.minion)globalThis.playEnemyCombatReaction?.("break");}return gain;}
 function setGuard(active){
   if(!game||game.phase!=="battle"||game.paused||archiveKind||game.heroId!=="warrior")return false;const c=game.combat;
   if(active&&!c.guard){if(c.guardCooldownUntil>game.clock)return false;c.guard=true;c.guardStarted=game.clock;c.guardWardGranted=false;combatEvent("guard_start");globalThis.playCombatRig?.("guard");globalThis.playCombatGuard?.("start");}
@@ -204,6 +211,8 @@ function syncProfile(){
 function checkEnd(){if(game.phase!=="battle")return;
   if(game.hp<=0){game.hp=0;finish(false);return;}
   if(game.enemy.hp<=0){game.enemy.hp=0;globalThis.playEnemyCombatReaction?.("death");globalThis.playCombatRig?.("victory");recordKill(game.enemy);gainGold(18+game.floor*7+(game.enemy.elite?18:0));
+    /* 2.18.0: ambush victories grant bonus rewards. */
+    if(game.ambushBonus){gainGold(30+game.floor*10);if(random()<.5)randomRelic();game.ambushBonus=false;}
     if(game.combat.mode==="endless"){game.combat.wave++;game.combat.encounter=(game.combat.encounter||0)+1;combatEvent("wave_clear",{wave:game.combat.wave-1});const index=Math.floor(random()*ROSTER.length),elite=game.combat.wave%4===0;game.enemy=makeEnemy(index,elite);resetBreakState(game.enemy);const scale=1+(game.combat.wave-1)*.09;game.enemy.max*=scale;game.enemy.hp=game.enemy.max;game.enemy.attack*=1+(game.combat.wave-1)*.055;game.summons=[];game.floorStart=game.clock;commit();return;}
     if(!game.returnFromBattle)game.stats.floors.push({floor:game.floor+1,ms:game.clock-game.floorStart});
     game.rewardReturn=game.returnFromBattle?"advance":game.floor===7?"victory":"events";openReward();commit();
@@ -215,8 +224,39 @@ function extractEndless(){if(game?.phase!=="battle"||game.combat?.mode!=="endles
 function openReward(all=false){game.phase="reward";game.paused=true;game.rewardOffers=draw(RELICS.filter(r=>!game.relics.includes(r.id)).map(r=>r.id),all?RELICS.length:3);}
 function selectRelic(id){if(game.phase!=="reward"||!game.rewardOffers.includes(id))return;grantRelic(id);game.rewardOffers=[];afterReward();commit();}
 function afterReward(){if(game.rewardReturn==="victory")return finish(true);if(game.rewardReturn==="advance")return advanceFloor();if(game.rewardReturn==="trial"){heal(game.max);return eventResult(["核心破碎，生命已恢复，遗物已领取","Cores shattered. Health restored and relic claimed"]);}openEvents();}
-function openEvents(){game.phase="events";game.paused=true;game.eventUsed=false;game.eventId=null;game.eventOffers=draw(EVENT_CATALOG.filter(e=>e[0]!=="trial"||!game.trialUsed).map(e=>e[0]),4);}
-function chooseEvent(id){if(game.phase!=="events"||game.eventUsed||!game.eventOffers.includes(id))return;game.eventUsed=true;game.eventId=id;game.phase=id==="shop"?"shop":"event";if(id==="shop"){game.shopStock=draw(SHOP.map(s=>s.id),3);game.bought=[];}commit();}
+function openEvents(){game.phase="events";game.paused=true;game.eventUsed=false;game.eventId=null;
+  /* 2.18.0: weighted draw with category diversity, floor scaling, recent-event dampening. */
+  const floor=Math.min(8,game.floor+1),fw=EVENT_FLOOR_WEIGHTS[floor]||EVENT_FLOOR_WEIGHTS[4];
+  const recent=game.recentEvents||[];
+  let pool=EVENT_CATALOG.filter(e=>{
+    if(e.id==="trial"&&game.trialUsed)return false;
+    if(floor<e.floorRange[0]||floor>e.floorRange[1])return false;
+    if(recent.includes(e.id))return false;
+    return true;
+  });
+  /* Fallback: if pool too small (e.g. many recent), allow recent back except trial */
+  if(pool.length<4)pool=EVENT_CATALOG.filter(e=>{
+    if(e.id==="trial"&&game.trialUsed)return false;
+    if(floor<e.floorRange[0]||floor>e.floorRange[1])return false;
+    return true;
+  });
+  const picked=[],usedCats=new Set();
+  while(picked.length<4&&pool.length){
+    let total=0;const weights=pool.map(e=>{
+      let w=e.weight*(fw[e.category]||1);
+      if(usedCats.has(e.category))w*=0.25;
+      if(e.rare)w*=0.6;
+      total+=w;return w;
+    });
+    let roll=random()*total,idx=0;
+    for(;idx<weights.length;idx++){roll-=weights[idx];if(roll<0)break;}
+    idx=Math.min(idx,pool.length-1);
+    const chosen=pool.splice(idx,1)[0];
+    picked.push(chosen.id);usedCats.add(chosen.category);
+  }
+  game.eventOffers=picked;
+}
+function chooseEvent(id){if(game.phase!=="events"||game.eventUsed||!game.eventOffers.includes(id))return;game.eventUsed=true;game.eventId=id;game.recentEvents=[id,...(game.recentEvents||[])].slice(0,3);game.phase=id==="shop"?"shop":"event";if(id==="shop"){game.shopStock=draw(SHOP.map(s=>s.id),3);game.bought=[];}commit();}
 function advanceFloor(){game.floor++;game.returnFromBattle=false;if(game.combat.mode!=="endless"){game.combat.pressure=0;game.combat.tier=0;combatEvent("pressure_reset",{floor:game.floor+1});}beginBattle(game.plan[game.floor]);}
 function eventResult(result){game.result=result;game.phase="result";if(game.hp<=0)finish(false);}
 function eventBattle(){const pool=ROSTER.map((m,i)=>({m,i})).filter(({m})=>m.zone===["EARLY","EARLY","MID","MID","LATE","LATE","DEEP","BOSS"][game.floor]);beginBattle({index:choice(pool).i,elite:true},true);}
@@ -227,24 +267,46 @@ function eventOptions(){const f=game.floor+1,g=game.gold;const leave={text:["离
   const opt=(zh,en,run,enabled=true)=>({text:[zh,en],run,enabled});
   const done=(run,text=["事件已结算","Event resolved"])=>()=>{run();if(game.phase==="event")eventResult(text);};
   const stat=n=>game.baseAttack+=n;
+  const setMods=m=>{game.battleMods={...(game.battleMods||{}),...m};};
+  const pressureDelta=d=>{game.combat.pressure=Math.max(0,Math.min(100,game.combat.pressure+d));};
+  const ambush=()=>{game.ambushBonus=true;eventBattle();};
+  /* 2.18.0: each event has 2+ distinct choices; high-risk options pay more;
+     Pressure / Relic / Break / next-battle modifiers woven in. */
   const options={
-    camp:[opt("休息：恢复 35% 生命","Rest: heal 35%",done(()=>heal(game.max*.35))),opt("训练：失去 12 生命，攻击 +2","Train: pay 12 health; attack +2",done(()=>{if(spendHealth(12))stat(2)}),game.hp>12),opt("调查余烬","Investigate embers",done(()=>{const roll=random();if(roll<.45){heal(22);addWard(15)}else if(roll<.8){if(spendHealth(10))stat(3)}else{game.potions++;game.baseDefense++}}))],
-    shrine:[opt("献祭 15 生命：攻击 +3","Offer 15 health: attack +3",done(()=>{if(spendHealth(15))stat(3)}),game.hp>15),opt("祈祷：恢复 20 生命","Pray: heal 20",done(()=>heal(20)))],
-    chest:[opt("开箱：70% 金币，30% 精英伏击","Open: 70% gold, 30% elite ambush",done(()=>{if(random()<.7)gainGold(25+f*8);else eventBattle()}))],
-    healer:[opt("12 金币：药瓶 +1","12 gold: +1 healing bottle",done(()=>{if(spendGold(12))game.potions++}),g>=12),opt("冒险祝福：防御或损失生命换金币","Risk blessing: defense or lose health for gold",done(()=>{if(random()<.5)game.baseDefense+=2;else{damageHero(18,false);gainGold(35)}}))],
-    spring:[opt("饮用：55% 增强生命，否则受到 16 伤害","Drink: 55% vitality, otherwise take 16 damage",done(()=>{if(random()<.55){game.baseMax+=5;reconcile();heal(40)}else damageHero(16,false)}))],
-    adventurer:[opt("救人：60% 金币与药瓶，否则精英伏击","Rescue: 60% gold and bottle, else elite ambush",done(()=>{if(random()<.6){gainGold(30+f*6);game.potions++}else eventBattle()}))],
-    gambler:[15,40,70].map(stake=>opt(`下注 ${stake} 金币`,`Bet ${stake} gold`,()=>{if(g<stake)return;const a=1+Math.floor(random()*6),b=1+Math.floor(random()*6);if(a>b)gainGold(stake);if(a<b)spendGold(stake);eventResult([`你 ${a} 点，对手 ${b} 点：${a>b?"获胜":a<b?"失败":"平局"}`,`You rolled ${a}, opponent ${b}: ${a>b?"win":a<b?"loss":"tie"}`]);},g>=stake)),
-    library:[opt("研读：攻击 +1","Study: attack +1",done(()=>stat(1))),opt("冥想：防御 +1","Meditate: defense +1",done(()=>game.baseDefense++))],
-    well:[opt("投入 25 金币：随机祝福","Offer 25 gold: random blessing",done(()=>{if(!spendGold(25))return;const r=random();if(r<.45)randomRelic();else if(r<.7)stat(2);else if(r<.85)game.baseDefense+=2;else{game.baseMax+=20;reconcile();heal(20)}}),g>=25)],
-    cards:[opt("25 金币抽牌：金币、补给或诅咒","Draw for 25 gold: coins, supplies or curse",done(()=>{if(!spendGold(25))return;const r=random();if(r<.45)gainGold(60);else if(r<.8){game.potions++;addWard(20)}else damageHero(14,false)}),g>=25)],
-    oracle:[1,2].map(n=>opt(`预见后 ${n} 层`,`See ${n} floor(s) ahead`,()=>{const p=game.plan[game.floor+n];const m=p?ROSTER[p.index]:null;eventResult(m?[`第 ${game.floor+n+1} 层：${m.name}${p.elite?"（精英）":""}`,`Floor ${game.floor+n+1}: ${MONSTER_EN[m.name]}${p.elite?" (Elite)":""}`]:["前方已是终点","No more floors lie ahead"])})),
-    curator:[opt(`${55+f*10} 金币：三选一遗物`,`${55+f*10} gold: choose one of three relics`,()=>{if(!spendGold(55+f*10))return;game.rewardReturn="advance";openReward()},g>=55+f*10&&game.relics.length<RELICS.length)],
-    rift:[opt("进入裂隙：挑战精英","Enter: challenge an elite",eventBattle)],
-    forge:[opt("失去 12 生命：攻击 +4","Lose 12 health: attack +4",done(()=>{if(spendHealth(12))stat(4)}),game.hp>12),opt("失去 12 生命：防御 +4","Lose 12 health: defense +4",done(()=>{if(spendHealth(12))game.baseDefense+=4}),game.hp>12)],
-    altar:[opt("30 金币：生命上限 +14，恢复 20","30 gold: max health +14; heal 20",done(()=>{if(spendGold(30)){game.baseMax+=14;reconcile();heal(20)}}),g>=30),opt(`获得 ${30+f*3} 护盾`,`Gain ${30+f*3} ward`,done(()=>addWard(30+f*3)))],
-    caravan:[opt(`${20+f*3} 金币：药瓶与护盾`,`${20+f*3} gold: bottle and ward`,done(()=>{if(spendGold(20+f*3)){game.potions++;addWard(18+f*3)}}),g>=20+f*3)],
-    idol:[opt(`献祭 10 生命：${45+f*5} 基础金币`,`Offer 10 health: ${45+f*5} base gold`,done(()=>{if(spendHealth(10))gainGold(45+f*5)}),game.hp>10)],
+    camp:[opt("休息：恢复 35% 生命","Rest: heal 35%",done(()=>heal(game.max*.35))),
+      opt("训练：失去 12 生命，攻击 +2","Train: pay 12 health; attack +2",done(()=>{if(spendHealth(12))stat(2)}),game.hp>12),
+      opt("深渊调息：Pressure -15，下场战斗开局 +20 护盾","Attune: Pressure -15; next battle starts with +20 ward",done(()=>{pressureDelta(-15);setMods({ward:20});}))],
+    shrine:[opt("献祭 15 生命：攻击 +3","Offer 15 health: attack +3",done(()=>{if(spendHealth(15))stat(3)}),game.hp>15),
+      opt("祈祷：恢复 20 生命","Pray: heal 20",done(()=>heal(20))),
+      opt("深渊契约：Pressure +10，获得随机遗物","Abyss pact: Pressure +10; gain a random relic",done(()=>{pressureDelta(10);randomRelic();}))],
+    chest:[opt("开箱：70% 金币，30% 精英伏击（伏击胜利有额外奖励）","Open: 70% gold, 30% elite ambush (bonus loot if you win)",done(()=>{if(random()<.7)gainGold(25+f*8);else ambush();}))],
+    healer:[opt("12 金币：药瓶 +1","12 gold: +1 healing bottle",done(()=>{if(spendGold(12))game.potions++}),g>=12),
+      opt("25 金币：净化所有负面状态，恢复 30 生命","25 gold: cleanse all debuffs; heal 30",done(()=>{if(spendGold(25)){game.statuses={poison:0,burn:0,weak:0,sunder:0};heal(30);}}),g>=25),
+      opt("冒险祝福：防御或损失生命换金币","Risk blessing: defense or lose health for gold",done(()=>{if(random()<.5)game.baseDefense+=2;else{damageHero(18,false);gainGold(35);}}))],
+    spring:[opt("饮用：55% 增强生命，否则受到 16 伤害","Drink: 55% vitality, otherwise take 16 damage",done(()=>{if(random()<.55){game.baseMax+=5;reconcile();heal(40);}else damageHero(16,false);})),
+      opt("沐浴：Pressure -10，失去 10 金币","Bathe: Pressure -10; lose 10 gold",done(()=>{if(spendGold(10))pressureDelta(-10);}),g>=10)],
+    adventurer:[opt("救人：60% 金币与药瓶，否则精英伏击（伏击胜利有额外奖励）","Rescue: 60% gold and bottle, else elite ambush (bonus loot)",done(()=>{if(random()<.6){gainGold(30+f*6);game.potions++;}else ambush();}))],
+    gambler:[...[15,40,70].map(stake=>opt(`下注 ${stake} 金币`,`Bet ${stake} gold`,()=>{if(g<stake)return;const a=1+Math.floor(random()*6),b=1+Math.floor(random()*6);if(a>b)gainGold(stake);if(a<b)spendGold(stake);eventResult([`你 ${a} 点，对手 ${b} 点：${a>b?"获胜":a<b?"失败":"平局"}`,`You rolled ${a}, opponent ${b}: ${a>b?"win":a<b?"loss":"tie"}`]);},g>=stake)),
+      opt("梭哈：下注全部金币，赢则翻倍","All in: bet all gold, double or nothing",done(()=>{if(g<10)return;const a=1+Math.floor(random()*6),b=1+Math.floor(random()*6);if(a>b)gainGold(g);else if(a<b)spendGold(g);}),g>=10)],
+    library:[opt("研读：攻击 +1","Study: attack +1",done(()=>stat(1))),
+      opt("冥想：防御 +1","Meditate: defense +1",done(()=>game.baseDefense++)),
+      opt("禁书研读：失去 10 生命，下场战斗 Break +30%","Forbidden tome: lose 10 health; next battle Break +30%",done(()=>{if(spendHealth(10))setMods({breakBonus:1.3});}),game.hp>10)],
+    well:[opt("投入 25 金币：随机祝福","Offer 25 gold: random blessing",done(()=>{if(!spendGold(25))return;const r=random();if(r<.45)randomRelic();else if(r<.7)stat(2);else if(r<.85)game.baseDefense+=2;else{game.baseMax+=20;reconcile();heal(20);}}),g>=25),
+      opt("献祭遗物：失去一件遗物，Pressure -20 并回满血","Sacrifice relic: lose a relic; Pressure -20 and full heal",done(()=>{if(!game.relics.length)return;const lost=choice(game.relics);game.relics=game.relics.filter(r=>r!==lost);reconcile();pressureDelta(-20);heal(game.max);}),game.relics.length>0)],
+    cards:[opt("25 金币抽牌：金币、补给或诅咒","Draw for 25 gold: coins, supplies or curse",done(()=>{if(!spendGold(25))return;const r=random();if(r<.45)gainGold(60);else if(r<.8){game.potions++;addWard(20);}else damageHero(14,false);}),g>=25)],
+    oracle:[...[1,2].map(n=>opt(`预见后 ${n} 层`,`See ${n} floor(s) ahead`,()=>{const p=game.plan[game.floor+n];const m=p?ROSTER[p.index]:null;eventResult(m?[`第 ${game.floor+n+1} 层：${m.name}${p.elite?"（精英）":""}`,`Floor ${game.floor+n+1}: ${MONSTER_EN[m.name]}${p.elite?" (Elite)":""}`]:["前方已是终点","No more floors lie ahead"]);})),
+      opt("深渊洞察：下场战斗开局 Pressure -10","Abyss insight: next battle starts with Pressure -10",done(()=>setMods({pressureDelta:-10})))],
+    curator:[opt(`${55+f*10} 金币：三选一遗物`,`${55+f*10} gold: choose one of three relics`,()=>{if(!spendGold(55+f*10))return;game.rewardReturn="advance";openReward();},g>=55+f*10&&game.relics.length<RELICS.length)],
+    rift:[opt("【高风险 / 高奖励】进入裂隙：挑战精英，胜利获得额外遗物与金币","[HIGH RISK / HIGH REWARD] Enter: challenge an elite for bonus relic and gold",ambush)],
+    forge:[opt("失去 12 生命：攻击 +4","Lose 12 health: attack +4",done(()=>{if(spendHealth(12))stat(4);}),game.hp>12),
+      opt("失去 12 生命：防御 +4","Lose 12 health: defense +4",done(()=>{if(spendHealth(12))game.baseDefense+=4;}),game.hp>12),
+      opt("失去 20 生命：下场战斗开局 +40 护盾，Break +20%","Lose 20 health: next battle +40 ward, Break +20%",done(()=>{if(spendHealth(20))setMods({ward:40,breakBonus:1.2});}),game.hp>20)],
+    altar:[opt("30 金币：生命上限 +14，恢复 20","30 gold: max health +14; heal 20",done(()=>{if(spendGold(30)){game.baseMax+=14;reconcile();heal(20);}}),g>=30),
+      opt("15 金币：Pressure -15","15 gold: Pressure -15",done(()=>{if(spendGold(15))pressureDelta(-15);}),g>=15),
+      opt(`获得 ${30+f*3} 护盾`,`Gain ${30+f*3} ward`,done(()=>addWard(30+f*3)))],
+    caravan:[opt(`${20+f*3} 金币：药瓶与护盾`,`${20+f*3} gold: bottle and ward`,done(()=>{if(spendGold(20+f*3)){game.potions++;addWard(18+f*3);}}),g>=20+f*3)],
+    idol:[opt(`献祭 10 生命：${45+f*5} 金币`,`Offer 10 health: ${45+f*5} gold`,done(()=>{if(spendHealth(10))gainGold(45+f*5);}),game.hp>10),
+      opt("献祭 20 生命：获得随机遗物","Offer 20 health: gain a random relic",done(()=>{if(spendHealth(20))randomRelic();}),game.hp>20)],
     stalker:[opt("追踪神秘身影：双核试炼","Follow the shadow: Trial of Twin Cores",startTrial,!game.trialUsed)],
     trial:[opt("进入双核试炼：40 步，破坏两个核心","Enter Twin Cores: 40 moves, destroy two cores",startTrial,!game.trialUsed)]
   };return [...(options[game.eventId]||[]),leave];
@@ -316,9 +378,9 @@ function validRun(s){
   if(s.enemy.zone!==ROSTER[s.enemy.index].zone||s.enemy.minion!==false||s.summons.some(m=>m.zone!=="SUMMON"||m.minion!==true))return false;
   if(s.phase==="battle"&&s.enemy.hp<=0||s.rng<=0||!Number.isInteger(s.rng)||s.rng>4294967295)return false;
   if(!s.statuses||["poison","burn","weak","sunder"].some(k=>!finite(s.statuses[k],0,60)))return false;
-  if(!Array.isArray(s.rewardOffers)||s.rewardOffers.some(id=>!RELIC_BY_ID[id])||!Array.isArray(s.eventOffers)||s.eventOffers.some(id=>!EVENT_CATALOG.some(e=>e[0]===id)))return false;
+  if(!Array.isArray(s.rewardOffers)||s.rewardOffers.some(id=>!RELIC_BY_ID[id])||!Array.isArray(s.eventOffers)||s.eventOffers.some(id=>!EVENT_CATALOG.some(e=>e.id===id)))return false;
   if(!["events","advance","victory","trial"].includes(s.rewardReturn)||!Array.isArray(s.result)||s.result.length!==2||s.result.some(x=>typeof x!=="string"||x.length>2000))return false;
-  if(["event","shop"].includes(s.phase)&&!EVENT_CATALOG.some(e=>e[0]===s.eventId))return false;
+  if(["event","shop"].includes(s.phase)&&!EVENT_CATALOG.some(e=>e.id===s.eventId))return false;
   if(!Array.isArray(s.shopStock)||!Array.isArray(s.bought)||[...s.shopStock,...s.bought].some(id=>!SHOP.some(i=>i.id===id)))return false;
   if(s.phase==="trial"){const t=s.trial,cell=n=>Number.isInteger(n)&&n>=0&&n<64;if(!t||!cell(t.player)||!cell(t.monster)||!Array.isArray(t.boxes)||t.boxes.length!==2||t.boxes.some(c=>!cell(c))||!Array.isArray(t.cores)||!t.cores.length||t.cores.length>2||t.cores.some(c=>!cell(c))||!Number.isInteger(t.moves)||t.moves<0||t.moves>=40)return false;if(new Set([t.player,t.monster,...t.boxes]).size!==4)return false;}
   return true;

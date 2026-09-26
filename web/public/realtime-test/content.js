@@ -109,14 +109,43 @@ const MONSTER_MODULES = [
   {moves:["burn","hexburst","nova"],speed:1,weakness:["为第三阶段保留净化","Save cleansing for phase three"]}
 ];
 const ACTION_NAMES={bite:["撕咬","Bite"],double:["连击","Combo"],rage:["狂暴","Frenzy"],sunder:["破甲","Sunder"],charge:["蓄力重击","Charged Strike"],poison:["毒雾","Venom"],shield:["屏障","Barrier"],counter:["反击姿态","Counter Stance"],weak:["虚弱诅咒","Weakening Hex"],dispel:["驱散","Dispel"],burn:["烈焰","Flame"],heal:["复苏","Recovery"],drain:["汲取","Drain"],sweep:["横扫","Sweep"],curse:["侵蚀","Corruption"],summon:["召唤","Summon"],nova:["深渊新星","Abyssal Nova"],pounce:["扑袭","Pounce"],barrage:["碎骨连射","Bone Barrage"],bleed:["裂伤","Rending Wound"],fortify:["深渊堡垒","Abyssal Fortify"],quake:["震地冲击","Seismic Crash"],shadowstep:["暗影步","Shadowstep"],hexburst:["咒印爆发","Hexburst"]};
+/* ===== 2.18.0: data-driven event system =====
+   Each event: id / category / weight / floorRange / rare.
+   Categories: safe, trade, arcane, risk, trial.
+   floorRange: [minFloor, maxFloor] (1-based). */
 const EVENT_CATALOG=[
-  ["camp","篝火","Campfire"],["shop","商店","Merchant"],["shrine","古老神龛","Ancient Shrine"],["chest","上锁宝箱","Locked Chest"],
-  ["healer","流浪医师","Wandering Healer"],["spring","神秘清泉","Mystic Spring"],["adventurer","受困冒险者","Trapped Adventurer"],
-  ["gambler","骰子赌徒","Dice Gambler"],["library","古老图书馆","Ancient Library"],["well","低语之井","Whispering Well"],
-  ["cards","纸牌骗子","Card Sharp"],["oracle","预言家","Oracle"],["curator","遗物收藏家","Relic Curator"],["rift","裂隙之门","Rift Gate"],
-  ["forge","遗忘熔炉","Forgotten Forge"],["altar","回声祭坛","Echoing Altar"],["caravan","月光商队","Moonlit Caravan"],
-  ["idol","饥饿神像","Starved Idol"],["stalker","神秘追踪者","Mysterious Stalker"],["trial","双核试炼","Trial of Twin Cores"]
+  {id:"camp",name:["篝火","Campfire"],category:"safe",weight:10,floorRange:[1,8]},
+  {id:"shop",name:["商店","Merchant"],category:"trade",weight:9,floorRange:[1,8]},
+  {id:"shrine",name:["古老神龛","Ancient Shrine"],category:"arcane",weight:8,floorRange:[1,8]},
+  {id:"chest",name:["上锁宝箱","Locked Chest"],category:"risk",weight:8,floorRange:[2,8]},
+  {id:"healer",name:["流浪医师","Wandering Healer"],category:"safe",weight:9,floorRange:[1,7]},
+  {id:"spring",name:["神秘清泉","Mystic Spring"],category:"arcane",weight:7,floorRange:[1,8]},
+  {id:"adventurer",name:["受困冒险者","Trapped Adventurer"],category:"risk",weight:7,floorRange:[2,8]},
+  {id:"gambler",name:["骰子赌徒","Dice Gambler"],category:"trade",weight:7,floorRange:[2,8]},
+  {id:"library",name:["古老图书馆","Ancient Library"],category:"arcane",weight:8,floorRange:[1,8]},
+  {id:"well",name:["低语之井","Whispering Well"],category:"arcane",weight:7,floorRange:[2,8]},
+  {id:"cards",name:["纸牌骗子","Card Sharp"],category:"risk",weight:6,floorRange:[3,8]},
+  {id:"oracle",name:["预言家","Oracle"],category:"arcane",weight:7,floorRange:[1,7]},
+  {id:"curator",name:["遗物收藏家","Relic Curator"],category:"trade",weight:6,floorRange:[3,8]},
+  {id:"rift",name:["裂隙之门","Rift Gate"],category:"risk",weight:6,floorRange:[3,8],highRisk:true},
+  {id:"forge",name:["遗忘熔炉","Forgotten Forge"],category:"risk",weight:7,floorRange:[2,8]},
+  {id:"altar",name:["回声祭坛","Echoing Altar"],category:"arcane",weight:7,floorRange:[1,8]},
+  {id:"caravan",name:["月光商队","Moonlit Caravan"],category:"trade",weight:7,floorRange:[2,8]},
+  {id:"idol",name:["饥饿神像","Starved Idol"],category:"risk",weight:6,floorRange:[3,8]},
+  {id:"stalker",name:["神秘追踪者","Mysterious Stalker"],category:"trial",weight:2,floorRange:[2,7],rare:true},
+  {id:"trial",name:["双核试炼","Trial of Twin Cores"],category:"trial",weight:5,floorRange:[2,7]}
 ];
+/* Floor-based category weight multipliers: [safe, trade, arcane, risk, trial] */
+const EVENT_FLOOR_WEIGHTS={
+  1:{safe:1.6,trade:1.0,arcane:0.9,risk:0.5,trial:0.8},
+  2:{safe:1.4,trade:1.1,arcane:1.0,risk:0.7,trial:1.0},
+  3:{safe:1.1,trade:1.3,arcane:1.3,risk:0.9,trial:1.0},
+  4:{safe:1.0,trade:1.3,arcane:1.3,risk:1.0,trial:1.0},
+  5:{safe:0.9,trade:1.2,arcane:1.2,risk:1.2,trial:1.0},
+  6:{safe:0.7,trade:1.0,arcane:1.1,risk:1.4,trial:1.0},
+  7:{safe:0.6,trade:0.9,arcane:1.0,risk:1.6,trial:1.0},
+  8:{safe:0.5,trade:0.8,arcane:0.9,risk:1.8,trial:0.5}
+};
 const STORY_CHAPTERS=[
   {title:["序章 · 被遗忘的名字","PROLOGUE · THE FORGOTTEN NAME"],body:["七年前，深渊吞没了北境远征军，也从所有史书里抹去了他们的名字。今晚，刻着你名字的黑色信函出现在门前：想知道他们为何消失，就独自走到第八层。","Seven years ago the abyss swallowed the northern expedition—and erased every name from history. Tonight, a black letter bearing your name appeared at the door: descend alone to the eighth floor if you want the truth."]},
   {title:["第一幕 · 墙后的呼吸","ACT I · BREATH BEHIND THE WALL"],body:["石墙内传来整齐的呼吸声。失踪者没有死去；某种东西让他们在墙后继续做着同一个梦。你在裂缝中找到一枚远征军徽记。","Measured breathing echoes inside the stone. The lost did not die; something keeps them dreaming behind the walls. In a crack, you find the expedition's crest."]},

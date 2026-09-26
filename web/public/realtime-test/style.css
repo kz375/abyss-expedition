@@ -360,7 +360,7 @@ body[data-phase="battle"] .arena{min-height:clamp(660px,74vh,850px);grid-templat
 /* 2.4.3 combat staging and full-strength gallery-grade contact feedback. */
 .fighter.enemy .portrait,.fighter.enemy .portrait.enemy-gallery{bottom:4px;transform:translateY(8px)}
 .fighter.hit-white,.fighter.hit-crit,.fighter.hit-shield{animation:none}
-.fighter.hit-white .portrait img,.fighter.hit-crit .portrait img{animation:actor-flash-soft .16s steps(2)}
+.fighter.hit-white .portrait img,.fighter.hit-crit .portrait img{animation:none!important}
 .arena.impact-heavy{animation:combat-shake-soft .22s ease-out}
 .fighter.enemy.contact-hit .enemy-gallery img{animation:enemy-contact-hit-soft .22s ease-out}
 .combat-contact-fx{width:210px;height:190px;top:43%;filter:drop-shadow(0 0 13px #ffc45d)}

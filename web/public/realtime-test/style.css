@@ -663,22 +663,20 @@ body:after{background:radial-gradient(ellipse 42% 26% at 68% 6%,#93a9c714,transp
   pointer-events:none;
 }
 
-/* 2.20.0: Rig 冲击闪光层 - 增强打击感 */
-.rig-impact-flash{
-  position:absolute;left:50%;top:42%;width:90px;height:90px;
-  transform:translate(-50%,-50%) scale(.3);border-radius:50%;
-  pointer-events:none;opacity:0;
-  background:radial-gradient(circle,#fff 0%,#ffe9a8 25%,transparent 70%);
-  animation:rig-impact-flash .38s ease-out forwards;
-}
-.rig-impact-flash[data-family="fire"]{background:radial-gradient(circle,#fff 0%,#ffb347 30%,#ff6b35 55%,transparent 75%);}
-.rig-impact-flash[data-family="ice"]{background:radial-gradient(circle,#fff 0%,#a8e6ff 30%,#4da6ff 55%,transparent 75%);}
-.rig-impact-flash[data-family="poison"]{background:radial-gradient(circle,#eaffea 0%,#7dff8a 30%,#2d8a3e 55%,transparent 75%);}
-.rig-impact-flash[data-family="arcane"]{background:radial-gradient(circle,#fff 0%,#d8a8ff 30%,#8b4dff 55%,transparent 75%);}
-.rig-impact-flash[data-family="holy"]{background:radial-gradient(circle,#fff 0%,#fff3a8 30%,#ffd94d 55%,transparent 75%);}
-.rig-impact-flash[data-family="soul"]{background:radial-gradient(circle,#e8fff8 0%,#7dffd4 30%,#2d8a6e 55%,transparent 75%);}
-@keyframes rig-impact-flash{
-  0%{opacity:0;transform:translate(-50%,-50%) scale(.3);}
-  18%{opacity:1;transform:translate(-50%,-50%) scale(1.15);}
-  100%{opacity:0;transform:translate(-50%,-50%) scale(1.8);}
-}
+/* 2.21.0: 事件结算奖励/惩罚可视化 */
+.event-loot{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 6px;justify-content:center}
+.event-loot.empty{justify-content:center;color:var(--muted);font-size:12px;padding:8px}
+.loot-item{display:flex;align-items:center;gap:10px;min-width:132px;padding:10px 14px;border-radius:10px;border:1px solid;opacity:0;transform:translateY(14px) scale(.92);animation:loot-pop .45s cubic-bezier(.2,1.4,.4,1) forwards}
+.loot-item.gain{border-color:#63e69a66;background:linear-gradient(135deg,#63e69a18,#63e69a08);box-shadow:0 0 18px #63e69a22}
+.loot-item.loss{border-color:#f17d6a66;background:linear-gradient(135deg,#f17d6a18,#f17d6a08);box-shadow:0 0 18px #f17d6a22}
+.loot-icon{font-size:26px;filter:drop-shadow(0 2px 6px #0008)}
+.loot-item.gain .loot-icon{animation:loot-glow 1.2s ease-in-out infinite}
+.loot-info{display:flex;flex-direction:column;gap:2px}
+.loot-info b{font-size:18px;font-variant-numeric:tabular-nums;line-height:1}
+.loot-item.gain .loot-info b{color:#7dffab;text-shadow:0 0 12px #63e69a88}
+.loot-item.loss .loot-info b{color:#ff9d8a;text-shadow:0 0 12px #f17d6a88}
+.loot-info em{font-style:normal;font-size:11px;color:var(--muted)}
+.loot-info small{font-size:10px;color:#e9d08b;max-width:160px;line-height:1.4}
+@keyframes loot-pop{to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes loot-glow{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@media(prefers-reduced-motion:reduce){.loot-item{animation:none;opacity:1;transform:none}.loot-item.gain .loot-icon{animation:none}}

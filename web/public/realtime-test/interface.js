@@ -52,7 +52,15 @@ function renderScene(){if(!game)return;if(game.phase!=="trial")trialViewState=nu
   }else if(game.phase==="shop"){
     modal(["商店","Merchant"],[`金币 ${game.gold} · 每件商品限购一次`,`Gold ${game.gold} · Each item can be bought once`],`<div class="cards">${buttons(game.shopStock.map(id=>{const s=SHOP.find(s=>s.id===id);return {id,name:s.name,desc:[`${s.price} 金币 · ${shopDescription(id)[0]}`,`${s.price} gold · ${shopDescription(id)[1]}`],disabled:game.bought.includes(id)||game.gold<s.price}}),"data-buy")}</div><button class="card compact" id="shop-leave">${tx("离开商店","Leave shop")}</button>`);bind("[data-buy]",b=>buy(b.dataset.buy));$("shop-leave").onclick=()=>{if(game.phase!=="shop")return;eventResult(["补给完成","Supplies secured"]);commit();};
   }else if(game.phase==="result"){
-    const p=eventPresentation(game.eventId);modal(["命运已经落定","The choice is sealed"],game.result,`<div class="event-result tone-${p.tone}"><span>${p.icon}</span><b>${tx("深渊记住了你的选择","THE ABYSS REMEMBERS")}</b></div><button class="card compact" id="next-floor">${tx("收起回响，进入下一层","Leave the echo and enter the next floor")} →</button>`);$("overlay").querySelector(".modal").classList.add("event-modal");$("next-floor").onclick=()=>{if(game.phase!=="result")return;advanceFloor();commit();};
+    const p=eventPresentation(game.eventId);
+    // 2.21.0: 奖励/惩罚可视化
+    const diff=game.eventDiff||[];
+    const diffHtml=diff.length?`<div class="event-loot">${diff.map((d,i)=>{
+      const valTxt=(d.val>0?"+":"")+d.val;
+      const detail=d.detail?`<small>${esc(d.detail)}</small>`:"";
+      return `<div class="loot-item ${d.good?"gain":"loss"}" style="animation-delay:${i*90}ms"><span class="loot-icon">${d.icon}</span><div class="loot-info"><b>${valTxt}</b><em>${esc(label([d.labelZh,d.labelEn]))}</em>${detail}</div></div>`;
+    }).join("")}</div>`:`<div class="event-loot empty"><span>${tx("无明显变化","No visible change")}</span></div>`;
+    modal(["命运已经落定","The choice is sealed"],game.result,`${diffHtml}<div class="event-result tone-${p.tone}"><span>${p.icon}</span><b>${tx("深渊记住了你的选择","THE ABYSS REMEMBERS")}</b></div><button class="card compact" id="next-floor">${tx("收起回响，进入下一层","Leave the echo and enter the next floor")} →</button>`);$("overlay").querySelector(".modal").classList.add("event-modal");$("next-floor").onclick=()=>{if(game.phase!=="result")return;advanceFloor();commit();};
   }else if(game.phase==="trial")renderTrial();
   else if(game.finished){
     const extracted=game.extractedItems||[],loot=extracted.length?`<div class="victory-loot">${extracted.map(item=>`<div class="loot-card quality-${item.quality}"><span>${esc(label(GEAR_QUALITIES[item.quality]))}</span><strong>${esc(label(GEAR_BASE_BY_ID[item.baseId].name))}</strong><small>${esc(gearDescription(item))}</small></div>`).join("")}</div>`:"";

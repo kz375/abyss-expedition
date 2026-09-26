@@ -259,14 +259,25 @@ function openEvents(){game.phase="events";game.paused=true;game.eventUsed=false;
 }
 function chooseEvent(id){if(game.phase!=="events"||game.eventUsed||!game.eventOffers.includes(id))return;game.eventUsed=true;game.eventId=id;game.recentEvents=[id,...(game.recentEvents||[])].slice(0,3);game.phase=id==="shop"?"shop":"event";if(id==="shop"){game.shopStock=draw(SHOP.map(s=>s.id),3);game.bought=[];}commit();}
 function advanceFloor(){game.floor++;game.returnFromBattle=false;if(game.combat.mode!=="endless"){game.combat.pressure=0;game.combat.tier=0;combatEvent("pressure_reset",{floor:game.floor+1});}beginBattle(game.plan[game.floor]);}
-function eventResult(result){game.result=result;game.phase="result";if(game.hp<=0)finish(false);}
+function eventResult(result,diff){game.result=result;game.eventDiff=diff||null;game.phase="result";if(game.hp<=0)finish(false);}
+function snapshotEventState(){return {gold:game.gold,hp:Math.round(game.hp),max:game.max,attack:game.baseAttack,defense:game.baseDefense,potions:game.potions,relics:game.relics.length,shield:Math.round(game.shield)};}
+function diffEventState(before){const after=snapshotEventState(),d=[];const push=(key,icon,labelZh,labelEn,val,good)=>{if(val!==0)d.push({key,icon,labelZh,labelEn,val,good});};
+  push("gold","🪙","金币","Gold",after.gold-before.gold,after.gold>=before.gold);
+  const hpD=after.hp-before.hp;if(hpD!==0)d.push({key:"hp",icon:hpD>0?"💚":"💔",labelZh:hpD>0?"恢复生命":"失去生命",labelEn:hpD>0?"Healed":"Lost HP",val:hpD,good:hpD>0});
+  push("max","❤️","生命上限","Max HP",after.max-before.max,true);
+  push("attack","⚔️","攻击","Attack",after.attack-before.attack,true);
+  push("defense","🛡️","防御","Defense",after.defense-before.defense,true);
+  push("potions","🧪","药瓶","Bottles",after.potions-before.potions,after.potions>=before.potions);
+  const relicD=after.relics-before.relics;if(relicD>0){const names=game.relics.slice(before.relics).map(id=>{const r=(typeof RELICS!=="undefined"?RELICS:[]).find(r=>r.id===id);return r?(r.name?.[0]||r.name||id):id;});d.push({key:"relic",icon:"✨",labelZh:"获得遗物",labelEn:"Relic",val:relicD,good:true,detail:names.join("、")});}
+  push("shield","🔷","护盾","Ward",after.shield-before.shield,true);
+  return d;}
 function eventBattle(){const pool=ROSTER.map((m,i)=>({m,i})).filter(({m})=>m.zone===["EARLY","EARLY","MID","MID","LATE","LATE","DEEP","BOSS"][game.floor]);beginBattle({index:choice(pool).i,elite:true},true);}
 function spendGold(cost){if(game.gold<cost)return false;game.gold-=cost;return true;}
 function spendHealth(cost){if(game.hp<=cost)return false;game.hp-=cost;game.stats.taken+=cost;return true;}
 function randomRelic(){const pool=RELICS.filter(r=>!game.relics.includes(r.id));if(pool.length)grantRelic(choice(pool).id);else gainGold(40);}
 function eventOptions(){const f=game.floor+1,g=game.gold;const leave={text:["离开","Leave"],run:()=>eventResult(["继续向深渊前进","Continue into the abyss"])};
   const opt=(zh,en,run,enabled=true)=>({text:[zh,en],run,enabled});
-  const done=(run,text=["事件已结算","Event resolved"])=>()=>{run();if(game.phase==="event")eventResult(text);};
+  const done=(run,text=["事件已结算","Event resolved"])=>()=>{const before=snapshotEventState();run();if(game.phase==="event")eventResult(text,diffEventState(before));};
   const stat=n=>game.baseAttack+=n;
   const setMods=m=>{game.battleMods={...(game.battleMods||{}),...m};};
   const pressureDelta=d=>{game.combat.pressure=Math.max(0,Math.min(100,game.combat.pressure+d));};

@@ -703,3 +703,102 @@ body:after{background:radial-gradient(ellipse 42% 26% at 68% 6%,#93a9c714,transp
 .result-modal{display:flex;min-height:min(620px,calc(100dvh - 40px));flex-direction:column;align-items:center;justify-content:center;text-align:center}.result-modal>h2,.result-modal>p{z-index:7}.result-abyss-scene{opacity:.68}.event-result{position:relative;z-index:7;display:flex;max-width:620px;flex-direction:column;align-items:center;gap:10px;margin:25px auto;padding:22px;background:none;border:0}.event-result>span{display:grid;width:62px;height:62px;place-items:center;border:1px solid var(--tone);border-radius:50%;color:var(--tone);font-size:27px;box-shadow:0 0 28px color-mix(in srgb,var(--tone) 24%,transparent)}.event-result strong{color:#e4e8e3;font:600 clamp(24px,4vw,42px) Georgia,serif}.event-result small{color:#8f9c95}.result-continue{position:relative;z-index:7;width:min(300px,100%);text-align:center}
 @media(max-width:760px){.event-modal,.relic-modal,.result-modal{min-height:calc(100dvh - 24px);padding:20px 14px}.event-grid{grid-template-columns:1fr}.event-card{min-height:190px}.event-detail-modal{display:block}.event-detail-modal>.event-detail-art{min-height:320px;margin-top:14px}.event-decision-panel{margin-top:-54px;border-left:0;border-top:1px solid var(--tone)}.relic-grid{grid-template-columns:1fr;margin:18px 0}.relic-choice{min-height:210px}.relic-icon{width:64px;height:64px;font-size:31px}}
 @media(prefers-reduced-motion:reduce){.event-card,.event-card .event-backdrop,.scene-fog,.event-choice{transition:none}.event-card:hover,.event-choice:hover{transform:none}}
+
+/* 2.20.1: richer event environments — architecture, props and readable midground without wallpaper noise. */
+.event-backdrop{--scene-light:#6e9285;--scene-warm:#b17a4b;background:
+  radial-gradient(ellipse at 50% 42%,color-mix(in srgb,var(--scene-light) 25%,transparent) 0,transparent 34%),
+  linear-gradient(180deg,#07110f 0,#07100e 48%,#020504 100%)}
+.event-backdrop:before{content:"";position:absolute;z-index:0;inset:0;opacity:.8;background:
+  linear-gradient(90deg,#020403b8 0 7%,transparent 16% 84%,#020403b8 93%),
+  repeating-linear-gradient(90deg,transparent 0 9%,#1b282326 9.3% 10.5%,transparent 10.8% 18%),
+  linear-gradient(180deg,transparent 0 67%,#09100dcf 68% 100%);filter:blur(.3px)}
+.event-backdrop:after{background:linear-gradient(180deg,#01040318 0,transparent 47%,#0205049e 73%,#020403ed 100%),radial-gradient(ellipse at center,transparent 8%,#01030285 92%)}
+.scene-depth{inset:7% 2% 17%;opacity:.78;filter:blur(3px)}
+.scene-detail{opacity:.64;filter:blur(1.4px)}
+.scene-subject{filter:brightness(1.32) drop-shadow(0 20px 28px #000)}
+.scene-fog{opacity:.58;filter:blur(18px);background:radial-gradient(ellipse at 18% 65%,#8da59d35,transparent 36%),radial-gradient(ellipse at 72% 52%,#78908e32,transparent 43%),linear-gradient(180deg,transparent,#8ba09822 52%,transparent)}
+
+.scene-campfire{--scene-light:#507d68;--scene-warm:#d68345}.scene-campfire:before{background:
+  linear-gradient(105deg,transparent 0 13%,#111a16cc 14% 20%,transparent 21% 76%,#111915cc 77% 84%,transparent 85%),
+  radial-gradient(ellipse at 50% 69%,#df7a3d32,transparent 31%),linear-gradient(180deg,transparent 64%,#080b09 65%)}
+.scene-campfire .scene-depth{background:
+  linear-gradient(90deg,transparent 5%,#17201b 6% 9%,transparent 10% 91%,#17201b 92% 95%,transparent 96%),
+  linear-gradient(166deg,transparent 0 45%,#151a16 46% 56%,transparent 57%) 12% 60%/25% 34% no-repeat,
+  linear-gradient(194deg,transparent 0 45%,#151a16 46% 56%,transparent 57%) 88% 60%/25% 34% no-repeat}
+.scene-campfire .scene-subject{top:36%;width:150px;height:175px;filter:brightness(1.55) drop-shadow(0 0 25px #b75a2c88)}
+.scene-campfire .scene-detail{background:
+  radial-gradient(ellipse at 25% 75%,#8a8f8440 0 5%,transparent 6%),radial-gradient(ellipse at 76% 72%,#8a8f8440 0 4%,transparent 5%),
+  linear-gradient(72deg,transparent 38%,#7a827b45 39% 41%,transparent 42%) 16% 74%/24% 20% no-repeat,
+  linear-gradient(-68deg,transparent 38%,#7a827b45 39% 41%,transparent 42%) 83% 72%/23% 20% no-repeat}
+
+.scene-merchant{--scene-light:#476f62;--scene-warm:#d6a25f}.scene-merchant:before{background:
+  linear-gradient(180deg,transparent 0 48%,#131b17d9 49% 55%,#090e0c 56% 100%),
+  linear-gradient(112deg,transparent 0 24%,#17201bbb 25% 27%,transparent 28% 72%,#17201bbb 73% 75%,transparent 76%),
+  radial-gradient(circle at 28% 37%,#e5ac5f6b 0 1.5%,#9c653d28 8%,transparent 18%),
+  radial-gradient(circle at 72% 34%,#d89a5352 0 1.2%,transparent 15%)}
+.scene-merchant .scene-depth{background:
+  linear-gradient(180deg,#17221d88 0 4%,transparent 5%) 10% 20%/80% 44% no-repeat,
+  repeating-linear-gradient(90deg,#111916 0 4%,transparent 4.5% 13%) 0 45%/100% 33% no-repeat,
+  linear-gradient(90deg,transparent 0 12%,#26302a66 13% 14%,transparent 15% 85%,#26302a66 86% 87%,transparent 88%)}
+.scene-merchant .scene-subject{left:60%;top:21%;width:150px;height:250px;filter:brightness(1.45) drop-shadow(-16px 18px 20px #000)}
+.scene-merchant .scene-detail{background:
+  radial-gradient(circle at 24% 35%,#ffd37a 0 1.6%,#c0783c75 2% 4%,transparent 11%),
+  linear-gradient(90deg,transparent 8%,#6d554033 9% 28%,transparent 29% 68%,#6d554030 69% 90%,transparent 91%) 0 72%/100% 14% no-repeat,
+  radial-gradient(ellipse at 28% 68%,#a98c6338 0 6%,transparent 7%),radial-gradient(ellipse at 48% 71%,#82907e32 0 5%,transparent 6%)}
+
+.scene-library{--scene-light:#62587c}.scene-library:before{background:
+  linear-gradient(90deg,#080c0b 0 7%,transparent 8% 92%,#080c0b 93%),
+  repeating-linear-gradient(90deg,#111815 0 6%,#28312c55 6.5% 7.5%,#080d0b 8% 16%),
+  linear-gradient(180deg,transparent 0 18%,#3d465033 18.5% 19%,transparent 20% 41%,#3d46502c 41.5% 42%,transparent 43% 100%)}
+.scene-library .scene-depth{background:
+  radial-gradient(ellipse at 50% 35%,#8874a33b,transparent 30%),
+  linear-gradient(90deg,#0c1210 0 14%,transparent 15% 85%,#0c1210 86%),
+  repeating-linear-gradient(180deg,transparent 0 11%,#6f776f32 11.5% 12.7%,transparent 13% 23%);filter:blur(1.5px)}
+.scene-library .scene-subject{top:18%;width:330px;height:285px;opacity:.9;background:
+  linear-gradient(90deg,#18211dcc 0 16%,transparent 17% 83%,#18211dcc 84%),
+  repeating-linear-gradient(180deg,transparent 0 13%,#7a807937 14% 16%,transparent 17% 28%),
+  radial-gradient(ellipse at 50% 32%,#7d669844,transparent 36%);box-shadow:inset 0 0 75px #5c477832}
+.scene-library .scene-detail{background:
+  linear-gradient(25deg,transparent 20%,#d3c8d15c 21% 23%,transparent 24% 48%,#b9aec858 49% 51%,transparent 52%),
+  linear-gradient(-19deg,transparent 32%,#b9aec85a 33% 35%,transparent 36% 68%,#cfc4da50 69% 71%,transparent 72%),
+  radial-gradient(ellipse at 50% 78%,#6b5e7c32,transparent 36%);filter:blur(.6px)}
+
+.scene-oracle{--scene-light:#5a7484}.scene-oracle:before{background:
+  radial-gradient(ellipse at 50% 53%,#718ba443,transparent 32%),
+  linear-gradient(110deg,transparent 0 20%,#121a1bbb 21% 25%,transparent 26% 74%,#121a1bbb 75% 79%,transparent 80%),
+  linear-gradient(180deg,transparent 59%,#0a100f 60%)}
+.scene-oracle .scene-depth{background:radial-gradient(circle at 50% 47%,transparent 0 18%,#75899b2d 18.5% 19.3%,transparent 20% 28%,#75899b20 28.5% 29.2%,transparent 30%),linear-gradient(90deg,transparent 12%,#1c27266b 13% 16%,transparent 17% 84%,#1c27266b 85% 88%,transparent 89%)}
+.scene-oracle .scene-subject{top:17%;width:185px;height:270px;filter:brightness(1.46) drop-shadow(0 18px 26px #000)}
+.scene-oracle .scene-detail{background:radial-gradient(circle at 50% 58%,#c5e2eb9b 0 2.8%,#7694aa55 3% 8%,transparent 15%),linear-gradient(25deg,transparent 45%,#9baeb455 46% 47%,transparent 48%) 15% 65%/28% 25% no-repeat,linear-gradient(-25deg,transparent 45%,#9baeb455 46% 47%,transparent 48%) 85% 65%/28% 25% no-repeat}
+
+.scene-refuge{--scene-light:#527d78}.scene-refuge:before{background:linear-gradient(105deg,transparent 0 16%,#15211dcc 17% 27%,transparent 28% 75%,#15211dcc 76% 86%,transparent 87%),radial-gradient(ellipse at 50% 68%,#75aaa041,transparent 35%),linear-gradient(180deg,transparent 63%,#08100d 64%)}
+.scene-refuge .scene-depth{background:linear-gradient(165deg,transparent 0 41%,#24322d77 42% 50%,transparent 51%) 8% 45%/35% 40% no-repeat,linear-gradient(195deg,transparent 0 41%,#24322d77 42% 50%,transparent 51%) 92% 45%/35% 40% no-repeat}
+.scene-refuge .scene-subject{top:38%;width:270px;height:150px;filter:brightness(1.55) drop-shadow(0 0 25px #527f7866)}
+.scene-refuge .scene-detail{background:radial-gradient(ellipse at 50% 69%,#bdded47d 0 2%,#689f9445 5%,transparent 23%),radial-gradient(ellipse at 25% 77%,#50675e55 0 7%,transparent 8%),radial-gradient(ellipse at 76% 75%,#50675e55 0 6%,transparent 7%)}
+
+.scene-altar,.scene-relic{--scene-light:#746b4c;--scene-warm:#c1a75c}.scene-altar:before,.scene-relic:before{background:
+  linear-gradient(90deg,#0a0e0b 0 9%,transparent 10% 90%,#0a0e0b 91%),
+  linear-gradient(105deg,transparent 0 20%,#1a201aaa 21% 24%,transparent 25% 75%,#1a201aaa 76% 79%,transparent 80%),
+  radial-gradient(ellipse at 50% 60%,#b59d5c35,transparent 33%),linear-gradient(180deg,transparent 64%,#090b08 65%)}
+.scene-altar .scene-depth,.scene-relic .scene-depth{background:
+  linear-gradient(90deg,transparent 8%,#29302855 9% 13%,transparent 14% 87%,#29302855 88% 92%,transparent 93%),
+  radial-gradient(ellipse at 50% 23%,transparent 0 15%,#9f8d5738 16% 17%,transparent 18%)}
+.scene-altar .scene-subject,.scene-relic .scene-subject{top:29%;width:260px;height:220px;filter:brightness(1.5) drop-shadow(0 20px 26px #000)}
+.scene-altar .scene-detail,.scene-relic .scene-detail{background:
+  linear-gradient(90deg,transparent 49%,#e0ca7a47 49.5% 50.5%,transparent 51%),
+  radial-gradient(ellipse at 50% 57%,#d3bc6c4f 0 4%,transparent 23%),
+  radial-gradient(circle at 25% 75%,#b59b6044 0 1%,transparent 7%),radial-gradient(circle at 75% 75%,#b59b6044 0 1%,transparent 7%)}
+
+.scene-ruins:before{background:linear-gradient(106deg,transparent 0 11%,#121915cc 12% 19%,transparent 20% 78%,#121915cc 79% 87%,transparent 88%),linear-gradient(166deg,transparent 35%,#19221d8c 36% 47%,transparent 48%) 5% 58%/42% 43% no-repeat,linear-gradient(194deg,transparent 35%,#19221d8c 36% 47%,transparent 48%) 95% 58%/42% 43% no-repeat,linear-gradient(180deg,transparent 66%,#080c0a 67%)}
+.scene-ruins .scene-subject{filter:brightness(1.4) drop-shadow(0 20px 24px #000)}
+.scene-rift,.scene-trial{--scene-light:#665a82}.scene-rift:before,.scene-trial:before{background:linear-gradient(104deg,transparent 0 18%,#14191aab 19% 24%,transparent 25% 75%,#14191aab 76% 81%,transparent 82%),radial-gradient(ellipse at 50% 48%,#77659a3e,transparent 28%),linear-gradient(180deg,transparent 66%,#080a09 67%)}
+.scene-rift .scene-subject,.scene-trial .scene-subject{width:125px;filter:brightness(1.6) blur(1px) drop-shadow(0 0 30px #8d70b487)}
+.scene-forge{--scene-light:#75594d}.scene-forge:before{background:linear-gradient(90deg,#0b0d0b 0 10%,transparent 11% 89%,#0b0d0b 90%),radial-gradient(ellipse at 50% 64%,#cf683b40,transparent 31%),repeating-linear-gradient(90deg,transparent 0 17%,#20231d66 18% 21%,transparent 22% 34%),linear-gradient(180deg,transparent 65%,#090b08 66%)}
+.scene-forge .scene-subject{width:285px;height:165px;filter:brightness(1.5) drop-shadow(0 18px 24px #000)}
+
+.event-card .event-backdrop:after{background:linear-gradient(180deg,#01030210 0,transparent 48%,#020504b5 75%,#020403f2 100%),radial-gradient(ellipse at center,transparent 15%,#01030265 93%)}
+.event-card .scene-subject{transform:translateX(-50%) scale(.9);filter:brightness(1.55) drop-shadow(0 12px 18px #000)}
+.event-card .scene-depth{opacity:.82}.event-card .scene-detail{opacity:.75}.event-card .scene-fog{opacity:.42}
+.event-detail-modal>.event-detail-art{box-shadow:inset 0 0 55px #0005,0 16px 40px #0008}
+.relic-altar-scene .scene-subject{top:31%;filter:brightness(1.65) drop-shadow(0 0 32px #aa8d4e70)}
+.relic-altar-scene .scene-detail{opacity:.78}.result-abyss-scene{opacity:.86}.result-abyss-scene .scene-subject{filter:brightness(1.75) blur(.5px) drop-shadow(0 0 35px #8a70ad70)}

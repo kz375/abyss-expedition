@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="深渊远征 2.0 · 八层实时暗黑远征">
+  <title>深渊远征 · 战斗框架 2.2</title>
+  <link rel="stylesheet" href="/realtime-test/style.css?v=2.25.0-scenefirst">
+  <script src="/realtime-test/campaign.js?v=2.25.0-scenefirst" defer></script>
+  <script src="/realtime-test/content.js?v=2.25.0-scenefirst" defer></script>
+  <script src="/art-test/actors.js?v=2.25.0-scenefirst" defer></script>
+  <script src="/realtime-test/combat-core.js?v=2.25.0-scenefirst" defer></script>
+  <script src="/realtime-test/enemy-combat-rig.js?v=2.25.0-scenefirst" defer></script>
+  <script src="/realtime-test/character-rig.js?v=2.25.0-scenefirst" defer></script>
+  <script src="/realtime-test/runtime.js?v=2.25.0-scenefirst" defer></script>
+  <script src="/realtime-test/interface.js?v=2.25.0-scenefirst" defer></script>
+</head>
+<body>
+  <main class="page">
+    <div class="beta-head"><p class="eyebrow" id="eyebrow">ABYSS EXPEDITION · 2.0</p><div class="beta-tools"><a id="legacy-game" href="/legacy/">旧版存档</a><a id="art-lab" href="/art-test/">美术实验室</a><button id="language" type="button">EN</button><button id="warehouse" type="button">仓库</button><button id="codex" type="button">图鉴</button><button id="achievements" type="button">成就</button></div></div>
+    <h1 id="title">深渊流战 · 八层远征测试</h1>
+    <p class="sub" id="sub">穿过八层深渊，找回七年前被世界遗忘的远征军。</p>
+    <p class="notice" id="notice">实时战斗 · 永久仓库 · 分支事件 · 双核试炼 · 中英双语</p>
+    <section class="arena" aria-label="实时战斗地牢">
+      <div class="abyss-scenery" aria-hidden="true"><span class="moon"></span><span class="far-mountains"></span><span class="ruin pillar-left"></span><span class="ruin pillar-right"></span><span class="distant-castle"><i class="castle-keep"></i><i class="castle-tower tower-left"></i><i class="castle-tower tower-right"></i><i class="castle-tower tower-far-left"></i><i class="castle-tower tower-far-right"></i><i class="castle-spire"></i><i class="castle-wall"></i><i class="castle-spire"></i><i class="castle-wall"></i></span><span class="chain chain-left"></span><span class="chain chain-right"></span><span class="embers"></span><span class="battle-road"></span><span class="foreground-rocks"></span></div>
+      <div class="pressure-darkness" aria-hidden="true"></div>
+      <div class="pressure-vignette" aria-hidden="true"></div>
+      <div class="pressure-fog" aria-hidden="true"></div>
+      <div class="pressure-motes" aria-hidden="true"></div>
+      <div class="arena-head"><span id="floor-label">选择职业后开始</span><span id="flow"><i></i><span id="flow-text">战斗冻结</span></span></div>
+      <div class="fighter player" id="player-card"><p class="role" id="hero-role">PLAYER</p><h2 id="hero-name">选择一名英雄</h2><span class="portrait" aria-hidden="true"></span><div class="meter"><b>生命</b><strong id="hero-hp-text">—</strong><div class="bar hp"><span id="hero-hp"></span><i id="hero-shield" aria-hidden="true"></i></div></div><div class="statuses" id="hero-status"></div><p class="passive" id="hero-passive">职业被动将在这里显示</p></div>
+      <div class="impact" id="impact" aria-hidden="true">✦</div>
+      <div class="fighter enemy" id="enemy-card"><div class="enemy-intent" id="intent-callout"><span>INTENT</span><strong id="intent-action">观察敌方动作</strong><b id="intent-countdown">—</b></div><p class="role" id="enemy-role">HOSTILE</p><h2 id="enemy-name">深渊正在等待</h2><span class="portrait" aria-hidden="true"></span><div class="meter"><b>生命</b><strong id="enemy-hp-text">—</strong><div class="bar hp"><span id="enemy-hp"></span><i id="enemy-shield" aria-hidden="true"></i></div><div class="enemy-break"><span>BREAK</span><b id="break-text">0 / 100</b><i><em id="break-fill"></em></i></div></div><div class="statuses" id="enemy-status"></div><div class="summons" id="summons" aria-live="polite"></div></div>
+      <div class="skills" id="skills" aria-label="技能栏"></div>
+      <div class="pressure-dock"><span>ABYSS PRESSURE</span><b id="pressure-text">0%</b><i><em id="pressure-fill"></em></i><small class="pressure-debug" id="pressure-debug" aria-hidden="true"></small></div>
+      <div class="overlay" id="overlay"></div>
+    </section>
+    <section class="below"><div class="journal" id="journal">[系统] 选择职业以开启完整实时远征测试。</div><div class="run-stats"><span id="gold">金币 0</span><span id="relics">遗物 0</span></div><button id="pause">暂停</button><button id="restart" class="danger">重新开始</button></section>
+    <p class="fineprint" id="save-status"></p>
+  </main>
+</body>
+</html>

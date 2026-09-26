@@ -1,6 +1,6 @@
 {
   "id":"humanoid-v1",
-  "version":"1.1.0",
+  "version":"1.1.1",
   "canvas":[600,900],
   "origin":[300,850],
   "bones":[
@@ -34,7 +34,7 @@
   "meta":{
     "mirror":[["upperArm_L","upperArm_R"],["lowerArm_L","lowerArm_R"],["hand_L","hand_R"],
       ["thigh_L","thigh_R"],["shin_L","shin_R"],["foot_L","foot_R"]],
-    "lengths":{"root":0,"pelvis":200.0,"torso":180.0,"head":170.0,"upperArm_L":96.0,"lowerArm_L":134.2,"hand_L":120.9,"upperArm_R":96.0,"lowerArm_R":132.0,"hand_R":120.9,"thigh_L":40.0,"shin_L":105.5,"foot_L":90.1,"thigh_R":40.0,"shin_R":106.1,"foot_R":90.6},
+    "lengths":{"root":0,"pelvis":200.0,"torso":180.0,"head":170.0,"upperArm_L":134.2,"lowerArm_L":120.9,"hand_L":120.9,"upperArm_R":132.0,"lowerArm_R":120.9,"hand_R":120.9,"thigh_L":105.5,"shin_L":90.1,"foot_L":90.1,"thigh_R":106.1,"shin_R":90.6,"foot_R":90.6},
     "floorY":850,
     "footRestY":845,
     "facing":"front"

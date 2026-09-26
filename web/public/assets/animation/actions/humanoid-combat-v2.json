@@ -37,20 +37,20 @@
       {"at":1250,"root":{"x":0,"y":0},"pelvis":{"r":0},"torso":{"r":0},"upperArm_R":{"r":0},"lowerArm_R":{"r":0},"upperArm_L":{"r":0}}
     ]},
     "guard":{"duration":900,"hold":true,"events":[{"at":140,"type":"windup"},{"at":300,"type":"impact"}],"poses":[
-      {"at":0,"easing":"ease-out","root":{"x":0},"torso":{"r":0}},
-      {"at":140,"easing":"cubic-bezier(.1,.8,.2,1)","root":{"x":-8,"y":5},"pelvis":{"r":-7},"torso":{"r":-12},"head":{"r":4},"upperArm_L":{"r":-28},"lowerArm_L":{"r":-12},"upperArm_R":{"r":-16},"lowerArm_R":{"r":-6}},
-      {"at":300,"easing":"ease-out","root":{"x":-14,"y":9},"pelvis":{"r":-11},"torso":{"r":-18},"head":{"r":7},"upperArm_L":{"r":-48},"lowerArm_L":{"r":-24},"upperArm_R":{"r":-24},"lowerArm_R":{"r":-9}},
-      {"at":520,"easing":"ease-in-out","root":{"x":-12,"y":7},"pelvis":{"r":-9},"torso":{"r":-15},"upperArm_L":{"r":-45},"lowerArm_L":{"r":-21},"upperArm_R":{"r":-21},"lowerArm_R":{"r":-8}},
-      {"at":700,"easing":"ease-in-out","root":{"x":-14,"y":10},"pelvis":{"r":-11},"torso":{"r":-18},"upperArm_L":{"r":-48},"lowerArm_L":{"r":-24},"upperArm_R":{"r":-24},"lowerArm_R":{"r":-9}},
-      {"at":900,"root":{"x":-12,"y":7},"pelvis":{"r":-9},"torso":{"r":-15},"upperArm_L":{"r":-45},"lowerArm_L":{"r":-21},"upperArm_R":{"r":-21},"lowerArm_R":{"r":-8}}
+      {"at":0,"easing":"ease-out","root":{"x":0,"y":0},"torso":{"r":0}},
+      {"at":140,"easing":"cubic-bezier(.1,.8,.2,1)","root":{"x":-4,"y":5},"pelvis":{"r":-1},"torso":{"r":-5},"head":{"r":2},"thigh_L":{"r":11},"shin_L":{"r":-11},"thigh_R":{"r":-11},"shin_R":{"r":11},"upperArm_L":{"r":10},"lowerArm_L":{"r":-50},"upperArm_R":{"r":-6},"lowerArm_R":{"r":-40}},
+      {"at":300,"easing":"ease-out","root":{"x":-6,"y":8},"pelvis":{"r":0},"torso":{"r":-6},"head":{"r":4},"thigh_L":{"r":22},"shin_L":{"r":-22},"thigh_R":{"r":-22},"shin_R":{"r":22},"upperArm_L":{"r":20},"lowerArm_L":{"r":-100},"upperArm_R":{"r":-8},"lowerArm_R":{"r":-75}},
+      {"at":520,"easing":"ease-in-out","root":{"x":-6,"y":8},"pelvis":{"r":0},"torso":{"r":-6},"head":{"r":4},"thigh_L":{"r":20},"shin_L":{"r":-20},"thigh_R":{"r":-20},"shin_R":{"r":20},"upperArm_L":{"r":19},"lowerArm_L":{"r":-98},"upperArm_R":{"r":-8},"lowerArm_R":{"r":-74}},
+      {"at":700,"easing":"ease-in-out","root":{"x":-6,"y":8},"pelvis":{"r":0},"torso":{"r":-6},"head":{"r":4},"thigh_L":{"r":22},"shin_L":{"r":-22},"thigh_R":{"r":-22},"shin_R":{"r":22},"upperArm_L":{"r":20},"lowerArm_L":{"r":-100},"upperArm_R":{"r":-8},"lowerArm_R":{"r":-75}},
+      {"at":900,"root":{"x":-6,"y":8},"pelvis":{"r":0},"torso":{"r":-6},"head":{"r":4},"thigh_L":{"r":20},"shin_L":{"r":-20},"thigh_R":{"r":-20},"shin_R":{"r":20},"upperArm_L":{"r":19},"lowerArm_L":{"r":-98},"upperArm_R":{"r":-8},"lowerArm_R":{"r":-74}}
     ]},
     "perfect_guard":{"duration":720,"events":[{"at":90,"type":"impact"},{"at":280,"type":"counter"}],"poses":[
-      {"at":0,"easing":"ease-out","root":{"x":0},"torso":{"r":0}},
-      {"at":90,"easing":"cubic-bezier(.05,.9,.1,1)","root":{"x":-16,"y":4},"pelvis":{"r":-12},"torso":{"r":-21},"head":{"r":8},"upperArm_L":{"r":-58},"lowerArm_L":{"r":-26},"upperArm_R":{"r":18}},
-      {"at":175,"easing":"ease-out","root":{"x":-5,"y":-6},"pelvis":{"r":5},"torso":{"r":12},"head":{"r":-7},"upperArm_L":{"r":-44},"lowerArm_L":{"r":-18},"upperArm_R":{"r":47}},
-      {"at":280,"easing":"ease-out","root":{"x":24,"y":-3},"pelvis":{"r":12},"torso":{"r":24},"upperArm_L":{"r":-20},"lowerArm_L":{"r":-18},"upperArm_R":{"r":82},"lowerArm_R":{"r":38}},
-      {"at":430,"easing":"ease-in-out","root":{"x":15,"y":0},"pelvis":{"r":7},"torso":{"r":13},"upperArm_L":{"r":-31},"upperArm_R":{"r":44}},
-      {"at":720,"root":{"x":0,"y":0},"pelvis":{"r":0},"torso":{"r":0},"upperArm_L":{"r":0},"lowerArm_L":{"r":0},"upperArm_R":{"r":0},"lowerArm_R":{"r":0}}
+      {"at":0,"easing":"ease-out","root":{"x":0,"y":0},"torso":{"r":0}},
+      {"at":90,"easing":"cubic-bezier(.05,.9,.1,1)","root":{"x":-8,"y":8},"pelvis":{"r":-1},"torso":{"r":-6},"head":{"r":3},"thigh_L":{"r":20},"shin_L":{"r":-20},"thigh_R":{"r":-20},"shin_R":{"r":20},"upperArm_L":{"r":24},"lowerArm_L":{"r":-105},"upperArm_R":{"r":-8},"lowerArm_R":{"r":-70}},
+      {"at":175,"easing":"ease-out","root":{"x":-4,"y":6},"pelvis":{"r":-1},"torso":{"r":-3},"head":{"r":1},"thigh_L":{"r":18},"shin_L":{"r":-18},"thigh_R":{"r":-18},"shin_R":{"r":18},"upperArm_L":{"r":20},"lowerArm_L":{"r":-100},"upperArm_R":{"r":-2},"lowerArm_R":{"r":-60}},
+      {"at":280,"easing":"ease-out","root":{"x":12,"y":8},"pelvis":{"r":-3},"torso":{"r":-12},"head":{"r":6},"thigh_L":{"r":20},"shin_L":{"r":-20},"thigh_R":{"r":-20},"shin_R":{"r":20},"upperArm_L":{"r":14},"lowerArm_L":{"r":-90},"upperArm_R":{"r":35},"lowerArm_R":{"r":30}},
+      {"at":430,"easing":"ease-in-out","root":{"x":6,"y":5},"pelvis":{"r":-1},"torso":{"r":-4},"head":{"r":2},"thigh_L":{"r":14},"shin_L":{"r":-14},"thigh_R":{"r":-14},"shin_R":{"r":14},"upperArm_L":{"r":10},"lowerArm_L":{"r":-70},"upperArm_R":{"r":20},"lowerArm_R":{"r":-10}},
+      {"at":720,"root":{"x":0,"y":0},"pelvis":{"r":0},"torso":{"r":0},"head":{"r":0},"thigh_L":{"r":0},"shin_L":{"r":0},"thigh_R":{"r":0},"shin_R":{"r":0},"upperArm_L":{"r":0},"lowerArm_L":{"r":0},"upperArm_R":{"r":0},"lowerArm_R":{"r":0}}
     ]},
     "hit":{"duration":620,"events":[{"at":75,"type":"impact"},{"at":290,"type":"recover"}],"poses":[
       {"at":0,"easing":"ease-out","root":{"x":0},"torso":{"r":0}},

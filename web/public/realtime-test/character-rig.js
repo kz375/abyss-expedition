@@ -5,7 +5,8 @@ const COMBAT_RIG_CHARACTERS=globalThis.ART_TEST_ACTORS?.rigCharacters||Object.fr
 globalThis.COMBAT_RIG_CHARACTERS=COMBAT_RIG_CHARACTERS;
 const COMBAT_RIG_PARTS=new Set(["pelvis","torso","head","upperArm_L","lowerArm_L","hand_L","upperArm_R","lowerArm_R","hand_R","thigh_L","shin_L","foot_L","thigh_R","shin_R","foot_R"]);
 let combatRig=null,combatRigLoad=0,combatRigTimer=0,combatImpactTimer=0;
-const rigFetch=async path=>{const response=await fetch(path);if(!response.ok)throw Error(`Rig asset missing: ${path}`);return response.json();};
+const RIG_DATA_VERSION=(()=>{try{return new URL(document.currentScript.src).searchParams.get("v")||"";}catch{return "";}})();
+const rigFetch=async path=>{const url=RIG_DATA_VERSION?`${path}${path.includes("?")?"&":"?"}v=${encodeURIComponent(RIG_DATA_VERSION)}`:path;const response=await fetch(url);if(!response.ok)throw Error(`Rig asset missing: ${path}`);return response.json();};
 function combatRigUrl(path){return new URL(path,document.baseURI).href;}
 async function mountCombatRig(heroId,portrait){
   const id=COMBAT_RIG_CHARACTERS[heroId];

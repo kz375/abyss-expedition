@@ -234,12 +234,12 @@ body{background:linear-gradient(180deg,#030705d9,#050907f2),url("/assets/backgro
 .pressure-darkness{
   background:linear-gradient(180deg,rgba(2,6,5,var(--p-darkness)) 0%,rgba(1,4,3,calc(var(--p-darkness)*.85)) 55%,rgba(0,2,1,var(--p-darkness)) 100%);
   opacity:1;
-  transition:background .8s linear;
+  /* 2.18.1: no transition — values update every frame (pressure rises continuously);
+     transition restarts = flicker. JS mapping is already smooth. */
 }
 /* Vignette: dark edges, clear center for combat readability */
 .pressure-vignette{
   background:radial-gradient(ellipse at 50% 46%,transparent 42%,rgba(0,0,0,calc(var(--p-vignette)*.55)) 72%,rgba(0,0,0,var(--p-vignette)) 100%);
-  transition:background .8s linear;
 }
 /* Fog: pressure fog, thicker at top (far view), never covers fighters (z2 below z3) */
 .pressure-fog{
@@ -248,7 +248,6 @@ body{background:linear-gradient(180deg,#030705d9,#050907f2),url("/assets/backgro
     radial-gradient(ellipse at 22% 30%,rgba(140,170,160,calc(var(--p-fog)*.4)),transparent 55%),
     radial-gradient(ellipse at 78% 22%,rgba(130,160,150,calc(var(--p-fog)*.36)),transparent 52%);
   filter:blur(18px);
-  transition:background .8s linear;
   animation:pressure-fog-drift 24s ease-in-out infinite alternate;
 }
 @keyframes pressure-fog-drift{

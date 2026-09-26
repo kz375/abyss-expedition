@@ -84,6 +84,7 @@ function resetBreakState(enemy){if(!enemy)return;enemy.break=0;enemy.brokenUntil
 function beginBattle(plan,ambush=false){
   game.combat.encounter=(game.combat.encounter||0)+1;game.enemy=makeEnemy(plan.index,plan.elite);resetBreakState(game.enemy);game.summons=[];game.phase="battle";game.paused=false;game.returnFromBattle=ambush;
   game.phoenixUsed=false;game.floorStart=game.clock;game.statuses={poison:0,burn:0,weak:0,sunder:0};
+  if(!ambush)game.ambushBonus=false;
   if(effects().reset)game.cd=[0,0,0,0];game.pulse=game.clock+4000;addWard(effects().ward+(game.heroId==="warrior"?70:0));
   /* 2.18.0: apply event-granted next-battle modifiers, then consume. */
   if(game.battleMods){const bm=game.battleMods;
@@ -229,14 +230,14 @@ function openEvents(){game.phase="events";game.paused=true;game.eventUsed=false;
   const floor=Math.min(8,game.floor+1),fw=EVENT_FLOOR_WEIGHTS[floor]||EVENT_FLOOR_WEIGHTS[4];
   const recent=game.recentEvents||[];
   let pool=EVENT_CATALOG.filter(e=>{
-    if(e.id==="trial"&&game.trialUsed)return false;
+    if((e.id==="trial"||e.id==="stalker")&&game.trialUsed)return false;
     if(floor<e.floorRange[0]||floor>e.floorRange[1])return false;
     if(recent.includes(e.id))return false;
     return true;
   });
   /* Fallback: if pool too small (e.g. many recent), allow recent back except trial */
   if(pool.length<4)pool=EVENT_CATALOG.filter(e=>{
-    if(e.id==="trial"&&game.trialUsed)return false;
+    if((e.id==="trial"||e.id==="stalker")&&game.trialUsed)return false;
     if(floor<e.floorRange[0]||floor>e.floorRange[1])return false;
     return true;
   });

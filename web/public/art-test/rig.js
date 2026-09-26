@@ -22,7 +22,7 @@ async function loadRig(heroId="warrior"){
 }
 function worldPose(id,pose,cache=new Map()){
   if(!rigModel)return {x:0,y:0,r:0};
-  const socketTarget=rigModel.character.attachments?.[id],resolved=socketTarget?rigModel.skeleton.sockets?.[socketTarget]:id;
+  const socketTarget=rigModel.character.attachments?.[id],socketDef=socketTarget?rigModel.skeleton.sockets?.[socketTarget]:null,resolved=socketDef?(typeof socketDef==="object"?socketDef.bone:socketDef):id;
   if(resolved!==id){const target=worldPose(resolved,pose,cache),grip=rigModel.joints.get(id)||{x:0,y:0};return {x:target.worldX-grip.x,y:target.worldY-grip.y,r:target.r,worldX:target.worldX,worldY:target.worldY};}
   if(cache.has(id))return cache.get(id);
   const bone=rigModel.bones.get(id);if(!bone)return {x:0,y:0,r:0};
@@ -32,7 +32,7 @@ function worldPose(id,pose,cache=new Map()){
   else{const parent=worldPose(bone.parent,pose,cache),parentJoint=rigModel.joints.get(bone.parent)||{x:0,y:0},angle=parent.r*Math.PI/180,dx=baseX-parentJoint.x,dy=baseY-parentJoint.y,rotX=dx*Math.cos(angle)-dy*Math.sin(angle),rotY=dx*Math.sin(angle)+dy*Math.cos(angle),worldX=parent.worldX+rotX+(local.x||0),worldY=parent.worldY+rotY+(local.y||0);value={x:worldX-baseX,y:worldY-baseY,r:parent.r+(local.r||0),worldX,worldY};}
   cache.set(id,value);return value;
 }
-function poseTransform(id,pose){const value=worldPose(id,pose),base=rigModel.baseAngles.get(id)||0,socketAngle=id==="weapon"?159:0;return `translate(${value.x}px,${value.y}px) rotate(${base+value.r+socketAngle}deg)`;}
+function poseTransform(id,pose){const value=worldPose(id,pose),base=rigModel.baseAngles.get(id)||0,socketName=rigModel.character.attachments?.[id],socketDef=socketName?rigModel.skeleton.sockets?.[socketName]:null,socketAngle=typeof socketDef==="object"?(socketDef.angle||0):(id==="weapon"?159:0);return `translate(${value.x}px,${value.y}px) rotate(${base+value.r+socketAngle}deg)`;}
 function mergePose(body,legs){const screenLegs=Object.fromEntries(Object.entries(legs).map(([id,value])=>[id,value&&typeof value==="object"&&Number.isFinite(value.r)?{...value,r:-value.r}:value])),merged={...screenLegs,...body};for(const id of new Set([...Object.keys(screenLegs),...Object.keys(body)]))if(screenLegs[id]&&body[id]&&typeof screenLegs[id]==="object"&&typeof body[id]==="object")merged[id]={...screenLegs[id],...body[id]};return merged;}
 function groundedPose(name,pose){const grounded={...pose};if(rigModel?.host.classList.contains("production-skin")&&pose.head&&Number.isFinite(pose.head.r))grounded.head={...pose.head,r:pose.head.r*.42};if(name==="idle")return grounded;if(pose.root)grounded.root={...pose.root,x:0};if(pose.pelvis&&Number.isFinite(pose.pelvis.r))grounded.pelvis={...pose.pelvis,r:pose.pelvis.r*.58};return grounded;}
 function modelPose(name,pose){

@@ -412,84 +412,107 @@ body:after{background:radial-gradient(ellipse 42% 26% at 68% 6%,#93a9c714,transp
 .battle-road:after{background:linear-gradient(72deg,transparent 0 21%,#5a7a9a1e 21.4% 21.8%,transparent 22.2% 48%,#6a8aaa1a 48.3% 48.7%,transparent 49.1% 76%,#4a6a8a1e 76.3% 76.8%,transparent 77.2%),radial-gradient(ellipse at 50% 92%,#8aa8c818,transparent 34%)}
 .foreground-rocks{opacity:.5;filter:drop-shadow(0 -5px 12px #000) brightness(.75)}
 
-/* ===== 2.16.0: moonlit battlefield — reference-grade night scenery (overrides 2.14.1 abyss night) =====
-   Design refs: moonlit castle on hill (warm windows), layered mountain ridges,
-   readable moonlit road, visible drifting fog. Lifts the crushed blacks; keeps it dark fantasy. */
+/* ===== 2.16.1: midnight fortress — true midnight palette, detailed castle (overrides 2.16.0) =====
+   Crush the brightness to midnight; castle gets battlements, pointed roofs,
+   arched windows and a gate instead of flat blocks. */
 .abyss-scenery{
   background:
-    radial-gradient(circle at 7% 7%, #e8eef6 0 1px, transparent 2px),
-    radial-gradient(circle at 17% 24%, #ccd6e6 0 1px, transparent 2px),
-    radial-gradient(circle at 33% 8%, #e8eef6 0 1.4px, transparent 2.4px),
-    radial-gradient(circle at 46% 19%, #ccd6e6 0 1px, transparent 2px),
-    radial-gradient(circle at 57% 6%, #e8eef6 0 1px, transparent 2px),
-    radial-gradient(circle at 83% 28%, #ccd6e6 0 1px, transparent 2px),
-    radial-gradient(circle at 92% 9%, #e8eef6 0 1.4px, transparent 2.4px),
-    radial-gradient(circle at 25% 33%, #ccd6e6 0 1px, transparent 2px),
-    radial-gradient(circle at 70% 14%, #a9bcd42e 0 72px, transparent 132px),
-    linear-gradient(180deg, #060b14 0%, #0b1424 36%, #132034 60%, #0a0f1a 100%);
+    radial-gradient(circle at 7% 7%, #aebdd2 0 1px, transparent 2px),
+    radial-gradient(circle at 17% 24%, #8b99b0 0 1px, transparent 2px),
+    radial-gradient(circle at 33% 8%, #aebdd2 0 1px, transparent 2px),
+    radial-gradient(circle at 46% 19%, #8b99b0 0 1px, transparent 2px),
+    radial-gradient(circle at 57% 6%, #aebdd2 0 1px, transparent 2px),
+    radial-gradient(circle at 83% 28%, #8b99b0 0 1px, transparent 2px),
+    radial-gradient(circle at 92% 9%, #aebdd2 0 1px, transparent 2px),
+    radial-gradient(circle at 25% 33%, #8b99b0 0 1px, transparent 2px),
+    radial-gradient(circle at 70% 14%, #93a7c41e 0 72px, transparent 132px),
+    linear-gradient(180deg, #010309 0%, #030712 38%, #081020 64%, #04070d 100%);
 }
 .moon{position:absolute;z-index:0;left:66%;top:11%;width:88px;height:88px;border-radius:50%;
-  background:radial-gradient(circle at 36% 32%, #f4f7fc 0 40%, #dbe3ee 66%, #b4c0d1 100%);
-  box-shadow:0 0 24px 6px #c3d2e633, 0 0 84px 26px #93a7c422;}
+  background:radial-gradient(circle at 36% 32%, #eef2f8 0 40%, #cfd8e5 66%, #a3afc2 100%);
+  box-shadow:0 0 24px 6px #b9c9de2b, 0 0 84px 26px #8498b81c;}
 .moon:before{content:"";position:absolute;inset:0;border-radius:50%;
   background:
-    radial-gradient(circle at 62% 58%, #a9b4c636 0 9px, transparent 11px),
-    radial-gradient(circle at 42% 68%, #a9b4c62e 0 6px, transparent 8px),
-    radial-gradient(circle at 58% 30%, #a9b4c62b 0 5px, transparent 7px);}
-.far-mountains{position:absolute;z-index:0;left:-6%;right:-6%;bottom:172px;height:196px;background:#263450;
+    radial-gradient(circle at 62% 58%, #9aa7bb30 0 9px, transparent 11px),
+    radial-gradient(circle at 42% 68%, #9aa7bb28 0 6px, transparent 8px),
+    radial-gradient(circle at 58% 30%, #9aa7bb26 0 5px, transparent 7px);}
+.far-mountains{position:absolute;z-index:0;left:-6%;right:-6%;bottom:172px;height:196px;background:#0a1120;
   clip-path:polygon(0 100%,0 62%,5% 44%,10% 58%,15% 36%,21% 55%,27% 28%,33% 52%,38% 40%,44% 60%,50% 34%,56% 56%,61% 42%,67% 62%,73% 44%,79% 60%,85% 38%,90% 56%,95% 46%,100% 58%,100% 100%);}
-.far-mountains:after{content:"";position:absolute;inset:0;background:#1b2540;
+.far-mountains:after{content:"";position:absolute;inset:0;background:#060b16;
   clip-path:polygon(0 100%,0 78%,7% 60%,13% 74%,20% 55%,27% 72%,34% 58%,41% 76%,48% 60%,55% 78%,62% 62%,69% 80%,76% 64%,83% 78%,90% 66%,96% 76%,100% 70%,100% 100%);}
-.distant-castle{opacity:.94;filter:blur(1.1px) drop-shadow(0 16px 16px #000b) drop-shadow(7px 0 14px #8fa3c435);
-  background:linear-gradient(90deg,transparent 0 4%,#1d2942f2 5% 95%,transparent 96%);}
-.distant-castle i{background:linear-gradient(90deg,#0c1322,#26344e 52%,#0c1322);box-shadow:inset 0 0 18px #000;}
-.castle-spire{left:48.5%;bottom:0;width:3%;height:96%;clip-path:polygon(50% 0,100% 18%,100% 100%,0 100%,0 18%);}
-.tower-far-left{left:11%;bottom:0;width:8%;height:70%;clip-path:polygon(20% 0,80% 0,100% 16%,100% 100%,0 100%,0 16%);}
-.tower-far-right{right:11%;bottom:0;width:8%;height:70%;clip-path:polygon(20% 0,80% 0,100% 16%,100% 100%,0 100%,0 16%);}
-.distant-castle:before{content:"";position:absolute;inset:0;opacity:.96;
-  background:
-    radial-gradient(circle at 46% 32%, #ffdca6 0 2px, #ff9e4d99 3px, transparent 5px),
-    radial-gradient(circle at 50% 32%, #ffdca6 0 2px, #ff9e4d99 3px, transparent 5px),
-    radial-gradient(circle at 54% 32%, #ffdca6 0 2px, #ff9e4d99 3px, transparent 5px),
-    radial-gradient(circle at 48% 45%, #ffd2a0 0 2px, #ff9e4d88 3px, transparent 5px),
-    radial-gradient(circle at 52% 45%, #ffd2a0 0 2px, #ff9e4d88 3px, transparent 5px),
-    radial-gradient(circle at 50% 58%, #ffc98c 0 2px, #ff9e4d77 3px, transparent 5px),
-    radial-gradient(circle at 27% 48%, #ffd2a0 0 2px, #ff9e4d88 3px, transparent 5px),
-    radial-gradient(circle at 27% 60%, #ffc98c 0 2px, #ff9e4d77 3px, transparent 5px),
-    radial-gradient(circle at 73% 48%, #ffd2a0 0 2px, #ff9e4d88 3px, transparent 5px),
-    radial-gradient(circle at 73% 60%, #ffc98c 0 2px, #ff9e4d77 3px, transparent 5px),
-    radial-gradient(circle at 15% 56%, #ffc98c 0 1.6px, #ff9e4d66 3px, transparent 4.5px),
-    radial-gradient(circle at 85% 56%, #ffc98c 0 1.6px, #ff9e4d66 3px, transparent 4.5px),
-    radial-gradient(circle at 35% 74%, #ffc98c 0 1.6px, #ff9e4d66 3px, transparent 4.5px),
-    radial-gradient(circle at 65% 74%, #ffc98c 0 1.6px, #ff9e4d66 3px, transparent 4.5px),
-    repeating-linear-gradient(90deg, transparent 0 38px, #8fa3bd16 39px 41px),
-    repeating-linear-gradient(0deg, transparent 0 29px, #05070caa 30px 33px);}
+/* --- castle: dark silhouette, moonlit right rim, real architecture --- */
+.distant-castle{opacity:.96;filter:blur(1px) drop-shadow(0 16px 16px #000c);
+  background:none;}
+.distant-castle:before{display:none;}
 .distant-castle:after{display:none;}
-.ruin{background:linear-gradient(90deg,#0b0e14,#273043 44%,#141a26 72%,#0a0d13);filter:drop-shadow(0 12px 18px #000) drop-shadow(4px 0 10px #8fa3c42a);}
-.ruin:after{background:repeating-linear-gradient(177deg,transparent 0 24px,#a9bcd422 25px 27px);mix-blend-mode:screen;}
-.chain{background:repeating-linear-gradient(180deg,#232a35 0 9px,#8a7a55 10px 12px,#141922 13px 22px);}
-.chain:after{border-color:#6b5f42;}
+.distant-castle i{position:absolute;background:linear-gradient(90deg,#03060c 0%,#0a1322 62%,#1b2a44 100%);
+  box-shadow:inset 0 0 22px #000c;}
+/* central keep: battlements + two window rows + gate arch */
+.castle-keep{left:42%;bottom:0;width:17%;height:70%;clip-path:none;
+  background:
+    radial-gradient(circle at 30% 26%, #ffca7d 0 2px, #ff9e4d59 4px, transparent 6px),
+    radial-gradient(circle at 50% 26%, #ffca7d 0 2px, #ff9e4d59 4px, transparent 6px),
+    radial-gradient(circle at 70% 26%, #ffca7d 0 2px, #ff9e4d59 4px, transparent 6px),
+    radial-gradient(circle at 30% 48%, #ffc27a 0 2px, #ff9e4d4d 4px, transparent 6px),
+    radial-gradient(circle at 50% 48%, #ffc27a 0 2px, #ff9e4d4d 4px, transparent 6px),
+    radial-gradient(circle at 70% 48%, #ffc27a 0 2px, #ff9e4d4d 4px, transparent 6px),
+    linear-gradient(90deg,#03060c 0%,#0a1322 62%,#1b2a44 100%);}
+.castle-keep:before{content:"";position:absolute;left:0;right:0;top:-7px;height:8px;
+  background:repeating-linear-gradient(90deg,#04070d 0 9px,transparent 9px 16px);}
+.castle-keep:after{content:"";position:absolute;left:37%;right:37%;bottom:0;height:30%;
+  background:#010204;border-radius:50% 50% 0 0 / 34% 34% 0 0;
+  box-shadow:0 0 12px #ff9e4d33;}
+/* towers: pointed roofs + lit windows */
+.castle-tower{bottom:0;width:10%;height:82%;clip-path:none;
+  background:
+    radial-gradient(circle at 50% 32%, #ffca7d 0 2px, #ff9e4d52 4px, transparent 6px),
+    radial-gradient(circle at 50% 58%, #ffc27a 0 2px, #ff9e4d45 4px, transparent 6px),
+    linear-gradient(90deg,#03060c 0%,#0a1322 62%,#1b2a44 100%);}
+.castle-tower:before{content:"";position:absolute;left:0;right:0;top:-6px;height:7px;
+  background:repeating-linear-gradient(90deg,#04070d 0 7px,transparent 7px 12px);}
+.castle-tower:after{content:"";position:absolute;left:-10%;right:-10%;top:-38%;height:34%;
+  background:linear-gradient(180deg,#01030a 0%,#0a1322 100%);
+  clip-path:polygon(50% 0,100% 100%,0 100%);}
+.tower-left{left:22%;}
+.tower-right{right:22%;}
+.tower-far-left{left:11%;bottom:0;width:8%;height:64%;}
+.tower-far-right{right:11%;bottom:0;width:8%;height:64%;}
+/* central spire: needle with tiny brazier light */
+.castle-spire{left:48.4%;bottom:0;width:3.2%;height:97%;clip-path:polygon(50% 0,100% 20%,100% 100%,0 100%,0 20%);
+  background:
+    radial-gradient(circle at 50% 30%, #ffca7d 0 1.6px, #ff9e4d4d 3px, transparent 5px),
+    linear-gradient(90deg,#03060c,#0d1728 62%,#1e2f4b);}
+/* curtain wall keeps its crenellated silhouette, darker */
+.castle-wall{left:7%;right:7%;bottom:0;height:30%;
+  background:linear-gradient(180deg,#04070d,#030509);}
+/* --- ruins, chains, road, rocks: pulled down to midnight --- */
+.ruin{background:linear-gradient(90deg,#04060a,#141b29 44%,#080d16 72%,#03050a);
+  filter:drop-shadow(0 12px 18px #000) drop-shadow(4px 0 10px #8fa3c420);}
+.ruin:after{background:repeating-linear-gradient(177deg,transparent 0 24px,#a9bcd41c 25px 27px);mix-blend-mode:screen;}
+.chain{background:repeating-linear-gradient(180deg,#161c26 0 9px,#6b5f42 10px 12px,#0c1017 13px 22px);}
+.chain:after{border-color:#57503a;}
 .battle-road{
   background:
-    linear-gradient(90deg,#0a0e15d9,#263145d9 13%,#323e52d9 49%,#242e40d9 87%,#0a0e15d9),
-    repeating-linear-gradient(96deg,transparent 0 91px,#0a0d1390 93px 97px),
-    repeating-linear-gradient(3deg,transparent 0 48px,#0a0d13a0 50px 54px);
-  box-shadow:inset 0 22px 42px #000b,inset 0 -24px 35px #000a,inset 0 2px 0 #c6d6ea33,0 -2px 0 #8fa3bd45;
+    linear-gradient(90deg,#04060bd9,#101826d9 13%,#182234d9 49%,#0e1624d9 87%,#04060bd9),
+    repeating-linear-gradient(96deg,transparent 0 91px,#02040a90 93px 97px),
+    repeating-linear-gradient(3deg,transparent 0 48px,#02040aa0 50px 54px);
+  box-shadow:inset 0 22px 42px #000c,inset 0 -24px 35px #000b,inset 0 2px 0 #c6d6ea26,0 -2px 0 #8fa3bd38;
   filter:drop-shadow(0 20px 18px #000);}
-.battle-road:after{opacity:.8;
+.battle-road:after{opacity:.7;
   background:
-    linear-gradient(72deg,transparent 0 21%,#a9bcd435 21.4% 21.8%,transparent 22.2% 48%,#c6d6ea30 48.3% 48.7%,transparent 49.1% 76%,#a9bcd430 76.3% 76.8%,transparent 77.2%),
-    radial-gradient(ellipse at 50% 88%, #c6d6ea26, transparent 36%);}
+    linear-gradient(72deg,transparent 0 21%,#a9bcd428 21.4% 21.8%,transparent 22.2% 48%,#c6d6ea24 48.3% 48.7%,transparent 49.1% 76%,#a9bcd424 76.3% 76.8%,transparent 77.2%),
+    radial-gradient(ellipse at 50% 88%, #c6d6ea1e, transparent 36%);}
+.foreground-rocks{filter:brightness(.6) drop-shadow(0 -5px 12px #000);}
 .abyss-scenery:after{
   background:
-    radial-gradient(ellipse at 28% 62%, #93a7c233, transparent 55%),
-    radial-gradient(ellipse at 68% 42%, #8aa0bb2e, transparent 50%),
-    linear-gradient(90deg, transparent, #a9bcd428 30%, #a9bcd428 70%, transparent);
-  filter:blur(14px);opacity:.95;}
+    radial-gradient(ellipse at 28% 62%, #5b6f8c26, transparent 55%),
+    radial-gradient(ellipse at 68% 42%, #54687f22, transparent 50%),
+    linear-gradient(90deg, transparent, #6d84a01e 30%, #6d84a01e 70%, transparent);
+  filter:blur(14px);opacity:.8;}
 .abyss-scenery:before{
-  background:radial-gradient(ellipse,#93a7c230 0 14%,#7d92ad30 36%,transparent 70%);
-  opacity:.9;}
-.embers{opacity:.8;}
+  background:radial-gradient(ellipse,#5b6f8c22 0 14%,#4c607a22 36%,transparent 70%);
+  opacity:.75;}
+.embers{opacity:.55;}
 @media(max-width:720px){
   .moon{width:64px;height:64px;left:62%;}
   .far-mountains{height:150px;bottom:150px;}

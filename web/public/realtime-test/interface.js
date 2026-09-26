@@ -81,6 +81,8 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId,portra
   const intentEntity=[m,...(game.summons||[])].find(e=>e?.telegraph),intentLeft=intentEntity?Math.max(0,intentEntity.next-game.clock):0;$("intent-callout").classList.toggle("armed",!!intentEntity);$("intent-callout").classList.toggle("urgent",!!intentEntity&&intentLeft<1200);$("intent-action").textContent=intentEntity?label(ACTION_NAMES[intentEntity.telegraph]):tx("观察敌方动作","READ THE ENEMY");$("intent-countdown").textContent=intentEntity?`${(intentLeft/1000).toFixed(2)}s`:"—";
   const pressure=active?game.combat.pressure:0,currentBreak=!!m&&m.breakEncounter===game.combat.encounter,broken=currentBreak&&m.brokenUntil>game.clock,breakRatio=active&&currentBreak?Math.max(0,Math.min(1,broken?1:(m.break||0)/(m.breakMax||100))):0;$("pressure-fill").style.transform=`scaleX(${pressure/100})`;$("pressure-text").textContent=active?`${Math.floor(pressure)}% · T${game.combat.tier}`:"0%";
   /* 2.17.0: Pressure → environment. Piecewise-linear stage mapping, smooth. */
+  /* 2.17.2: only write CSS vars when values change (render runs at 60fps; */
+  /* unconditional writes restart transitions → flicker). */
   (function(){
     const p=Math.max(0,Math.min(100,pressure))/100;
     const lerp=(a,b,t)=>a+(b-a)*t;
@@ -92,7 +94,10 @@ function render(){if(!game)return;const m=game.enemy,active=!!game.heroId,portra
       p<.95?{d:seg(.80,.95,.40,.58),f:seg(.80,.95,.55,.75),v:seg(.80,.95,.55,.75),m:seg(.80,.95,.40,.55),g:seg(.80,.95,.55,.80),b:seg(.80,.95,2,4),dt:seg(.80,.95,0,.05)}:
              {d:seg(.95,1,.58,.70),f:seg(.95,1,.75,.88),v:seg(.95,1,.75,.92),m:seg(.95,1,.55,.65),g:seg(.95,1,.80,1),b:seg(.95,1,4,6),dt:seg(.95,1,.05,.08)};
     const arena=document.querySelector(".arena");
-    if(arena){const s=arena.style;
+    const key=[stage.d,stage.f,stage.v,stage.m,stage.g,stage.b].map(v=>v.toFixed(3)).join("|");
+    if(arena&&arena.dataset.envKey!==key){
+      arena.dataset.envKey=key;
+      const s=arena.style;
       s.setProperty("--p-darkness",stage.d.toFixed(3));
       s.setProperty("--p-fog",stage.f.toFixed(3));
       s.setProperty("--p-vignette",stage.v.toFixed(3));
